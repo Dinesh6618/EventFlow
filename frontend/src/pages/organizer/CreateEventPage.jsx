@@ -1,11 +1,11 @@
-import EventForm from '../../components/events/EventForm.jsx';
+import EventWizard from '../../components/events/EventWizard.jsx';
 import PageHeader from '../../components/ui/PageHeader.jsx';
 
 export default function CreateEventPage() {
   return (
     <>
-      <PageHeader title="Create event" description="Fill in the details below. Fields marked * are required." />
-      <EventForm />
+      <PageHeader eyebrow="Create event" title="Create a new event" description="Five quick steps. Fields marked * are required." />
+      <EventWizard />
     </>
   );
 }

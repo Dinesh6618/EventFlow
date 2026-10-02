@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import { closeDb, initSchema, query } from '../db.js';
 import { createEvent } from '../models/eventModel.js';
 import { create as createSession } from '../models/scheduleModel.js';
+import * as certificates from '../models/certificateModel.js';
 import * as judging from '../models/judgingModel.js';
 import * as teams from '../models/teamModel.js';
 import { createUser, updateProfile } from '../models/userModel.js';
@@ -196,7 +197,55 @@ await createSession(orientation, {
   venue: 'Main Auditorium', speaker: 'Prof. R. Iyer', description: 'Introduction to the college and its support services.',
 });
 
-console.log(`Seeded 9 users and ${events.length + 1} events with sample registrations. (admin id ${admin.id})`);
+// Student profile details, so tables and forms show realistic data.
+const profile = async (user, year, phone) => query('UPDATE users SET year = $2, phone = $3 WHERE id = $1', [user.id, year, phone]);
+await profile(sam, 3, '+91 98765 43210');
+await profile(riya, 2, '+91 98765 43211');
+await profile(extra[0], 4, '+91 98765 43212');
+await profile(extra[1], 3, '+91 98765 43213');
+await profile(extra[2], 1, '+91 98765 43214');
+await profile(extra[3], 2, '+91 98765 43215');
+
+// Event page content: format, prizes, rules and FAQs.
+await query(
+  `UPDATE events SET prizes = $2::jsonb, rules = $3::jsonb, faqs = $4::jsonb, mode = 'offline' WHERE id = $1`,
+  [
+    hackathon.id,
+    JSON.stringify([
+      { title: 'First place', description: 'Cash prize of Rs. 50,000 and internship referrals' },
+      { title: 'Second place', description: 'Cash prize of Rs. 30,000' },
+      { title: 'Third place', description: 'Cash prize of Rs. 15,000 and goodies' },
+      { title: 'Best UI/UX', description: 'Special award for the best-designed prototype' },
+    ]),
+    JSON.stringify([
+      'Teams must have between 2 and 4 members.',
+      'All code must be written during the event; open-source libraries are allowed.',
+      'Every team member must carry their college ID and event pass.',
+      'Projects must be submitted before the deadline to be judged.',
+      'The decision of the judges is final.',
+    ]),
+    JSON.stringify([
+      { question: 'Do I need a team to register?', answer: 'No. You can register on your own and find teammates from the Team tab afterwards.' },
+      { question: 'Is food provided?', answer: 'Yes. Meals and refreshments are provided throughout the 24 hours.' },
+      { question: 'What should I bring?', answer: 'Your laptop, charger, college ID and your event pass (QR code).' },
+    ]),
+  ],
+);
+await query(`UPDATE events SET mode = 'online', department = NULL WHERE id = $1`, [mlWorkshop.id]);
+await query(`UPDATE events SET department = 'Computer Science' WHERE id = $1`, [codingContest.id]);
+await query(
+  `UPDATE events SET rules = $2::jsonb, faqs = $3::jsonb WHERE id = $1`,
+  [
+    mlWorkshop.id,
+    JSON.stringify(['Bring a laptop with Python installed.', 'Join the meeting link 10 minutes early.']),
+    JSON.stringify([{ question: 'Will the session be recorded?', answer: 'Yes, registered participants receive the recording afterwards.' }]),
+  ],
+);
+
+// A certificate for the finished event so "My Certificates" has something to show.
+await certificates.issueManual(orientation, 'participant', [{ name: sam.name, email: sam.email }], priya.id);
+
+console.log(`Seeded 11 users and ${events.length + 1} events with sample registrations. (admin id ${admin.id})`);
 console.log(`All sample accounts use the password "${SAMPLE_PASSWORD}":`);
 console.log('  admin@eventflow.test        (admin)');
 console.log('  organizer@eventflow.test    (organizer)');

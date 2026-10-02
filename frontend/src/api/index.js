@@ -10,14 +10,13 @@ export const authApi = {
 };
 
 export const eventsApi = {
-  list: ({ q, type, date } = {}, signal) => {
+  list: (filters = {}, signal) => {
     const params = new URLSearchParams();
-    if (q) params.set('q', q);
-    if (type) params.set('type', type);
-    if (date) params.set('date', date);
+    Object.entries(filters).forEach(([key, value]) => value && params.set(key, value));
     const qs = params.toString();
     return request(`/api/events${qs ? `?${qs}` : ''}`, { signal });
   },
+  favorite: (id, on) => request(`/api/events/${id}/favorite`, { method: on ? 'POST' : 'DELETE' }),
   mine: (signal) => request('/api/events/mine', { signal }),
   get: (id, signal) => request(`/api/events/${id}`, { signal }),
   create: (formData) => request('/api/events', { method: 'POST', body: formData }),
@@ -32,6 +31,7 @@ const query = (params) => {
 
 export const organizerApi = {
   stats: (signal) => request('/api/organizer/stats', { signal }),
+  activity: (signal) => request('/api/organizer/activity', { signal }),
   participants: (filters, signal) => request(`/api/organizer/participants${query(filters)}`, { signal }),
   exportParticipants: ({ page: _p, pageSize: _s, ...filters }) =>
     download(`/api/organizer/participants/export${query(filters)}`, 'participants.csv'),
@@ -171,4 +171,12 @@ export const insightsApi = {
   addZone: (eventId, name) => request(`/api/events/${eventId}/zones`, { method: 'POST', body: { name } }),
   reportZone: (eventId, zoneId, body) => request(`/api/events/${eventId}/zones/${zoneId}`, { method: 'PATCH', body }),
   removeZone: (eventId, zoneId) => request(`/api/events/${eventId}/zones/${zoneId}`, { method: 'DELETE' }),
+};
+
+export const studentApi = {
+  dashboard: (signal) => request('/api/me/dashboard', { signal }),
+};
+
+export const publicApi = {
+  stats: (signal) => request('/api/public/stats', { signal, auth: false }),
 };

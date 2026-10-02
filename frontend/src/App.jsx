@@ -1,16 +1,18 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import AppLayout from './components/layout/AppLayout.jsx';
-import DashboardLayout, { ADMIN_NAV, ORGANIZER_NAV } from './components/layout/DashboardLayout.jsx';
+import DashboardLayout, { ADMIN_NAV, ORGANIZER_BOTTOM, ORGANIZER_NAV } from './components/layout/DashboardLayout.jsx';
 import { ProtectedRoute, PublicOnlyRoute } from './components/layout/RouteGuards.jsx';
 import { PageLoader } from './components/ui/Spinner.jsx';
 import { useAuth } from './context/AuthContext.jsx';
 import AdminDashboard from './pages/admin/AdminDashboard.jsx';
+import LandingPage from './pages/LandingPage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import NotFoundPage from './pages/NotFoundPage.jsx';
 import CreateEventPage from './pages/organizer/CreateEventPage.jsx';
 import AiPlanPage from './pages/organizer/AiPlanPage.jsx';
 import AiPlannerPage from './pages/organizer/AiPlannerPage.jsx';
 import AnalyticsPage from './pages/organizer/AnalyticsPage.jsx';
+import EventSectionPicker from './pages/organizer/EventSectionPicker.jsx';
 import MyEventsPage from './pages/organizer/MyEventsPage.jsx';
 import OrganizerDashboard from './pages/organizer/OrganizerDashboard.jsx';
 import AiPlanTab from './pages/organizer/event/AiPlanTab.jsx';
@@ -30,40 +32,48 @@ import StaffPage from './pages/organizer/event/StaffPage.jsx';
 import ParticipantsPage from './pages/organizer/ParticipantsPage.jsx';
 import { VolunteerEvent, VolunteerHome } from './pages/volunteer/VolunteerPages.jsx';
 import EventDetailsPage from './pages/participant/EventDetailsPage.jsx';
-import EventListingPage from './pages/participant/EventListingPage.jsx';
+import EventPassPage from './pages/participant/EventPassPage.jsx';
+import ExplorePage from './pages/participant/ExplorePage.jsx';
+import FeedbackFormPage from './pages/participant/FeedbackPage.jsx';
+import HomePage from './pages/participant/HomePage.jsx';
+import MyEventsStudentPage from './pages/participant/MyEventsPage.jsx';
+import MyTeamPage from './pages/participant/MyTeamPage.jsx';
+import RegisterForEventPage from './pages/participant/RegisterForEventPage.jsx';
 import { JudgingEvent, JudgingHome, JudgingTeam } from './pages/judge/JudgePages.jsx';
 import MyCertificatesPage from './pages/participant/MyCertificatesPage.jsx';
-import MyRegistrationsPage from './pages/participant/MyRegistrationsPage.jsx';
 import NotificationsPage from './pages/NotificationsPage.jsx';
 import VerifyPage from './pages/VerifyPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
 import RegisterPage from './pages/RegisterPage.jsx';
+import RoleSelectionPage from './pages/RoleSelectionPage.jsx';
 import { ROLES, homePathFor } from './utils/constants.js';
 
-function RootRedirect() {
+/** Signed-in people go straight to their home; everyone else sees the public landing page. */
+function Landing() {
   const { user, loading } = useAuth();
   if (loading) return <PageLoader label="Loading..." />;
-  return <Navigate to={user ? homePathFor(user.role) : '/login'} replace />;
+  return user ? <Navigate to={homePathFor(user.role)} replace /> : <LandingPage />;
 }
 
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<RootRedirect />} />
+      <Route path="/" element={<Landing />} />
 
       {/* Certificate verification is public: anyone holding a certificate can check it */}
       <Route path="/verify" element={<VerifyPage />} />
       <Route path="/verify/:code" element={<VerifyPage />} />
 
       <Route element={<PublicOnlyRoute />}>
+        <Route path="/choose-role" element={<RoleSelectionPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
       </Route>
 
-      {/* Browsing events: open to every signed-in role */}
+      {/* Pages every signed-in role can open (students get the student shell) */}
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
-          <Route path="/events" element={<EventListingPage />} />
+          <Route path="/events" element={<ExplorePage />} />
           <Route path="/events/:id" element={<EventDetailsPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
@@ -72,7 +82,12 @@ export default function App() {
 
       <Route element={<ProtectedRoute roles={[ROLES.PARTICIPANT]} />}>
         <Route element={<AppLayout />}>
-          <Route path="/my/registrations" element={<MyRegistrationsPage />} />
+          <Route path="/home" element={<HomePage />} />
+          <Route path="/events/:id/register" element={<RegisterForEventPage />} />
+          <Route path="/events/:id/feedback" element={<FeedbackFormPage />} />
+          <Route path="/my/registrations" element={<MyEventsStudentPage />} />
+          <Route path="/my/registrations/:id/pass" element={<EventPassPage />} />
+          <Route path="/my/team" element={<MyTeamPage />} />
           <Route path="/my/certificates" element={<MyCertificatesPage />} />
           <Route path="/judging" element={<JudgingHome />} />
           <Route path="/judging/events/:eventId" element={<JudgingEvent />} />
@@ -83,7 +98,7 @@ export default function App() {
       </Route>
 
       <Route element={<ProtectedRoute roles={[ROLES.ORGANIZER]} />}>
-        <Route path="/organizer" element={<DashboardLayout items={ORGANIZER_NAV} />}>
+        <Route path="/organizer" element={<DashboardLayout items={ORGANIZER_NAV} bottomItems={ORGANIZER_BOTTOM} />}>
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<OrganizerDashboard />} />
           <Route path="create-event" element={<CreateEventPage />} />
@@ -103,6 +118,7 @@ export default function App() {
             <Route path="ai-plan" element={<AiPlanTab />} />
             <Route path="staff" element={<StaffPage />} />
           </Route>
+          <Route path="section/:section" element={<EventSectionPicker />} />
           <Route path="participants" element={<ParticipantsPage />} />
           <Route path="analytics" element={<AnalyticsPage />} />
           <Route path="ai-planner" element={<AiPlannerPage />} />

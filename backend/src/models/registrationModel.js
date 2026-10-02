@@ -144,6 +144,7 @@ export async function decide(registrationId, organizerId, nextStatus) {
 const EVENT_COLUMNS = `
   e.name AS "eventName", e.venue AS "eventVenue", e.type AS "eventType", e.image AS "eventImage",
   e.requires_approval AS "requiresApproval",
+  e.team_enabled AS "teamEnabled",
   to_char(e.date, 'YYYY-MM-DD') AS "eventDate",
   to_char(COALESCE(e.end_date, e.date), 'YYYY-MM-DD') AS "eventEndDate",
   to_char(e.start_time, 'HH24:MI') AS "eventStartTime",
@@ -179,6 +180,18 @@ export async function listForUser(userId) {
  * Organizer view of participants across their events.
  * `filters`: eventId, q, department, college, status. `page`: { limit, offset } or null for all rows.
  */
+// Whitelisted ORDER BY expressions; the request only ever picks a key, never SQL.
+const SORTS = {
+  name: 'lower(u.name)',
+  college: 'lower(u.college)',
+  department: 'lower(u.department)',
+  year: 'u.year',
+  status: 'r.status',
+  attendance: 'a.status',
+  team: 'lower("teamName")',
+  registered: 'r.registered_at',
+};
+
 export async function listForOrganizer(organizerId, filters, page) {
   const params = [organizerId];
   const where = ['e.organizer_id = $1'];
@@ -208,9 +221,12 @@ export async function listForOrganizer(organizerId, filters, page) {
   const pageSql = page ? ` LIMIT ${Number(page.limit)} OFFSET ${Number(page.offset)}` : '';
   const registrations = await query(
     `SELECT ${COLUMNS}, e.name AS "eventName", u.name AS "participantName", u.email,
-            u.department, u.college
-       ${from}
-      ORDER BY r.registered_at DESC, r.id DESC${pageSql}`,
+            u.department, u.college, u.year,
+            a.status AS "attendanceStatus",
+            (SELECT t.name FROM team_members m JOIN teams t ON t.id = m.team_id
+              WHERE m.user_id = r.user_id AND t.event_id = r.event_id ORDER BY t.id LIMIT 1) AS "teamName"
+       ${from.replace('WHERE', 'LEFT JOIN attendance a ON a.registration_id = r.id WHERE')}
+      ORDER BY ${filters.sort ? `${SORTS[filters.sort]} ${filters.dir === 'desc' ? 'DESC' : 'ASC'} NULLS LAST, r.id` : 'r.registered_at DESC, r.id DESC'}${pageSql}`,
     params,
   );
   return { registrations, total };

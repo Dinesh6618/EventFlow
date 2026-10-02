@@ -376,6 +376,25 @@ All of these are for the owning organizer, except the crowd-zone endpoints, whic
 
 Every figure is read from records the platform already holds; nothing is estimated or simulated. Crowd levels are the one thing the platform cannot know, so they are reports from people on site: each zone carries `reportedBy`, `reportedAt` and `ageMinutes`, a zone nobody has reported on has `reported: false` (no level is claimed), and a report older than `staleAfterMinutes` (60) is marked `stale`. The page refreshes every 10 seconds.
 
+## Student experience and UI (migration 010)
+
+| Method | Path | Description |
+| ------ | ---- | ----------- |
+| GET | /public/stats | No sign-in. `{ events, participants, colleges, satisfaction }` for the landing page. `satisfaction` is the average whole-event feedback rating as a percentage, or `null` until someone has given feedback |
+| GET | /me/dashboard | Students. `{ stats: { registered, upcoming, certificates, explored }, next, recommended }` |
+| POST / DELETE | /events/:id/favorite | Students. Save / unsave an event (idempotent) |
+| GET | /organizer/activity | The organizer's latest 8 registrations and check-ins across their events |
+
+**Dashboard numbers.** `registered` and `upcoming` count registrations that hold a seat (upcoming = not yet ended); `certificates` counts non-revoked certificates; `explored` counts distinct event pages the student has opened. `recommended` is a transparent rule, not a prediction: open events with seats that the student has not joined, ranked by "made for your department" (+3), then "same type as events you opened or joined" (+2), then date. Each carries a `reason` string shown on the card.
+
+**Event list filters** (`GET /events`): `q`, `type`, `date`, `mode` (`offline` | `online` | `hybrid`), `department` (events with no department are open to everyone and always match), `available=true` (hide full events), `favorites=true` (the caller's saved events). Event objects now include `mode`, `department`, `prizes` `[{ title, description }]`, `rules` `[string]`, `faqs` `[{ question, answer }]` and `favorite`.
+
+**Creating events** accepts the new optional fields as multipart text; `prizes`, `rules` and `faqs` are JSON lists (at most 10 / 20 / 15 items, validated item by item).
+
+**Profiles.** `PATCH /auth/me` also accepts `year` (1-4, or 5 for postgraduate; blank clears it) and `phone`. Leaving either out keeps the stored value.
+
+**Participants list** (`GET /organizer/participants`) adds `year`, `attendanceStatus` and `teamName` to each row and accepts `sort` (`name`, `college`, `department`, `year`, `status`, `attendance`, `team`, `registered`) and `dir` (`asc` | `desc`). Sort keys are whitelisted on the server.
+
 ## Event object
 
 ```json

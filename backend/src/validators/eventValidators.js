@@ -21,6 +21,20 @@ const time = (label) =>
     .string({ required_error: `${label} is required`, invalid_type_error: `${label} is required` })
     .regex(/^([01]\d|2[0-3]):[0-5]\d$/, `${label} must be a valid time (HH:MM)`);
 
+// Lists arrive as JSON text in multipart forms, or as real arrays in JSON bodies.
+const jsonList = (item, max, label) =>
+  z
+    .preprocess((v) => {
+      if (v === undefined || v === '') return [];
+      if (typeof v !== 'string') return v;
+      try {
+        return JSON.parse(v);
+      } catch {
+        return null;
+      }
+    }, z.array(item, { invalid_type_error: `${label} must be a list` }).max(max, `At most ${max} ${label.toLowerCase()}`))
+    .default([]);
+
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const CONTACT_RE = /^([^\s@]+@[^\s@]+\.[^\s@]+|\+?[\d\s\-()]{7,20})$/;
 
@@ -61,6 +75,11 @@ const baseEventSchema = z.object({
   requiresApproval: z.preprocess((v) => v === true || v === 'true', z.boolean()).default(false),
   teamEnabled: z.preprocess((v) => v === true || v === 'true', z.boolean()).default(false),
   allowMultipleTeams: z.preprocess((v) => v === true || v === 'true', z.boolean()).default(false),
+  mode: z.enum(['offline', 'online', 'hybrid'], { errorMap: () => ({ message: 'Choose offline, online or hybrid' }) }).default('offline'),
+  department: z.string().trim().max(100, 'Department must be at most 100 characters').optional().transform((v) => v || null),
+  prizes: jsonList(z.object({ title: z.string().trim().min(1, 'Prize title is required').max(100), description: z.string().trim().max(300).default('') }), 10, 'Prizes'),
+  rules: jsonList(z.string().trim().min(1, 'A rule cannot be empty').max(300, 'Each rule must be at most 300 characters'), 20, 'Rules'),
+  faqs: jsonList(z.object({ question: z.string().trim().min(1, 'Question is required').max(200), answer: z.string().trim().min(1, 'Answer is required').max(1000) }), 15, 'FAQs'),
   minTeamSize: z.coerce.number({ invalid_type_error: 'Minimum team size must be a number' }).int().min(1, 'Minimum team size must be at least 1').max(50).default(1),
   maxTeamSize: z.coerce.number({ invalid_type_error: 'Maximum team size must be a number' }).int().min(1, 'Maximum team size must be at least 1').max(50, 'Maximum team size must be at most 50').default(4),
 });
@@ -124,4 +143,8 @@ export const eventQuerySchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/)
     .refine(isRealDate)
     .optional(),
+  mode: z.enum(['offline', 'online', 'hybrid']).optional(),
+  department: z.string().trim().max(100).optional(),
+  available: z.enum(['true']).optional(),
+  favorites: z.enum(['true']).optional(),
 });

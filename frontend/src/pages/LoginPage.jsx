@@ -12,7 +12,7 @@ import { validateLogin } from '../utils/validation.js';
 // Matches the accounts created by `npm run seed` in the backend. Shown in development only.
 const DEMO_ACCOUNTS = [
   { label: 'Organizer', email: 'organizer@eventflow.test' },
-  { label: 'Participant', email: 'participant@eventflow.test' },
+  { label: 'Student', email: 'participant@eventflow.test' },
   { label: 'Admin', email: 'admin@eventflow.test' },
 ];
 
@@ -43,7 +43,7 @@ export default function LoginPage() {
       const user = await login({ email: values.email.trim(), password: values.password });
       // Send people back to where they were headed, but only if their role may open it.
       const from = location.state?.from;
-      const allowed = from && (user.role === ROLES.PARTICIPANT ? from.startsWith('/events') : from.startsWith(`/${user.role}`));
+      const allowed = from && (user.role === ROLES.PARTICIPANT ? !/^\/(organizer|admin)/.test(from) : from.startsWith(`/${user.role}`));
       navigate(allowed ? from : homePathFor(user.role), { replace: true });
     } catch (err) {
       if (err instanceof ApiError && err.status === 422) setErrors(err.errors);
@@ -65,7 +65,7 @@ export default function LoginPage() {
 
       <p className="mt-6 text-center text-sm text-slate-600">
         New to EventFlow?{' '}
-        <Link to="/register" className="font-medium text-indigo-600 hover:text-indigo-700">
+        <Link to="/choose-role" className="font-semibold text-indigo-600 hover:text-indigo-700">
           Create an account
         </Link>
       </p>

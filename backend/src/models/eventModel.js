@@ -26,8 +26,22 @@ const SELECT_EVENT = `
          e.allow_multiple_teams AS "allowMultipleTeams",
          e.created_at AS "createdAt",
          (SELECT COUNT(*)::int FROM registrations r
-           WHERE r.event_id = e.id AND r.status IN ('pending', 'approved', 'confirmed')) AS "registeredCount"
+           WHERE r.event_id = e.id AND r.status IN ('pending', 'approved', 'confirmed')) AS "registeredCount",
+         e.mode,
+         e.department,
+         e.prizes,
+         e.rules,
+         e.faqs
   FROM events e`;
+
+/** The same select, plus whether the viewer (bound to `param`) has saved the event. */
+const selectFor = (userId, param) =>
+  userId
+    ? SELECT_EVENT.replace(
+        '\n  FROM events e',
+        `,\n         EXISTS(SELECT 1 FROM event_favorites f WHERE f.event_id = e.id AND f.user_id = ${param}) AS favorite\n  FROM events e`,
+      )
+    : SELECT_EVENT;
 
 /** Adds computed fields and turns the stored file name into a public URL. */
 export function toEventDto(row, now = localNow()) {
@@ -35,6 +49,7 @@ export function toEventDto(row, now = localNow()) {
     ...row,
     image: row.image ? `/uploads/${row.image}` : null,
     // Pending, approved and confirmed registrations all hold a seat.
+    favorite: Boolean(row.favorite),
     availableSeats: Math.max(row.maxParticipants - row.registeredCount, 0),
     status: getEventStatus(row, now),
     registrationOpen: isRegistrationOpen(row, now),
@@ -44,10 +59,15 @@ export function toEventDto(row, now = localNow()) {
 const escapeLike = (value) => value.replace(/[\\%_]/g, (c) => `\\${c}`);
 
 /** Events that have not ended yet, soonest first, optionally filtered. */
-export async function listAvailable({ q, type, date }) {
+export async function listAvailable({ q, type, date, mode, department, available, favorites } = {}, userId = null) {
   const now = localNow();
   const params = [now.date];
   const where = ['COALESCE(e.end_date, e.date) >= $1'];
+  let viewer = null;
+  if (userId) {
+    params.push(userId);
+    viewer = `$${params.length}`;
+  }
 
   if (q) {
     params.push(`%${escapeLike(q)}%`);
@@ -62,8 +82,24 @@ export async function listAvailable({ q, type, date }) {
     where.push(`$${params.length}::date BETWEEN e.date AND COALESCE(e.end_date, e.date)`);
   }
 
+  if (mode) {
+    params.push(mode);
+    where.push(`e.mode = $${params.length}`);
+  }
+  if (department) {
+    // Events with no department are open to everyone, so they match every department.
+    params.push(department);
+    where.push(`(e.department IS NULL OR e.department = $${params.length})`);
+  }
+  if (available) {
+    where.push(`(SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id AND r.status IN ('pending', 'approved', 'confirmed')) < e.max_participants`);
+  }
+  if (favorites && viewer) {
+    where.push(`EXISTS(SELECT 1 FROM event_favorites f WHERE f.event_id = e.id AND f.user_id = ${viewer})`);
+  }
+
   const rows = await query(
-    `${SELECT_EVENT} WHERE ${where.join(' AND ')} ORDER BY e.date, e.start_time, e.id`,
+    `${selectFor(userId, viewer)} WHERE ${where.join(' AND ')} ORDER BY e.date, e.start_time, e.id`,
     params,
   );
   return rows.map((row) => toEventDto(row, now)).filter((event) => event.status !== 'ended');
@@ -83,8 +119,8 @@ export async function listAll() {
   return rows.map((row) => toEventDto(row, now));
 }
 
-export async function findById(id) {
-  const rows = await query(`${SELECT_EVENT} WHERE e.id = $1`, [id]);
+export async function findById(id, userId = null) {
+  const rows = await query(`${selectFor(userId, '$2')} WHERE e.id = $1`, userId ? [id, userId] : [id]);
   return rows[0] ? toEventDto(rows[0]) : undefined;
 }
 
@@ -92,8 +128,9 @@ export async function createEvent(organizerId, data) {
   const rows = await query(
     `INSERT INTO events (organizer_id, name, description, type, date, start_time, end_time, venue,
                          max_participants, registration_deadline, image, organizer_name, organizer_contact,
-                         requires_approval, end_date, team_enabled, min_team_size, max_team_size, allow_multiple_teams)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+                         requires_approval, end_date, team_enabled, min_team_size, max_team_size, allow_multiple_teams,
+                         mode, department, prizes, rules, faqs)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22::jsonb, $23::jsonb, $24::jsonb)
      RETURNING id`,
     [
       organizerId,
@@ -115,9 +152,19 @@ export async function createEvent(organizerId, data) {
       data.minTeamSize ?? 1,
       data.maxTeamSize ?? 4,
       data.allowMultipleTeams ?? false,
+      data.mode ?? 'offline',
+      data.department ?? null,
+      JSON.stringify(data.prizes ?? []),
+      JSON.stringify(data.rules ?? []),
+      JSON.stringify(data.faqs ?? []),
     ],
   );
   return findById(rows[0].id);
+}
+
+export async function setFavorite(userId, eventId, on) {
+  if (on) await query(`INSERT INTO event_favorites (user_id, event_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`, [userId, eventId]);
+  else await query(`DELETE FROM event_favorites WHERE user_id = $1 AND event_id = $2`, [userId, eventId]);
 }
 
 /** Aggregate numbers from a list of event DTOs. */

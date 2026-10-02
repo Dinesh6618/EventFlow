@@ -34,19 +34,24 @@ export default function ParticipantsPage() {
   const [searchParams] = useSearchParams();
   const [filters, setFilters] = useState({ ...NO_FILTERS, eventId: searchParams.get('eventId') || '' });
   const [page, setPage] = useState(1);
+  const [sort, setSort] = useState({ key: '', dir: 'asc' });
   const [viewing, setViewing] = useState(null);
   const [rejecting, setRejecting] = useState(null);
   const [busy, setBusy] = useState(false);
   const [exporting, setExporting] = useState(false);
 
   const q = useDebounced(filters.q.trim());
-  const query = { ...filters, q, page, pageSize: 20 };
+  const query = { ...filters, q, page, pageSize: 20, sort: sort.key, dir: sort.key ? sort.dir : '' };
   const { data, error, loading, reload } = useApi(
     (signal) => organizerApi.participants(query, signal),
-    [q, filters.eventId, filters.department, filters.college, filters.status, page],
+    [q, filters.eventId, filters.department, filters.college, filters.status, page, sort.key, sort.dir],
   );
   const myEvents = useApi((signal) => eventsApi.mine(signal));
 
+  const onSort = (key) => {
+    setSort((s) => (s.key === key ? { key, dir: s.dir === 'asc' ? 'desc' : 'asc' } : { key, dir: 'asc' }));
+    setPage(1);
+  };
   const filtered = Object.values(filters).some(Boolean);
   const change = (patch) => {
     setFilters((f) => ({ ...f, ...patch }));
@@ -74,7 +79,7 @@ export default function ParticipantsPage() {
   const exportCsv = async () => {
     setExporting(true);
     try {
-      await organizerApi.exportParticipants({ ...filters, q });
+      await organizerApi.exportParticipants({ ...filters, q, sort: sort.key, dir: sort.key ? sort.dir : '' });
     } catch (err) {
       toast.error(err.message);
     } finally {
@@ -85,7 +90,8 @@ export default function ParticipantsPage() {
   return (
     <>
       <PageHeader
-        title="Participants"
+        eyebrow="Participants"
+        title="Registered participants"
         description="Everyone registered for your events."
         action={
           <Button variant="secondary" onClick={exportCsv} loading={exporting} disabled={!data?.total}>
@@ -152,7 +158,7 @@ export default function ParticipantsPage() {
       ) : (
         <div className={loading ? 'opacity-60 transition-opacity' : 'transition-opacity'}>
           <p className="mb-3 text-sm text-slate-500" aria-live="polite">{data.total} {data.total === 1 ? 'participant' : 'participants'}</p>
-          <ParticipantsTable rows={data.registrations} onView={(r) => setViewing(r.id)} onDecide={onDecide} />
+          <ParticipantsTable rows={data.registrations} onView={(r) => setViewing(r.id)} onDecide={onDecide} sort={sort.key} dir={sort.dir} onSort={onSort} />
           <Pagination page={data.page} pageSize={data.pageSize} total={data.total} onPage={setPage} />
         </div>
       )}

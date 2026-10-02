@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ApiError } from '../api';
 import AuthShell from '../components/layout/AuthShell.jsx';
 import Alert from '../components/ui/Alert.jsx';
@@ -10,15 +10,17 @@ import { ROLES, homePathFor } from '../utils/constants.js';
 import { validateRegister } from '../utils/validation.js';
 
 const ROLE_OPTIONS = [
-  { value: ROLES.PARTICIPANT, title: 'Participant', text: 'Browse and join events' },
+  { value: ROLES.PARTICIPANT, title: 'Student', text: 'Discover and join events' },
   { value: ROLES.ORGANIZER, title: 'Organizer', text: 'Create and manage events' },
 ];
 
 export default function RegisterPage() {
   const { register } = useAuth();
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const startRole = params.get('role') === ROLES.ORGANIZER ? ROLES.ORGANIZER : ROLES.PARTICIPANT;
 
-  const [values, setValues] = useState({ name: '', email: '', password: '', confirmPassword: '', role: ROLES.PARTICIPANT, department: '', college: '' });
+  const [values, setValues] = useState({ name: '', email: '', password: '', confirmPassword: '', role: startRole, department: '', college: '' });
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);

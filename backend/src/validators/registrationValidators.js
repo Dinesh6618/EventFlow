@@ -9,6 +9,8 @@ export const participantsQuerySchema = z.object({
   department: optionalText(100),
   college: optionalText(150),
   status: z.enum(STATUSES).optional(),
+  sort: z.enum(['name', 'college', 'department', 'year', 'status', 'attendance', 'team', 'registered']).optional(),
+  dir: z.enum(['asc', 'desc']).default('asc'),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
 });

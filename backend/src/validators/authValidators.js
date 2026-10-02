@@ -31,6 +31,19 @@ const optionalText = (label, max) =>
     .transform((v) => v || null);
 
 const department = optionalText('Department', 100);
+
+// Year of study: 1-4, or 5 for postgraduate. Blank clears it.
+const year = z
+  .union([z.literal(''), z.null(), z.coerce.number({ invalid_type_error: 'Choose your year' }).int('Choose your year').min(1, 'Choose your year').max(5, 'Choose your year')])
+  .optional()
+  .transform((v) => (v === '' || v === null ? null : v));
+
+const phone = z
+  .string()
+  .trim()
+  .optional()
+  .refine((v) => !v || /^\+?[\d\s\-()]{7,20}$/.test(v), 'Enter a valid phone number')
+  .transform((v) => v || null);
 const college = optionalText('College', 150);
 
 export const registerSchema = z
@@ -43,6 +56,8 @@ export const registerSchema = z
     }),
     department,
     college,
+    year,
+    phone,
   })
   .superRefine((data, ctx) => {
     // Organizers filter participants by department/college, so participants must provide them.
@@ -61,4 +76,4 @@ const skills = z
   .max(15, 'List at most 15 skills')
   .optional();
 
-export const profileSchema = z.object({ name, department, college, skills });
+export const profileSchema = z.object({ name, department, college, skills, year, phone });

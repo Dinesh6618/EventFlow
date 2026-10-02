@@ -5,7 +5,7 @@ import { notFound } from '../utils/httpError.js';
 import { idParam } from '../utils/params.js';
 
 export async function listEvents(req, res) {
-  res.json({ events: await events.listAvailable(req.query) });
+  res.json({ events: await events.listAvailable(req.query, req.user.id) });
 }
 
 export async function listMyEvents(req, res) {
@@ -13,7 +13,7 @@ export async function listMyEvents(req, res) {
 }
 
 export async function getEvent(req, res) {
-  const event = await events.findById(idParam(req.params.id, 'Event'));
+  const event = await events.findById(idParam(req.params.id, 'Event'), req.user.id);
   if (!event) throw notFound('Event not found');
 
   // For participants also return their own registration, and remember that they looked.
@@ -25,6 +25,13 @@ export async function getEvent(req, res) {
     ]);
   }
   res.json({ event, registration: registration ?? null });
+}
+
+export async function favorite(req, res) {
+  const event = await events.findById(idParam(req.params.id, 'Event'));
+  if (!event) throw notFound('Event not found');
+  await events.setFavorite(req.user.id, event.id, req.method === 'POST');
+  res.json({ favorite: req.method === 'POST' });
 }
 
 export async function createEvent(req, res) {

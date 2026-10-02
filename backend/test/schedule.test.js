@@ -107,7 +107,7 @@ describe('schedule', () => {
     await addItem(org.token, item({ title: 'Talk', startTime: '09:00', endTime: '10:00' }));
     // Move the event to today so "now" lands inside one session.
     await query('UPDATE schedule_items SET date = CURRENT_DATE WHERE event_id = $1', [event.id]);
-    await query('UPDATE events SET date = CURRENT_DATE WHERE id = $1', [event.id]);
+    await query("UPDATE events SET date = CURRENT_DATE, start_time = '00:00', end_time = '23:59' WHERE id = $1", [event.id]);
     await query(`UPDATE schedule_items SET start_time = (NOW() - INTERVAL '10 minutes')::time, end_time = (NOW() + INTERVAL '40 minutes')::time WHERE event_id = $1 AND title = 'Talk'`, [event.id]);
     await query(`UPDATE schedule_items SET start_time = (NOW() + INTERVAL '50 minutes')::time, end_time = (NOW() + INTERVAL '55 minutes')::time WHERE event_id = $1 AND title = 'Workshop'`, [event.id]);
     await query(`UPDATE schedule_items SET start_time = (NOW() + INTERVAL '56 minutes')::time, end_time = (NOW() + INTERVAL '58 minutes')::time WHERE event_id = $1 AND title = 'Lunch'`, [event.id]);
@@ -259,7 +259,7 @@ describe('session attendance', () => {
     const reg = (await t.api('GET', '/api/registrations/mine', { token: bob.token })).body.registrations.find((r) => r.eventId === day.id);
     const s1 = (await addItem(org.token, item({ title: 'Talk 1' }), day.id)).body.item;
     const s2 = (await addItem(org.token, item({ title: 'Talk 2', startTime: '11:00', endTime: '12:00' }), day.id)).body.item;
-    await query('UPDATE events SET date = CURRENT_DATE WHERE id = $1', [day.id]);
+    await query("UPDATE events SET date = CURRENT_DATE, start_time = '00:00', end_time = '23:59' WHERE id = $1", [day.id]);
     await query('UPDATE schedule_items SET date = CURRENT_DATE WHERE event_id = $1', [day.id]);
 
     const scan = (sessionId, action = 'check_in') =>

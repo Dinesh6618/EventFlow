@@ -159,7 +159,7 @@ export async function listForEvent(eventId) {
 
 export async function listForUser(userId) {
   return query(
-    `SELECT ${COLUMNS}, e.name AS "eventName", to_char(e.date, 'YYYY-MM-DD') AS "eventDate"
+    `SELECT ${COLUMNS}, e.name AS "eventName", e.type AS "eventType", e.image AS "eventImage", to_char(e.date, 'YYYY-MM-DD') AS "eventDate"
        FROM certificates c JOIN events e ON e.id = c.event_id
       WHERE c.user_id = $1 AND c.revoked_at IS NULL ORDER BY c.issued_at DESC`,
     [userId],

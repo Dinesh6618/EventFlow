@@ -11,6 +11,7 @@ import * as admin from '../controllers/adminController.js';
 import * as auth from '../controllers/authController.js';
 import * as eventCtrl from '../controllers/eventController.js';
 import * as organizer from '../controllers/organizerController.js';
+import * as studentCtrl from '../controllers/studentController.js';
 import * as registrationCtrl from '../controllers/registrationController.js';
 import { ROLES } from '../constants.js';
 import { authenticate, requireRole } from '../middleware/auth.js';
@@ -38,6 +39,12 @@ router.get('/events/mine', authenticate, organizerOnly, eventCtrl.listMyEvents);
 router.get('/events/:id', authenticate, eventCtrl.getEvent);
 router.post('/events', authenticate, organizerOnly, uploadEventImage, validate(eventSchema), eventCtrl.createEvent);
 
+// Saved events, the student home screen and public numbers for the landing page
+router.post('/events/:id/favorite', authenticate, participantOnly, eventCtrl.favorite);
+router.delete('/events/:id/favorite', authenticate, participantOnly, eventCtrl.favorite);
+router.get('/me/dashboard', authenticate, participantOnly, studentCtrl.dashboard);
+router.get('/public/stats', studentCtrl.publicStats);
+
 // Registrations
 router.post('/events/:id/registrations', authenticate, participantOnly, registrationCtrl.register);
 router.get('/registrations/mine', authenticate, participantOnly, registrationCtrl.mine);
@@ -47,6 +54,7 @@ router.patch('/registrations/:id/status', authenticate, organizerOnly, validate(
 
 // Organizer
 router.get('/organizer/stats', authenticate, organizerOnly, organizer.stats);
+router.get('/organizer/activity', authenticate, organizerOnly, organizer.activity);
 router.get(
   '/organizer/participants',
   authenticate,

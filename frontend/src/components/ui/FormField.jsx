@@ -1,7 +1,7 @@
 import { useId } from 'react';
 
 const CONTROL =
-  'block w-full rounded-lg border bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 disabled:bg-slate-100';
+  'block w-full rounded-xl border bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 disabled:bg-slate-100';
 
 function Field({ label, error, hint, required, children, id }) {
   return (
@@ -54,11 +54,14 @@ export function Select({ label, error, hint, required, options, placeholder, ...
     <Field id={id} label={label} error={error} hint={hint} required={required}>
       <select {...controlProps(id, error)} required={required} {...props}>
         {placeholder && <option value="">{placeholder}</option>}
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
+        {options.map((option) => {
+          const { value, label } = typeof option === 'object' ? option : { value: option, label: option };
+          return (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          );
+        })}
       </select>
     </Field>
   );

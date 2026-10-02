@@ -4,7 +4,7 @@ import * as users from '../models/userModel.js';
 import { conflict, unauthorized } from '../utils/httpError.js';
 
 export async function register(req, res) {
-  const { name, email, password, role, department, college } = req.body;
+  const { name, email, password, role, department, college, year, phone } = req.body;
 
   if (await users.findByEmail(email)) {
     throw conflict('Email is already registered', { email: 'An account with this email already exists' });
@@ -16,6 +16,8 @@ export async function register(req, res) {
     role,
     department,
     college,
+    year,
+    phone,
     passwordHash: await bcrypt.hash(password, 10),
   });
   res.status(201).json({ user, token: signToken(user) });

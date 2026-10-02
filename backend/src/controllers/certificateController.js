@@ -48,7 +48,8 @@ export async function revoke(req, res) {
 }
 
 export async function mine(req, res) {
-  res.json({ certificates: await certificates.listForUser(req.user.id), types: certificates.TYPE_LABELS });
+  const rows = await certificates.listForUser(req.user.id);
+  res.json({ certificates: rows.map((c) => ({ ...c, eventImage: c.eventImage ? `/uploads/${c.eventImage}` : null })), types: certificates.TYPE_LABELS });
 }
 
 /** The holder or the event's organizer can download the PDF. */

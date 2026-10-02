@@ -1,6 +1,6 @@
-export default function Card({ className = '', children, ...props }) {
+export default function Card({ className = '', hover = false, children, ...props }) {
   return (
-    <div className={`rounded-xl border border-slate-200 bg-white shadow-sm ${className}`} {...props}>
+    <div className={`surface ${hover ? 'surface-lift' : ''} ${className}`} {...props}>
       {children}
     </div>
   );

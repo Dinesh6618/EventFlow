@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react';
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NotificationBell from '../notifications/NotificationBell.jsx';
 import Icon from '../ui/Icon.jsx';
+import BottomNavigation from './BottomNavigation.jsx';
 import Logo from './Logo.jsx';
+import Sidebar from './Sidebar.jsx';
 
-const linkClass = ({ isActive }) =>
-  `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-    isActive ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-  }`;
-
-/** Sidebar shell. On small screens the sidebar becomes a slide-in drawer. */
-export default function DashboardLayout({ items }) {
+/**
+ * Organizer / admin shell: dark sidebar on desktop, slide-in drawer on tablets and phones,
+ * and a bottom bar on phones for the most-used pages.
+ */
+export default function DashboardLayout({ items, bottomItems }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -22,95 +22,101 @@ export default function DashboardLayout({ items }) {
 
   const handleLogout = () => {
     logout();
-    navigate('/login', { replace: true });
+    navigate('/', { replace: true });
   };
+
+  const bottom = [...(bottomItems ?? []), { label: 'More', icon: 'menu', onClick: () => setOpen(true), expanded: open }];
 
   return (
     <div className="min-h-screen lg:flex">
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 lg:hidden">
-        <Logo />
+      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[70] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:shadow-lg">
+        Skip to content
+      </a>
+
+      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-slate-200/70 bg-white/85 px-4 py-3 backdrop-blur-xl lg:hidden">
+        <Link to={items[0].to} aria-label="Dashboard home">
+          <Logo />
+        </Link>
         <div className="-mr-2 flex items-center gap-1">
-        <NotificationBell />
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          aria-label="Open navigation"
-          aria-expanded={open}
-          className="rounded-lg p-2 text-slate-600 hover:bg-slate-100"
-        >
-          <Icon name="menu" className="h-6 w-6" />
-        </button>
+          <NotificationBell />
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            aria-label="Open navigation"
+            aria-expanded={open}
+            className="rounded-lg p-2 text-slate-600 hover:bg-slate-100"
+          >
+            <Icon name="menu" className="h-6 w-6" />
+          </button>
         </div>
       </header>
 
-      {open && <div className="fixed inset-0 z-40 bg-slate-900/50 lg:hidden" onClick={() => setOpen(false)} aria-hidden="true" />}
+      {open && <div className="animate-toast-in fixed inset-0 z-40 bg-slate-950/55 backdrop-blur-[2px] lg:hidden" onClick={() => setOpen(false)} aria-hidden="true" />}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-slate-900 px-4 py-5 transition-transform duration-200 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-72 transition-transform duration-200 lg:sticky lg:top-0 lg:h-screen lg:w-64 lg:shrink-0 lg:translate-x-0 ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="mb-8 flex items-center justify-between px-1">
-          <Logo light />
-          <span className="hidden lg:block"><NotificationBell dark align="left" /></span>
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            aria-label="Close navigation"
-            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white lg:hidden"
-          >
-            <Icon name="x" />
-          </button>
-        </div>
-
-        <nav aria-label="Main" className="flex flex-1 flex-col gap-1">
-          {items.map((item) => (
-            <NavLink key={item.to} to={item.to} className={linkClass} end={!item.prefix}>
-              <Icon name={item.icon} />
-              {item.label}
-            </NavLink>
-          ))}
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="mt-1 flex items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
-          >
-            <Icon name="logout" />
-            Logout
-          </button>
-        </nav>
-
-        <div className="mt-4 flex items-center gap-3 border-t border-slate-800 px-1 pt-4">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-500 text-sm font-semibold text-white">
-            {user?.name?.[0]?.toUpperCase()}
-          </span>
-          <div className="min-w-0">
-            <p className="truncate text-sm font-medium text-white">{user?.name}</p>
-            <p className="truncate text-xs capitalize text-slate-400">{user?.role}</p>
-          </div>
-        </div>
+        <Sidebar
+          items={items}
+          user={user}
+          onLogout={handleLogout}
+          variant="dark"
+          onNavigate={() => setOpen(false)}
+          header={
+            <span className="flex items-center gap-1">
+              <span className="hidden lg:block"><NotificationBell dark align="left" /></span>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                aria-label="Close navigation"
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-white/10 hover:text-white lg:hidden"
+              >
+                <Icon name="x" />
+              </button>
+            </span>
+          }
+        />
       </aside>
 
-      <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
+      <main id="main" className="min-w-0 flex-1 px-4 pb-28 pt-6 sm:px-6 lg:px-10 lg:pb-10 lg:pt-8">
         <div className="mx-auto max-w-6xl">
-          <Outlet />
+          <div key={location.pathname.split('/').slice(0, 4).join('/')} className="page-enter">
+            <Outlet />
+          </div>
         </div>
       </main>
+
+      <BottomNavigation items={bottom} label="Quick" />
     </div>
   );
 }
 
 export const ORGANIZER_NAV = [
-  { to: '/organizer/dashboard', label: 'Dashboard', icon: 'dashboard' },
+  { to: '/organizer/dashboard', label: 'Overview', icon: 'dashboard' },
+  { to: '/organizer/events', label: 'My Events', icon: 'calendar', prefix: true },
   { to: '/organizer/create-event', label: 'Create Event', icon: 'plus' },
-  { to: '/organizer/events', label: 'My Events', icon: 'calendar' },
   { to: '/organizer/participants', label: 'Participants', icon: 'users' },
+  { to: '/organizer/section/attendance', label: 'Attendance', icon: 'qr' },
+  { to: '/organizer/section/schedule', label: 'Schedule', icon: 'clock' },
+  { to: '/organizer/section/teams', label: 'Teams', icon: 'user-plus' },
+  { to: '/organizer/section/judging', label: 'Judging', icon: 'trophy' },
+  { to: '/organizer/section/certificates', label: 'Certificates', icon: 'award' },
+  { to: '/organizer/section/feedback', label: 'Feedback', icon: 'message' },
   { to: '/organizer/analytics', label: 'Analytics', icon: 'chart' },
   { to: '/organizer/ai-planner', label: 'AI Planner', icon: 'sparkles', prefix: true },
-  { to: '/organizer/profile', label: 'Profile', icon: 'user' },
+  { to: '/organizer/profile', label: 'Settings', icon: 'settings' },
+];
+
+export const ORGANIZER_BOTTOM = [
+  { to: '/organizer/dashboard', label: 'Overview', icon: 'dashboard' },
+  { to: '/organizer/events', label: 'Events', icon: 'calendar', end: false },
+  { to: '/organizer/create-event', label: 'Create', icon: 'plus' },
+  { to: '/organizer/participants', label: 'People', icon: 'users' },
 ];
 
 export const ADMIN_NAV = [
   { to: '/admin/dashboard', label: 'Dashboard', icon: 'dashboard' },
-  { to: '/admin/profile', label: 'Profile', icon: 'user' },
+  { to: '/admin/profile', label: 'Settings', icon: 'settings' },
 ];

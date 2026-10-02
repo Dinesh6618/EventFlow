@@ -6,9 +6,14 @@ import Badge from '../ui/Badge.jsx';
 import Button from '../ui/Button.jsx';
 import Card from '../ui/Card.jsx';
 import ConfirmDialog from '../ui/ConfirmDialog.jsx';
+import { Input } from '../ui/FormField.jsx';
+import ProfileAvatar from '../ui/ProfileAvatar.jsx';
 import LoadError from '../ui/LoadError.jsx';
 import TeamCard, { SkillChips } from './TeamCard.jsx';
 import TeamForm from './TeamForm.jsx';
+
+// Common roles to look for; the team's own wanted skills are listed first.
+const COMMON_ROLES = ['UI/UX Designer', 'Frontend Developer', 'Backend Developer', 'AI/ML Engineer', 'Data Analyst', 'Mobile Developer', 'Presenter'];
 
 const STRENGTH = { exact: 'Exact match', close: 'Close match', related: 'Related skill' };
 
@@ -36,19 +41,22 @@ function Suggestions({ team, onInvited }) {
 
   return (
     <Card className="p-5">
-      <h4 className="text-sm font-semibold text-slate-900">Find teammates</h4>
+      <h4 className="text-base font-bold text-slate-900">Find Teammates</h4>
       <p className="mt-0.5 text-xs text-slate-500">
         Registered participants without a team, ranked by how well their skills fit what you are looking for. This is a rule-based match, not a guarantee.
       </p>
       <div className="mt-3 max-w-sm">
-        <label htmlFor={`need-${team.id}`} className="sr-only">Look for a specific skill</label>
-        <input
-          id={`need-${team.id}`}
+        <Input
+          label="Looking for"
+          list={`roles-${team.id}`}
           value={skill}
           onChange={(e) => setSkill(e.target.value)}
-          placeholder={team.skills.length ? 'Or search one skill, e.g. Python' : 'Search a skill, e.g. UI/UX Designer'}
-          className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+          placeholder={team.skills.length ? "Pick a role or type a skill (blank = my team's wanted skills)" : 'Pick a role or type a skill, e.g. UI/UX Designer'}
+          autoComplete="off"
         />
+        <datalist id={`roles-${team.id}`}>
+          {[...new Set([...team.skills, ...COMMON_ROLES])].map((r) => <option key={r} value={r} />)}
+        </datalist>
       </div>
       {error ? (
         <div className="mt-3"><LoadError error={error} onRetry={reload} /></div>
@@ -60,12 +68,15 @@ function Suggestions({ team, onInvited }) {
         <ul className="mt-3 divide-y divide-slate-100">
           {data?.suggestions.map((person) => (
             <li key={person.userId} className="flex flex-wrap items-center justify-between gap-3 py-3">
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-slate-900">{person.name}</p>
-                <p className="text-xs text-slate-500">{[person.department, person.college].filter(Boolean).join(' - ')}</p>
-                <p className="mt-1 text-xs text-indigo-700">
-                  {person.matches.map((m) => `${m.skill} for ${m.need} (${STRENGTH[m.strength]})`).join('; ')}
-                </p>
+              <div className="flex min-w-0 items-center gap-3">
+                <ProfileAvatar name={person.name} />
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-slate-900">{person.name}</p>
+                  <p className="text-xs text-slate-500">{[person.department, person.college].filter(Boolean).join(' - ')}</p>
+                  <p className="mt-1 text-xs text-indigo-700">
+                    {person.matches.map((m) => `${m.skill} for ${m.need} (${STRENGTH[m.strength]})`).join('; ')}
+                  </p>
+                </div>
               </div>
               <Button size="sm" variant="secondary" loading={busy === person.userId} onClick={() => invite(person)}>Invite</Button>
             </li>
@@ -139,13 +150,16 @@ export default function MyTeam({ team, me, onChanged }) {
         <ul className="mt-2 divide-y divide-slate-100">
           {team.members.map((m) => (
             <li key={m.userId} className="flex flex-wrap items-center justify-between gap-2 py-2.5">
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-slate-900">{m.name}{m.userId === me && ' (you)'}</p>
-                <p className="text-xs text-slate-500">{[m.department, m.college].filter(Boolean).join(' - ')}</p>
-                <div className="mt-1"><SkillChips skills={m.skills} empty="" /></div>
+              <div className="flex min-w-0 items-center gap-3">
+                <ProfileAvatar name={m.name} size="md" />
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-slate-900">{m.name}{m.userId === me && ' (you)'}</p>
+                  <p className="text-xs text-slate-500">{m.role === 'leader' ? 'Team Leader' : m.skills?.[0] || [m.department].filter(Boolean).join('')}</p>
+                  <div className="mt-1"><SkillChips skills={m.skills} empty="" /></div>
+                </div>
               </div>
               <div className="flex items-center gap-2">
-                <Badge tone={m.role === 'leader' ? 'indigo' : 'slate'}>{m.role}</Badge>
+                <Badge tone={m.role === 'leader' ? 'indigo' : 'slate'}>{m.role === 'leader' ? 'Leader' : 'Member'}</Badge>
                 {isLeader && m.role !== 'leader' && (
                   <Button size="sm" variant="ghost" className="text-red-600 hover:bg-red-50" onClick={() => setConfirm({ kind: 'remove', member: m })}>Remove</Button>
                 )}

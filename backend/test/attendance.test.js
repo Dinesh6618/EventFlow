@@ -71,7 +71,7 @@ describe('QR codes', () => {
 describe('scanning', () => {
   before(async () => {
     // Attendance only opens on the day of the event.
-    await query('UPDATE events SET date = CURRENT_DATE WHERE id = $1', [event.id]);
+    await query("UPDATE events SET date = CURRENT_DATE, start_time = '00:00', end_time = '23:59' WHERE id = $1", [event.id]);
   });
 
   it('refuses scans before the event day', async () => {
@@ -143,7 +143,7 @@ describe('scanning', () => {
     await t.api('POST', `/api/events/${fresh.id}/registrations`, { token: carol.token });
     const after = (await mine(carol.token)).find((r) => r.eventId === fresh.id);
     assert.notEqual(after.qrToken, before.qrToken);
-    await query('UPDATE events SET date = CURRENT_DATE WHERE id = $1', [fresh.id]);
+    await query("UPDATE events SET date = CURRENT_DATE, start_time = '00:00', end_time = '23:59' WHERE id = $1", [fresh.id]);
     assert.equal((await scan(org.token, tokenOf(before), 'check_in', fresh.id)).status, 404);
     assert.equal((await scan(org.token, tokenOf(after), 'check_in', fresh.id)).status, 200);
   });

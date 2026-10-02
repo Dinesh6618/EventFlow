@@ -1,7 +1,7 @@
 import { query, transaction } from '../db.js';
 import { cleanSkills, skillKey } from '../services/skillMatch.js';
 
-const PUBLIC_COLUMNS = `id, name, email, role, department, college, created_at AS "createdAt",
+const PUBLIC_COLUMNS = `id, name, email, role, department, college, year, phone, created_at AS "createdAt",
   COALESCE((SELECT array_agg(s.skill ORDER BY s.skill) FROM user_skills s WHERE s.user_id = users.id), '{}') AS skills`;
 
 export async function findByEmail(email) {
@@ -14,18 +14,25 @@ export async function findById(id) {
   return rows[0];
 }
 
-export async function createUser({ name, email, passwordHash, role, department = null, college = null }) {
+export async function createUser({ name, email, passwordHash, role, department = null, college = null, year = null, phone = null }) {
   const rows = await query(
-    `INSERT INTO users (name, email, password, role, department, college)
-     VALUES ($1, $2, $3, $4, $5, $6) RETURNING ${PUBLIC_COLUMNS}`,
-    [name, email, passwordHash, role, department, college],
+    `INSERT INTO users (name, email, password, role, department, college, year, phone)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING ${PUBLIC_COLUMNS}`,
+    [name, email, passwordHash, role, department, college, year, phone],
   );
   return rows[0];
 }
 
-export async function updateProfile(id, { name, department, college, skills }) {
+export async function updateProfile(id, { name, department, college, skills, year, phone }) {
   await transaction(async (run) => {
-    await run(`UPDATE users SET name = $2, department = $3, college = $4 WHERE id = $1`, [id, name, department, college]);
+    // Year and phone are optional; leaving them out of the request keeps what is stored.
+    await run(
+      `UPDATE users SET name = $2, department = $3, college = $4,
+              year = CASE WHEN $5::boolean THEN $6::smallint ELSE year END,
+              phone = CASE WHEN $7::boolean THEN $8 ELSE phone END
+        WHERE id = $1`,
+      [id, name, department, college, year !== undefined, year ?? null, phone !== undefined, phone ?? null],
+    );
     // Skills are only replaced when the request includes them.
     if (skills) {
       await run(`DELETE FROM user_skills WHERE user_id = $1`, [id]);

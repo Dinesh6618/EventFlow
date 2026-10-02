@@ -15,6 +15,7 @@ College event planning and management platform: organizers create and run events
 | 7 | Certificates and feedback | Numbered PDF certificates, public verification page, anonymous feedback |
 | 8 | Analytics | Registrations, attendance rate, conversion, engagement and completion, per event or overall, CSV export |
 | 9 | AI Event Planner | Describe an idea, get a structured plan, edit, confirm, publish as a real event (needs an Anthropic API key) |
+| UI | Student experience and redesign | Landing page, role selection, student home with recommendations, explore with filters and saved events, tabbed event pages, 3-step registration wizard, digital event pass with downloadable QR, My Events, timeline schedule, My Team, notification centre, certificate gallery, feedback screen, 5-step event wizard, sortable participants table, bottom navigation on phones |
 | 10 | Recommendations and control center | Rule-based recommendations from the event's own numbers, optional AI ideas, a live control center with crowd-level reports |
 
 Definitions of every number (for example attendance rate or conversion) are in [docs/API.md](docs/API.md).
@@ -24,7 +25,7 @@ Definitions of every number (for example attendance rate or conversion) are in [
 ```text
 EventFlow/
 ├── backend/                     Node.js + Express REST API
-│   ├── db/migrations/           Versioned SQL migrations 001..009, applied automatically at start
+│   ├── db/migrations/           Versioned SQL migrations 001..010, applied automatically at start
 │   ├── src/
 │   │   ├── server.js, app.js, config.js, db.js, constants.js
 │   │   ├── routes/              URL -> controller mapping and access rules
@@ -97,6 +98,7 @@ Migrations live in [backend/db/migrations](backend/db/migrations) and are applie
 | 007 | certificates, feedback |
 | 008 | AI plans |
 | 009 | recommendations, crowd-level zones |
+| 010 | student year/phone, event format/department/prizes/rules/FAQs, saved events |
 
 **Two ways to run the database**
 
@@ -131,7 +133,7 @@ Stop the backend before running `npm run seed` when using the embedded database;
 
 ## Sample data
 
-`npm run seed` (in `backend/`) **deletes all users and events** and loads 11 accounts and 10 events (a multi-day hackathon with teams, judging criteria and a schedule, an event happening today, and a finished event with registrations, attendance and a session). Every account uses the password `Password123`.
+`npm run seed` (in `backend/`) **deletes all users and events** and loads 11 accounts and 9 events (a multi-day hackathon with teams, judging criteria and a schedule, an event happening today, and a finished event with registrations, attendance and a session). Every account uses the password `Password123`.
 
 | Role | Email |
 | ---- | ----- |
@@ -142,13 +144,18 @@ Stop the backend before running `npm run seed` when using the embedded database;
 
 The login page shows buttons that fill these in during development. Admin accounts cannot be created through the register form. Volunteers and judges are ordinary participant accounts that an organizer assigns to an event.
 
+## Design system
+
+Fonts: Plus Jakarta Sans. Colours are defined once in `frontend/src/index.css` (`@theme`): midnight navy surfaces, electric purple/indigo for actions, pink and blue as accents. The Tailwind `indigo` and `slate` scales are re-pointed at the brand palette, so every screen shares it. Reusable pieces live in `components/ui` (Button, Card, Badge, Tabs, SearchBar, ProfileAvatar, Timeline, Modal, StatCard, EmptyState, FavoriteButton, FormField), `components/layout` (Sidebar, StudentLayout, DashboardLayout, BottomNavigation, PublicNavbar) and `components/attendance/QRPass.jsx`. Motion is short and is switched off for people who prefer reduced motion.
+
 ## Roles and what each can do
 
 ```text
 Organizer   -> /organizer/dashboard: create events, then per event: overview, control center, insights,
                attendance, schedule, teams, judging, check-in, feedback, certificates, announcements,
                AI plan, team and volunteers. Also: participants, analytics, AI planner.
-Participant -> /events: browse, register, QR code, schedule, team, certificates, feedback.
+Student     -> /home: dashboard, /events explore, register (3 steps), /my/registrations (My Events + event pass),
+               /my/team, /notifications, /my/certificates, /events/:id/feedback, /profile.
                If assigned: /judging (score teams) and /volunteer (scan QR codes, report crowd levels).
 Admin       -> /admin/dashboard
 ```
