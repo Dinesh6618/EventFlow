@@ -8,6 +8,7 @@ const SELECT_EVENT = `
          e.description,
          e.type,
          to_char(e.date, 'YYYY-MM-DD') AS date,
+         to_char(COALESCE(e.end_date, e.date), 'YYYY-MM-DD') AS "endDate",
          to_char(e.start_time, 'HH24:MI') AS "startTime",
          to_char(e.end_time, 'HH24:MI') AS "endTime",
          e.venue,
@@ -16,18 +17,25 @@ const SELECT_EVENT = `
          e.image,
          e.organizer_name AS "organizerName",
          e.organizer_contact AS "organizerContact",
-         e.created_at AS "createdAt"
+         e.requires_approval AS "requiresApproval",
+         e.leaderboard_published AS "leaderboardPublished",
+         e.share_judge_comments AS "shareJudgeComments",
+         e.team_enabled AS "teamEnabled",
+         e.min_team_size AS "minTeamSize",
+         e.max_team_size AS "maxTeamSize",
+         e.allow_multiple_teams AS "allowMultipleTeams",
+         e.created_at AS "createdAt",
+         (SELECT COUNT(*)::int FROM registrations r
+           WHERE r.event_id = e.id AND r.status IN ('pending', 'approved', 'confirmed')) AS "registeredCount"
   FROM events e`;
 
 /** Adds computed fields and turns the stored file name into a public URL. */
 export function toEventDto(row, now = localNow()) {
-  // Phase 1 has no registrations yet; Phase 2 will replace this with a real count.
-  const registeredCount = 0;
   return {
     ...row,
     image: row.image ? `/uploads/${row.image}` : null,
-    registeredCount,
-    availableSeats: Math.max(row.maxParticipants - registeredCount, 0),
+    // Pending, approved and confirmed registrations all hold a seat.
+    availableSeats: Math.max(row.maxParticipants - row.registeredCount, 0),
     status: getEventStatus(row, now),
     registrationOpen: isRegistrationOpen(row, now),
   };
@@ -39,7 +47,7 @@ const escapeLike = (value) => value.replace(/[\\%_]/g, (c) => `\\${c}`);
 export async function listAvailable({ q, type, date }) {
   const now = localNow();
   const params = [now.date];
-  const where = ['e.date >= $1'];
+  const where = ['COALESCE(e.end_date, e.date) >= $1'];
 
   if (q) {
     params.push(`%${escapeLike(q)}%`);
@@ -51,7 +59,7 @@ export async function listAvailable({ q, type, date }) {
   }
   if (date) {
     params.push(date);
-    where.push(`e.date = $${params.length}`);
+    where.push(`$${params.length}::date BETWEEN e.date AND COALESCE(e.end_date, e.date)`);
   }
 
   const rows = await query(
@@ -83,8 +91,9 @@ export async function findById(id) {
 export async function createEvent(organizerId, data) {
   const rows = await query(
     `INSERT INTO events (organizer_id, name, description, type, date, start_time, end_time, venue,
-                         max_participants, registration_deadline, image, organizer_name, organizer_contact)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+                         max_participants, registration_deadline, image, organizer_name, organizer_contact,
+                         requires_approval, end_date, team_enabled, min_team_size, max_team_size, allow_multiple_teams)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
      RETURNING id`,
     [
       organizerId,
@@ -100,6 +109,12 @@ export async function createEvent(organizerId, data) {
       data.image ?? null,
       data.organizerName,
       data.organizerContact,
+      data.requiresApproval ?? false,
+      data.endDate && data.endDate !== data.date ? data.endDate : null,
+      data.teamEnabled ?? false,
+      data.minTeamSize ?? 1,
+      data.maxTeamSize ?? 4,
+      data.allowMultipleTeams ?? false,
     ],
   );
   return findById(rows[0].id);

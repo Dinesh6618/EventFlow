@@ -28,7 +28,7 @@ export default function MyEventsPage() {
       ) : error ? (
         <LoadError error={error} onRetry={reload} />
       ) : data.events.length ? (
-        <EventsTable events={data.events} />
+        <EventsTable events={data.events} manage />
       ) : (
         <EmptyState
           icon="calendar"

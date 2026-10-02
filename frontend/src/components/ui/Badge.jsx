@@ -23,3 +23,16 @@ export function EventStatusBadge({ event }) {
   if (!event.registrationOpen) return <Badge tone="amber">Registration closed</Badge>;
   return <Badge tone="indigo">Registration open</Badge>;
 }
+
+const REGISTRATION = {
+  pending: ['amber', 'Pending approval'],
+  approved: ['green', 'Approved'],
+  confirmed: ['green', 'Confirmed'],
+  rejected: ['red', 'Rejected'],
+  cancelled: ['slate', 'Cancelled'],
+};
+
+export function RegistrationStatusBadge({ status }) {
+  const [tone, label] = REGISTRATION[status] || ['slate', status];
+  return <Badge tone={tone}>{label}</Badge>;
+}

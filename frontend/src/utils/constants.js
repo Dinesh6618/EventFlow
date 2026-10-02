@@ -24,3 +24,12 @@ export const TYPE_GRADIENTS = {
   'Cultural Event': 'from-fuchsia-500 to-pink-600',
   'Technical Event': 'from-cyan-500 to-sky-600',
 };
+
+export const SESSION_TYPES = {
+  session: { label: 'Session', tone: 'indigo' },
+  workshop: { label: 'Workshop', tone: 'green' },
+  talk: { label: 'Talk', tone: 'indigo' },
+  break: { label: 'Break', tone: 'slate' },
+  competition: { label: 'Competition', tone: 'amber' },
+  evaluation_round: { label: 'Evaluation round', tone: 'amber' },
+};

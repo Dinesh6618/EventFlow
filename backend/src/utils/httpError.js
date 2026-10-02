@@ -11,3 +11,4 @@ export const unauthorized = (message = 'Authentication required') => new HttpErr
 export const forbidden = (message = 'You do not have permission to do that') => new HttpError(403, message);
 export const notFound = (message = 'Not found') => new HttpError(404, message);
 export const conflict = (message, errors) => new HttpError(409, message, errors);
+export const unprocessable = (message, errors) => new HttpError(422, message, errors);

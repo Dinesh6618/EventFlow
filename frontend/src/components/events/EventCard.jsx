@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { formatDate, formatDateTime, formatTimeRange } from '../../utils/format.js';
+import { formatDateTime, formatEventDates, formatTimeRange } from '../../utils/format.js';
 import Badge, { EventStatusBadge } from '../ui/Badge.jsx';
 import { buttonClasses } from '../ui/Button.jsx';
 import Icon from '../ui/Icon.jsx';
@@ -30,7 +30,7 @@ export default function EventCard({ event }) {
         <p className="mt-1.5 line-clamp-2 text-sm text-slate-600">{event.description}</p>
 
         <ul className="mt-4 space-y-2 text-sm text-slate-600">
-          <Meta icon="calendar">{formatDate(event.date)}</Meta>
+          <Meta icon="calendar">{formatEventDates(event)}</Meta>
           <Meta icon="clock">{formatTimeRange(event.startTime, event.endTime)}</Meta>
           <Meta icon="pin">{event.venue}</Meta>
           <Meta icon="users">

@@ -43,3 +43,19 @@ export function nowLocalISO() {
   const d = new Date();
   return `${todayISO()}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
+
+/** 'Sat, 3 Oct 2026' for one day, 'Sat, 3 Oct - Sun, 4 Oct 2026' for a multi-day event. */
+export function formatEventDates(event) {
+  const start = event.date;
+  const end = event.endDate || event.date;
+  if (start === end) return formatDate(start);
+  const short = (value) =>
+    parseDate(value).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+  return `${short(start)} - ${short(end)} ${end.slice(0, 4)}`;
+}
+
+/** Date plus time range; multi-day events show start and end times against their own days. */
+export function formatEventWhen(event) {
+  if ((event.endDate || event.date) === event.date) return `${formatDate(event.date)}, ${formatTimeRange(event.startTime, event.endTime)}`;
+  return `${formatEventDates(event)} (${formatTime(event.startTime)} to ${formatTime(event.endTime)})`;
+}

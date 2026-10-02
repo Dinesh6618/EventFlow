@@ -1,12 +1,12 @@
 import { Link } from 'react-router-dom';
-import { formatDate, formatTimeRange } from '../../utils/format.js';
+import { formatEventDates, formatTimeRange } from '../../utils/format.js';
 import Badge, { EventStatusBadge } from '../ui/Badge.jsx';
 import Card from '../ui/Card.jsx';
 
 const seats = (event) => `${event.registeredCount} / ${event.maxParticipants}`;
 
 /** Table on wide screens, stacked cards on phones. */
-export default function EventsTable({ events }) {
+export default function EventsTable({ events, manage = false }) {
   return (
     <>
       <Card className="hidden overflow-hidden md:block">
@@ -30,15 +30,20 @@ export default function EventsTable({ events }) {
                     <div className="mt-1"><Badge tone="indigo">{event.type}</Badge></div>
                   </td>
                   <td className="whitespace-nowrap px-5 py-4 text-slate-600">
-                    {formatDate(event.date)}
+                    {formatEventDates(event)}
                     <br />
                     <span className="text-xs text-slate-500">{formatTimeRange(event.startTime, event.endTime)}</span>
                   </td>
                   <td className="px-5 py-4 text-slate-600">{event.venue}</td>
                   <td className="whitespace-nowrap px-5 py-4 text-slate-600">{seats(event)}</td>
                   <td className="px-5 py-4"><EventStatusBadge event={event} /></td>
-                  <td className="px-5 py-4 text-right">
-                    <Link to={`/events/${event.id}`} className="font-medium text-indigo-600 hover:text-indigo-700">
+                  <td className="space-x-4 whitespace-nowrap px-5 py-4 text-right">
+                    {manage && (
+                      <Link to={`/organizer/events/${event.id}`} className="font-medium text-indigo-600 hover:text-indigo-700">
+                        Manage
+                      </Link>
+                    )}
+                    <Link to={`/events/${event.id}`} className="font-medium text-slate-600 hover:text-slate-900">
                       View
                     </Link>
                   </td>
@@ -60,7 +65,7 @@ export default function EventsTable({ events }) {
               <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
                 <div>
                   <dt className="text-xs text-slate-500">Date</dt>
-                  <dd className="text-slate-700">{formatDate(event.date)}</dd>
+                  <dd className="text-slate-700">{formatEventDates(event)}</dd>
                 </div>
                 <div>
                   <dt className="text-xs text-slate-500">Time</dt>
@@ -77,9 +82,16 @@ export default function EventsTable({ events }) {
               </dl>
               <div className="mt-3 flex items-center justify-between">
                 <EventStatusBadge event={event} />
-                <Link to={`/events/${event.id}`} className="text-sm font-medium text-indigo-600">
-                  View
-                </Link>
+                <span className="space-x-4">
+                  {manage && (
+                    <Link to={`/organizer/events/${event.id}`} className="text-sm font-medium text-indigo-600">
+                      Manage
+                    </Link>
+                  )}
+                  <Link to={`/events/${event.id}`} className="text-sm font-medium text-slate-600">
+                    View
+                  </Link>
+                </span>
               </div>
             </Card>
           </li>

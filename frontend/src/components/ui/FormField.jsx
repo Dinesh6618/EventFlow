@@ -63,3 +63,16 @@ export function Select({ label, error, hint, required, options, placeholder, ...
     </Field>
   );
 }
+
+export function Checkbox({ label, hint, ...props }) {
+  const id = useId();
+  return (
+    <div className="flex items-start gap-3">
+      <input id={id} type="checkbox" className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" {...props} />
+      <label htmlFor={id} className="text-sm">
+        <span className="font-medium text-slate-700">{label}</span>
+        {hint && <span className="mt-0.5 block text-xs text-slate-500">{hint}</span>}
+      </label>
+    </div>
+  );
+}

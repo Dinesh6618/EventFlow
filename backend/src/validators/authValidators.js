@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { SELF_REGISTER_ROLES } from '../constants.js';
+import { ROLES, SELF_REGISTER_ROLES } from '../constants.js';
 
 const name = z
   .string({ required_error: 'Name is required' })
@@ -21,18 +21,44 @@ const password = z
   .regex(/[A-Za-z]/, 'Password must contain a letter')
   .regex(/\d/, 'Password must contain a number');
 
-export const registerSchema = z.object({
-  name,
-  email,
-  password,
-  role: z.enum(SELF_REGISTER_ROLES, {
-    errorMap: () => ({ message: 'Role must be organizer or participant' }),
-  }),
-});
+// Optional text that is stored as NULL when blank.
+const optionalText = (label, max) =>
+  z
+    .string()
+    .trim()
+    .max(max, `${label} must be at most ${max} characters`)
+    .optional()
+    .transform((v) => v || null);
+
+const department = optionalText('Department', 100);
+const college = optionalText('College', 150);
+
+export const registerSchema = z
+  .object({
+    name,
+    email,
+    password,
+    role: z.enum(SELF_REGISTER_ROLES, {
+      errorMap: () => ({ message: 'Role must be organizer or participant' }),
+    }),
+    department,
+    college,
+  })
+  .superRefine((data, ctx) => {
+    // Organizers filter participants by department/college, so participants must provide them.
+    if (data.role !== ROLES.PARTICIPANT) return;
+    if (!data.department) ctx.addIssue({ code: 'custom', path: ['department'], message: 'Department is required' });
+    if (!data.college) ctx.addIssue({ code: 'custom', path: ['college'], message: 'College is required' });
+  });
 
 export const loginSchema = z.object({
   email,
   password: z.string({ required_error: 'Password is required' }).min(1, 'Password is required'),
 });
 
-export const profileSchema = z.object({ name });
+const skills = z
+  .array(z.string().trim().min(1).max(40, 'Each skill must be at most 40 characters'), { invalid_type_error: 'Skills must be a list' })
+  .max(15, 'List at most 15 skills')
+  .optional();
+
+export const profileSchema = z.object({ name, department, college, skills });

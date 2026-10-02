@@ -70,6 +70,11 @@ export default function LoginPage() {
         </Link>
       </p>
 
+      <p className="mt-3 text-center text-sm text-slate-600">
+        Have a certificate to check?{' '}
+        <Link to="/verify" className="font-medium text-indigo-600 hover:text-indigo-700">Verify it</Link>
+      </p>
+
       {import.meta.env.DEV && (
         <div className="mt-8 rounded-lg border border-dashed border-slate-300 bg-white p-4 text-sm">
           <p className="font-medium text-slate-700">Sample accounts (development)</p>

@@ -64,9 +64,33 @@ export async function request(path, { method = 'GET', body, signal, auth = true 
   }
 
   const data = await response.json().catch(() => null);
+  // Reading the body can be cut short by an abort; surface that as an abort, not as empty data.
+  if (signal?.aborted) throw new DOMException('Request aborted', 'AbortError');
   if (!response.ok) {
     if (response.status === 401 && auth && token) onUnauthorized();
     throw new ApiError(data?.message || `Request failed (${response.status})`, response.status, data?.errors);
   }
   return data;
+}
+
+/** Fetch a file with the auth header and hand it to the browser as a download. */
+export async function download(path, fallbackName) {
+  const token = tokenStore.get();
+  let response;
+  try {
+    response = await fetch(`${BASE}${path}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+  } catch {
+    throw new ApiError('Cannot reach the server. Make sure the backend is running.', 0);
+  }
+  if (!response.ok) {
+    const data = await response.json().catch(() => null);
+    throw new ApiError(data?.message || `Download failed (${response.status})`, response.status);
+  }
+  const match = /filename="([^"]+)"/.exec(response.headers.get('content-disposition') || '');
+  const url = URL.createObjectURL(await response.blob());
+  const link = Object.assign(document.createElement('a'), { href: url, download: match?.[1] || fallbackName });
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 }

@@ -15,10 +15,14 @@ export function validateLogin({ email, password }) {
   return errors;
 }
 
-export function validateRegister({ name, email, password, confirmPassword, role }) {
+export function validateRegister({ name, email, password, confirmPassword, role, department, college }) {
   const errors = validateLogin({ email, password });
   if (name.trim().length < 2) errors.name = 'Name must be at least 2 characters';
   if (!role) errors.role = 'Choose how you will use EventFlow';
+  if (role === 'participant') {
+    if (!department.trim()) errors.department = 'Department is required';
+    if (!college.trim()) errors.college = 'College is required';
+  }
 
   if (password) {
     if (password.length < 8) errors.password = 'Password must be at least 8 characters';
@@ -61,7 +65,9 @@ export function validateEvent(v, image) {
   if (need('date', 'Date') && v.date < todayISO()) errors.date = 'Event date cannot be in the past';
   need('startTime', 'Start time');
   need('endTime', 'End time');
-  if (v.startTime && v.endTime && v.endTime <= v.startTime) errors.endTime = 'End time must be after the start time';
+  const multiDay = v.endDate && v.date && v.endDate > v.date;
+  if (v.endDate && v.date && v.endDate < v.date) errors.endDate = 'End date cannot be before the start date';
+  if (!multiDay && v.startTime && v.endTime && v.endTime <= v.startTime) errors.endTime = 'End time must be after the start time';
 
   const max = Number(v.maxParticipants);
   if (need('maxParticipants', 'Maximum participants')) {
@@ -77,7 +83,27 @@ export function validateEvent(v, image) {
     }
   }
 
+  if (v.teamEnabled) {
+    const min = Number(v.minTeamSize);
+    const max = Number(v.maxTeamSize);
+    if (!Number.isInteger(min) || min < 1) errors.minTeamSize = 'Enter a whole number, at least 1';
+    if (!Number.isInteger(max) || max < 1 || max > 50) errors.maxTeamSize = 'Enter a whole number from 1 to 50';
+    else if (max < min) errors.maxTeamSize = 'Cannot be smaller than the minimum';
+  }
+
   const imageError = validateImage(image);
   if (imageError) errors.image = imageError;
+  return errors;
+}
+
+export function validateSession(v, event) {
+  const errors = {};
+  if (!v.title.trim()) errors.title = 'Title is required';
+  if (!v.sessionType) errors.sessionType = 'Choose a session type';
+  if (!v.date) errors.date = 'Date is required';
+  else if (v.date < event.date || v.date > (event.endDate || event.date)) errors.date = 'Date must be on one of the event days';
+  if (!v.startTime) errors.startTime = 'Start time is required';
+  if (!v.endTime) errors.endTime = 'End time is required';
+  if (v.startTime && v.endTime && v.endTime <= v.startTime) errors.endTime = 'End time must be after the start time';
   return errors;
 }

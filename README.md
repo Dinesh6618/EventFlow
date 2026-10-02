@@ -1,43 +1,54 @@
 # EventFlow
 
-College Event Planning and Management Platform.
+College event planning and management platform: organizers create and run events, participants discover and join them, judges and volunteers do their part, and the platform keeps the records.
 
-**Phase 1** (this release): authentication with three roles, an organizer dashboard, event creation, a participant-facing event listing with search and filters, and event details. Participant registration, AI features, QR attendance, certificates and judging arrive in later phases.
+## What it does
+
+| Phase | Feature | Highlights |
+| ----- | ------- | ---------- |
+| 1 | Accounts and events | Organizer / participant / admin roles, create events with a banner, searchable event listing, event details |
+| 2 | Registration | Register / cancel, optional organizer approval, capacity enforced under row locks, participant management, CSV export |
+| 3 | QR attendance | Per-registration secret QR codes, camera or manual scanning, volunteers, check-in/out, attendance dashboard |
+| 4 | Schedule and notifications | Sessions (multi-day events too), announcements, in-app notifications, reminders, session-level attendance |
+| 5 | Teams | Create / join / invite, leader tools, skill-based suggestions, team rules per event |
+| 6 | Judging | Criteria, judge assignment, scoring, progress tracking, leaderboard with a publish step and privacy controls |
+| 7 | Certificates and feedback | Numbered PDF certificates, public verification page, anonymous feedback |
+| 8 | Analytics | Registrations, attendance rate, conversion, engagement and completion, per event or overall, CSV export |
+| 9 | AI Event Planner | Describe an idea, get a structured plan, edit, confirm, publish as a real event (needs an Anthropic API key) |
+| 10 | Recommendations and control center | Rule-based recommendations from the event's own numbers, optional AI ideas, a live control center with crowd-level reports |
+
+Definitions of every number (for example attendance rate or conversion) are in [docs/API.md](docs/API.md).
 
 ## Folder structure
 
 ```text
 EventFlow/
 ├── backend/                     Node.js + Express REST API
-│   ├── db/schema.sql            PostgreSQL schema (users, events)
+│   ├── db/migrations/           Versioned SQL migrations 001..009, applied automatically at start
 │   ├── src/
-│   │   ├── server.js            Entry point
-│   │   ├── app.js               Express app (CORS, JSON, static uploads, routes)
-│   │   ├── config.js            Environment configuration
-│   │   ├── db.js                PostgreSQL (pg) or embedded PostgreSQL (PGlite)
-│   │   ├── constants.js         Roles and event types
+│   │   ├── server.js, app.js, config.js, db.js, constants.js
 │   │   ├── routes/              URL -> controller mapping and access rules
 │   │   ├── controllers/         Request handling
-│   │   ├── models/              SQL queries (users, events)
+│   │   ├── models/              SQL queries
+│   │   ├── services/            Access checks, metrics, rules engine, control center, certificates PDF,
+│   │   │                        reminders, ai/ (the only code that talks to Claude)
 │   │   ├── validators/          Request validation (zod)
-│   │   ├── middleware/          auth, validate, upload, error handler
-│   │   ├── utils/               event status helpers, HTTP errors
+│   │   ├── middleware/          auth, validate, upload, rate limits, error handler
+│   │   ├── utils/               event status, HTTP errors, CSV, params
 │   │   └── scripts/             setupDb.js, seed.js
-│   ├── test/api.test.js         API integration tests
-│   ├── uploads/                 Uploaded event banners (git-ignored)
+│   ├── test/                    node:test suites, one temporary database per file
+│   ├── uploads/                 Uploaded banners (git-ignored)
 │   └── .env.example
 ├── frontend/                    React + Tailwind CSS (Vite)
 │   └── src/
 │       ├── api/                 fetch client + endpoint functions
 │       ├── context/             AuthContext, ToastContext
-│       ├── hooks/               useApi, useDebounced
-│       ├── components/
-│       │   ├── ui/              Button, FormField, Modal, Card, Badge, ...
-│       │   ├── layout/          DashboardLayout (sidebar), AppLayout, route guards
-│       │   └── events/          EventCard, EventForm, EventFilters, EventsTable
-│       ├── pages/               organizer/, participant/, admin/, auth pages
+│       ├── hooks/               useApi (polling, abort), useDebounced
+│       ├── components/          ui/, layout/, events/, participants/, attendance/, schedule/, teams/,
+│       │                        judging/, feedback/, notifications/, charts/, ai/, insights/
+│       ├── pages/               organizer/ (+ event/ tabs), participant/, judge/, volunteer/, admin/
 │       └── utils/               constants, formatting, validation
-└── docs/API.md                  API endpoint documentation
+└── docs/API.md                  API reference and the rules behind each feature
 ```
 
 ## Requirements
@@ -69,18 +80,23 @@ npm run dev
 
 Open http://localhost:5173. In development the Vite server proxies `/api` and `/uploads` to the backend, so no CORS or URL configuration is needed.
 
-Production build of the frontend: `npm run build` (output in `frontend/dist`).
+Production build of the frontend: `npm run build` (output in `frontend/dist`, serve it from any static host and set `VITE_API_URL` if the API is on another origin).
 
 ## Database
 
-The schema is in [backend/db/schema.sql](backend/db/schema.sql) and is applied automatically every time the server starts (it is safe to repeat). `npm run db:setup` applies it without starting the server.
+Migrations live in [backend/db/migrations](backend/db/migrations) and are applied in order, once each, every time the server starts (recorded in a `schema_migrations` table). `npm run db:setup` applies them without starting the server.
 
-| Table  | Columns |
-| ------ | ------- |
-| users  | id, name, email (unique), password (bcrypt hash), role (`organizer` / `participant` / `admin`), created_at |
-| events | id, organizer_id, name, description, type, date, start_time, end_time, venue, max_participants, registration_deadline, image, organizer_name, organizer_contact, created_at |
-
-Relationship: `events.organizer_id` references `users.id` (one organizer has many events; deleting a user deletes their events).
+| Migration | Adds |
+| --------- | ---- |
+| 001 | users, events |
+| 002 | registrations |
+| 003 | attendance, event staff (volunteers) |
+| 004 | schedule sessions, announcements, notifications, multi-day events |
+| 005 | teams, members, invitations, skills |
+| 006 | judging criteria, assignments, scores, leaderboard settings |
+| 007 | certificates, feedback |
+| 008 | AI plans |
+| 009 | recommendations, crowd-level zones |
 
 **Two ways to run the database**
 
@@ -91,7 +107,7 @@ Relationship: `events.organizer_id` references `users.id` (one organizer has man
   # backend/.env
   DATABASE_URL=postgres://postgres:postgres@localhost:5432/eventflow
   ```
-  Then run `npm run seed` or just `npm start`.
+  Then run `npm run seed` or just `npm start`. The automated tests and manual checks so far ran against the embedded engine; the server path uses the same SQL through `pg` but has not been exercised in this repository's tests.
 
 Stop the backend before running `npm run seed` when using the embedded database; it can only be opened by one process at a time.
 
@@ -105,40 +121,46 @@ Stop the backend before running `npm run seed` when using the embedded database;
 | NODE_ENV | development | Set to `production` to require `JWT_SECRET` |
 | CLIENT_ORIGIN | http://localhost:5173 | Allowed browser origin(s) for CORS, comma separated |
 | JWT_SECRET | dev-only value | Secret used to sign login tokens. Use a long random string outside development |
+| PUBLIC_APP_URL | http://localhost:5173 | Address of the web app; certificate QR codes link to `<PUBLIC_APP_URL>/verify/<id>` |
+| ANTHROPIC_API_KEY | empty | Enables the AI planner and AI recommendation ideas. Server-side only, never sent to the browser. Empty = AI features show "not set up" and nothing else changes |
+| AI_MODEL / AI_EFFORT | claude-opus-5-5 / medium | Model and effort used for AI features |
 | DATABASE_URL | empty | PostgreSQL connection string. Empty = embedded PGlite |
 | PGLITE_DIR | .data/pglite | Where the embedded database is stored |
 
-`frontend/.env` (optional, see [frontend/.env.example](frontend/.env.example)): `VITE_API_URL` is only needed when the API is on a different origin than the site.
+`frontend/.env` (optional, see [frontend/.env.example](frontend/.env.example)): `VITE_API_URL` is only needed when the API is on a different origin than the site. There are no secrets in the frontend.
 
 ## Sample data
 
-`npm run seed` (in `backend/`) **deletes all users and events** and loads 5 accounts and 9 events. Every account uses the password `Password123`.
+`npm run seed` (in `backend/`) **deletes all users and events** and loads 11 accounts and 10 events (a multi-day hackathon with teams, judging criteria and a schedule, an event happening today, and a finished event with registrations, attendance and a session). Every account uses the password `Password123`.
 
 | Role | Email |
 | ---- | ----- |
 | Admin | admin@eventflow.test |
-| Organizer | organizer@eventflow.test |
-| Organizer | organizer2@eventflow.test |
-| Participant | participant@eventflow.test |
-| Participant | participant2@eventflow.test |
+| Organizer | organizer@eventflow.test (Priya), organizer2@eventflow.test (Arjun) |
+| Participant | participant@eventflow.test (Sam), participant2@eventflow.test (Riya), karthik@, meera@, aditya@, fatima@eventflow.test |
+| Judge (a participant account assigned as a judge) | judge1@eventflow.test, judge2@eventflow.test |
 
-The login page shows buttons that fill these in during development. Admin accounts cannot be created through the register form.
+The login page shows buttons that fill these in during development. Admin accounts cannot be created through the register form. Volunteers and judges are ordinary participant accounts that an organizer assigns to an event.
 
-## Phase 1 flow
+## Roles and what each can do
 
 ```text
-Login -> role detection
-  Organizer   -> /organizer/dashboard -> Create Event -> My Events
-  Participant -> /events -> search / filter -> event details -> Register
-  Admin       -> /admin/dashboard
+Organizer   -> /organizer/dashboard: create events, then per event: overview, control center, insights,
+               attendance, schedule, teams, judging, check-in, feedback, certificates, announcements,
+               AI plan, team and volunteers. Also: participants, analytics, AI planner.
+Participant -> /events: browse, register, QR code, schedule, team, certificates, feedback.
+               If assigned: /judging (score teams) and /volunteer (scan QR codes, report crowd levels).
+Admin       -> /admin/dashboard
 ```
 
-How the dashboard numbers are defined:
+All authorisation is enforced on the server (role checks and per-event ownership or assignment checks); the frontend hides what a role cannot use but is not relied on.
 
-- **Upcoming events**: events that have not started yet.
-- **Active events**: events happening right now, or still accepting registrations.
-- **Registered participants**: always 0 in Phase 1, because registration is not built yet. The Register button shows a confirmation message only and saves nothing.
-- Participants see events that have not ended yet; past events are only visible to their organizer and the admin.
+## Phase 10: recommendations and control center
+
+- **Insights tab.** Recommendations come from fixed rules over the event's own aggregate numbers, each shown with the numbers behind it and a link to the page where you can act. Dismiss or mark done; items disappear on their own when the situation changes.
+- **Ask AI for more ideas.** Sends Claude only aggregate numbers (no names, emails or comments) and stores up to five extra suggestions, clearly labelled as AI-written. Nothing is applied automatically.
+- **Control center tab.** A live picture of the event, refreshed every 10 seconds: check-ins, attendance, sessions on now and next, check-in throughput, judging and feedback progress, important alerts, and recent activity.
+- **Crowd levels.** The platform cannot sense crowds, so levels (Normal / Busy / High queue) are reported by the organizer and volunteers (volunteers use their event page on a phone). Each report shows who and when, an unreported area makes no claim, and a report older than an hour is marked as possibly out of date.
 
 ## Tests
 
@@ -147,6 +169,8 @@ cd backend
 npm test
 ```
 
-Runs the API tests (auth, role access, validation, image upload, search and filters) against a temporary embedded database.
+Runs the backend suites against temporary embedded databases: auth and validation, registration concurrency, QR attendance, schedule and notifications, teams, judging, certificates and feedback, analytics, the AI planner (against a scripted stand-in for the model), and the Phase 10 rule engine, recommendations, zones and control center.
+
+**About AI testing.** Without an Anthropic API key the AI features were verified against a scripted stub, against the real Anthropic SDK pointed at a local mock server (to check the request and response format), and in the browser against that mock. They have not been run against the live Anthropic API in this repository.
 
 API reference: [docs/API.md](docs/API.md).

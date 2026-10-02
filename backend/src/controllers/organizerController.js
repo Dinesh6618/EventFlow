@@ -9,8 +9,3 @@ export async function stats(req, res) {
 
   res.json({ stats: events.summarize(mine), upcomingEvents: upcoming });
 }
-
-// Phase 1 has no registrations yet; the endpoint exists so the page is API-driven for Phase 2.
-export function participants(_req, res) {
-  res.json({ participants: [] });
-}

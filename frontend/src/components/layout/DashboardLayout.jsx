@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
+import NotificationBell from '../notifications/NotificationBell.jsx';
 import Icon from '../ui/Icon.jsx';
 import Logo from './Logo.jsx';
 
@@ -28,15 +29,18 @@ export default function DashboardLayout({ items }) {
     <div className="min-h-screen lg:flex">
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 lg:hidden">
         <Logo />
+        <div className="-mr-2 flex items-center gap-1">
+        <NotificationBell />
         <button
           type="button"
           onClick={() => setOpen(true)}
           aria-label="Open navigation"
           aria-expanded={open}
-          className="-mr-2 rounded-lg p-2 text-slate-600 hover:bg-slate-100"
+          className="rounded-lg p-2 text-slate-600 hover:bg-slate-100"
         >
           <Icon name="menu" className="h-6 w-6" />
         </button>
+        </div>
       </header>
 
       {open && <div className="fixed inset-0 z-40 bg-slate-900/50 lg:hidden" onClick={() => setOpen(false)} aria-hidden="true" />}
@@ -48,6 +52,7 @@ export default function DashboardLayout({ items }) {
       >
         <div className="mb-8 flex items-center justify-between px-1">
           <Logo light />
+          <span className="hidden lg:block"><NotificationBell dark align="left" /></span>
           <button
             type="button"
             onClick={() => setOpen(false)}
@@ -60,7 +65,7 @@ export default function DashboardLayout({ items }) {
 
         <nav aria-label="Main" className="flex flex-1 flex-col gap-1">
           {items.map((item) => (
-            <NavLink key={item.to} to={item.to} className={linkClass} end>
+            <NavLink key={item.to} to={item.to} className={linkClass} end={!item.prefix}>
               <Icon name={item.icon} />
               {item.label}
             </NavLink>
@@ -100,6 +105,8 @@ export const ORGANIZER_NAV = [
   { to: '/organizer/create-event', label: 'Create Event', icon: 'plus' },
   { to: '/organizer/events', label: 'My Events', icon: 'calendar' },
   { to: '/organizer/participants', label: 'Participants', icon: 'users' },
+  { to: '/organizer/analytics', label: 'Analytics', icon: 'chart' },
+  { to: '/organizer/ai-planner', label: 'AI Planner', icon: 'sparkles', prefix: true },
   { to: '/organizer/profile', label: 'Profile', icon: 'user' },
 ];
 

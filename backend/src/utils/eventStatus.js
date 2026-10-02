@@ -11,11 +11,16 @@ export function localNow(now = new Date()) {
 /** 'upcoming' | 'ongoing' | 'ended' */
 export function getEventStatus(event, now = localNow()) {
   if (now.dateTime < `${event.date}T${event.startTime}`) return 'upcoming';
-  if (now.dateTime < `${event.date}T${event.endTime}`) return 'ongoing';
+  if (now.dateTime < `${event.endDate || event.date}T${event.endTime}`) return 'ongoing';
   return 'ended';
 }
 
 /** Registration is open until the deadline passes or the event ends. */
 export function isRegistrationOpen(event, now = localNow()) {
   return getEventStatus(event, now) !== 'ended' && now.dateTime <= event.registrationDeadline;
+}
+
+/** True while `now` falls on one of the event's calendar days (multi-day events use `endDate`). */
+export function isEventDay(event, now = localNow()) {
+  return now.date >= event.date && now.date <= (event.endDate || event.date);
 }

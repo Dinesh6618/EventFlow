@@ -21,6 +21,7 @@ const time = (label) =>
     .string({ required_error: `${label} is required`, invalid_type_error: `${label} is required` })
     .regex(/^([01]\d|2[0-3]):[0-5]\d$/, `${label} must be a valid time (HH:MM)`);
 
+const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const CONTACT_RE = /^([^\s@]+@[^\s@]+\.[^\s@]+|\+?[\d\s\-()]{7,20})$/;
 
 const baseEventSchema = z.object({
@@ -33,6 +34,12 @@ const baseEventSchema = z.object({
     .string({ required_error: 'Date is required', invalid_type_error: 'Date is required' })
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be a valid date')
     .refine(isRealDate, 'Date must be a valid date'),
+  endDate: z
+    .string()
+    .trim()
+    .optional()
+    .transform((v) => v || undefined)
+    .refine((v) => v === undefined || (DATE_PATTERN.test(v) && isRealDate(v)), 'End date must be a valid date'),
   startTime: time('Start time'),
   endTime: time('End time'),
   venue: text('Venue', 2, 200),
@@ -50,6 +57,12 @@ const baseEventSchema = z.object({
     CONTACT_RE,
     'Enter a valid email address or phone number',
   ),
+  // Multipart forms send booleans as the strings "true"/"false".
+  requiresApproval: z.preprocess((v) => v === true || v === 'true', z.boolean()).default(false),
+  teamEnabled: z.preprocess((v) => v === true || v === 'true', z.boolean()).default(false),
+  allowMultipleTeams: z.preprocess((v) => v === true || v === 'true', z.boolean()).default(false),
+  minTeamSize: z.coerce.number({ invalid_type_error: 'Minimum team size must be a number' }).int().min(1, 'Minimum team size must be at least 1').max(50).default(1),
+  maxTeamSize: z.coerce.number({ invalid_type_error: 'Maximum team size must be a number' }).int().min(1, 'Maximum team size must be at least 1').max(50, 'Maximum team size must be at most 50').default(4),
 });
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -59,6 +72,7 @@ const DATETIME_RE = /^\d{4}-\d{2}-\d{2}T([01]\d|2[0-3]):[0-5]\d$/;
 /** Rules that compare fields. zod skips these when any field is invalid, so run them separately. */
 function crossFieldIssues(input) {
   const { date, startTime, endTime, registrationDeadline } = input;
+  const endDate = typeof input.endDate === 'string' && input.endDate.trim() ? input.endDate.trim() : null;
   const now = localNow();
   const issues = [];
   const add = (path, message) => issues.push({ path: [path], message });
@@ -72,13 +86,20 @@ function crossFieldIssues(input) {
     isRealDate(registrationDeadline.slice(0, 10));
 
   if (dateOk && date < now.date) add('date', 'Event date cannot be in the past');
-  if (startOk && endOk && endTime <= startTime) add('endTime', 'End time must be after the start time');
+  const endDateOk = endDate !== null && DATE_RE.test(endDate) && isRealDate(endDate);
+  if (dateOk && endDateOk && endDate < date) add('endDate', 'End date cannot be before the start date');
+  // Only a single-day event needs the end time to be later than the start time.
+  const singleDay = !endDateOk || !dateOk || endDate === date;
+  if (singleDay && startOk && endOk && endTime <= startTime) add('endTime', 'End time must be after the start time');
   if (deadlineOk) {
     if (registrationDeadline < now.dateTime) {
       add('registrationDeadline', 'Registration deadline cannot be in the past');
     } else if (dateOk && startOk && registrationDeadline > `${date}T${startTime}`) {
       add('registrationDeadline', 'Registration deadline must be on or before the event start');
     }
+  }
+  if ((input.teamEnabled === true || input.teamEnabled === 'true') && Number(input.maxTeamSize) < Number(input.minTeamSize)) {
+    add('maxTeamSize', 'Maximum team size cannot be smaller than the minimum');
   }
   return issues;
 }

@@ -5,6 +5,7 @@ import Badge from '../components/ui/Badge.jsx';
 import Button from '../components/ui/Button.jsx';
 import Card from '../components/ui/Card.jsx';
 import { Input } from '../components/ui/FormField.jsx';
+import TagInput from '../components/ui/TagInput.jsx';
 import PageHeader from '../components/ui/PageHeader.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
@@ -12,29 +13,45 @@ import { useToast } from '../context/ToastContext.jsx';
 export default function ProfilePage() {
   const { user, setUser } = useAuth();
   const toast = useToast();
-  const [name, setName] = useState(user.name);
-  const [error, setError] = useState('');
+  const [values, setValues] = useState({ name: user.name, department: user.department || '', college: user.college || '', skills: user.skills || [] });
+  const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState('');
   const [saving, setSaving] = useState(false);
 
+  const isParticipant = user.role === 'participant';
+  const set = (key) => (e) => {
+    setValues((v) => ({ ...v, [key]: e.target.value }));
+    setErrors((prev) => ({ ...prev, [key]: undefined }));
+  };
+  const changed =
+    values.name.trim() !== user.name ||
+    values.department.trim() !== (user.department || '') ||
+    values.college.trim() !== (user.college || '') ||
+    values.skills.join('\n') !== (user.skills || []).join('\n');
   const joined = new Date(user.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 
   const submit = async (e) => {
     e.preventDefault();
     setFormError('');
-    if (name.trim().length < 2) {
-      setError('Name must be at least 2 characters');
-      return;
-    }
-    setError('');
+    const found = {};
+    if (values.name.trim().length < 2) found.name = 'Name must be at least 2 characters';
+    if (isParticipant && !values.department.trim()) found.department = 'Department is required';
+    if (isParticipant && !values.college.trim()) found.college = 'College is required';
+    setErrors(found);
+    if (Object.keys(found).length) return;
+
     setSaving(true);
     try {
-      const { user: updated } = await authApi.updateProfile({ name: name.trim() });
+      const { user: updated } = await authApi.updateProfile({
+        name: values.name.trim(),
+        department: values.department.trim(),
+        college: values.college.trim(),
+        ...(isParticipant ? { skills: values.skills } : {}),
+      });
       setUser(updated);
-      setName(updated.name);
       toast.success('Profile updated.');
     } catch (err) {
-      if (err instanceof ApiError && err.errors?.name) setError(err.errors.name);
+      if (err instanceof ApiError && err.status === 422) setErrors(err.errors);
       else setFormError(err.message);
     } finally {
       setSaving(false);
@@ -61,16 +78,22 @@ export default function ProfilePage() {
         </dl>
         <form onSubmit={submit} noValidate className="space-y-5 p-6">
           {formError && <Alert type="error">{formError}</Alert>}
-          <Input
-            label="Full name"
-            value={name}
-            onChange={(e) => {
-              setName(e.target.value);
-              setError('');
-            }}
-            error={error}
-          />
-          <Button type="submit" loading={saving} disabled={name.trim() === user.name}>
+          <Input label="Full name" value={values.name} onChange={set('name')} error={errors.name} />
+          {isParticipant && (
+            <div className="grid gap-5 sm:grid-cols-2">
+              <Input label="Department" required value={values.department} onChange={set('department')} error={errors.department} maxLength={100} />
+              <Input label="College" required value={values.college} onChange={set('college')} error={errors.college} maxLength={150} />
+            </div>
+          )}
+          {isParticipant && (
+            <TagInput
+              label="Your skills"
+              hint="Team leaders can see these to find teammates, for example UI/UX, Python or Public speaking."
+              value={values.skills}
+              onChange={(skills) => setValues((v) => ({ ...v, skills }))}
+            />
+          )}
+          <Button type="submit" loading={saving} disabled={!changed}>
             {saving ? 'Saving...' : 'Save changes'}
           </Button>
         </form>

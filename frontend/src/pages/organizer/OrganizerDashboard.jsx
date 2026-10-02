@@ -47,7 +47,7 @@ export default function OrganizerDashboard() {
             {loading ? (
               <div className="h-40 animate-pulse rounded-xl bg-slate-200" aria-label="Loading events" />
             ) : data.upcomingEvents.length ? (
-              <EventsTable events={data.upcomingEvents} />
+              <EventsTable events={data.upcomingEvents} manage />
             ) : (
               <EmptyState
                 icon="calendar"

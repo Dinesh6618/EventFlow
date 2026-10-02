@@ -23,6 +23,15 @@
   }
 }
 
+/* Chart tokens. Series colours are the validated categorical slots 1-3 (light surface); text stays on text tokens. */
+.viz {
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --viz-grid: #ebeae6;
+  --viz-axis: #cfcdc6;
+}
+
 @theme {
   --animate-toast-in: toast-in 0.2s ease-out;
 }

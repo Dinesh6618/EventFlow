@@ -1,20 +1,22 @@
-import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { eventsApi } from '../../api';
 import EventBanner from '../../components/events/EventBanner.jsx';
-import Alert from '../../components/ui/Alert.jsx';
+import AnnouncementsFeed from '../../components/events/AnnouncementsFeed.jsx';
+import SchedulePanel from '../../components/schedule/SchedulePanel.jsx';
+import FeedbackPanel from '../../components/feedback/FeedbackPanel.jsx';
+import LeaderboardPanel from '../../components/judging/LeaderboardPanel.jsx';
+import TeamsPanel from '../../components/teams/TeamsPanel.jsx';
+import RegistrationPanel from '../../components/events/RegistrationPanel.jsx';
 import Badge, { EventStatusBadge } from '../../components/ui/Badge.jsx';
-import Button from '../../components/ui/Button.jsx';
 import Card from '../../components/ui/Card.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
 import Icon from '../../components/ui/Icon.jsx';
 import LoadError from '../../components/ui/LoadError.jsx';
-import Modal from '../../components/ui/Modal.jsx';
 import { PageLoader } from '../../components/ui/Spinner.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useApi } from '../../hooks/useApi.js';
 import { ROLES, homePathFor } from '../../utils/constants.js';
-import { formatDate, formatDateTime, formatTimeRange } from '../../utils/format.js';
+import { formatDate, formatDateTime, formatEventDates, formatTimeRange } from '../../utils/format.js';
 
 function Detail({ icon, label, children }) {
   return (
@@ -36,13 +38,10 @@ export default function EventDetailsPage() {
   const navigate = useNavigate();
   const { data, error, loading, reload } = useApi((signal) => eventsApi.get(id, signal), [id]);
 
-  const [confirming, setConfirming] = useState(false);
-  const [confirmed, setConfirmed] = useState(false);
-
   // Opened in a fresh tab there is nothing to go back to, so fall back to the user's home.
   const back = () => (window.history.state?.idx > 0 ? navigate(-1) : navigate(homePathFor(user.role)));
 
-  if (loading) return <PageLoader label="Loading event..." />;
+  if (!data && loading) return <PageLoader label="Loading event..." />;
   if (error?.status === 404) {
     return (
       <EmptyState
@@ -55,11 +54,8 @@ export default function EventDetailsPage() {
   }
   if (error) return <LoadError error={error} onRetry={reload} />;
 
-  const { event } = data;
+  const { event, registration } = data;
   const isParticipant = user.role === ROLES.PARTICIPANT;
-  const full = event.availableSeats === 0;
-  const canRegister = event.registrationOpen && !full;
-  const blockedReason = event.status === 'ended' ? 'This event has ended.' : full ? 'This event is full.' : 'Registration has closed.';
 
   return (
     <>
@@ -77,11 +73,36 @@ export default function EventDetailsPage() {
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <Badge tone="indigo">{event.type}</Badge>
             <EventStatusBadge event={event} />
+            {event.requiresApproval && <Badge tone="amber">Approval required</Badge>}
           </div>
           <h1 className="text-3xl font-semibold tracking-tight text-slate-900">{event.name}</h1>
 
           <h2 className="mb-2 mt-8 text-lg font-semibold text-slate-900">About this event</h2>
           <p className="whitespace-pre-line text-slate-600">{event.description}</p>
+
+          <h2 className="mb-3 mt-8 text-lg font-semibold text-slate-900">Schedule</h2>
+          <SchedulePanel eventId={event.id} />
+
+          {isParticipant && registration && ['pending', 'approved', 'confirmed'].includes(registration.status) && (
+            <AnnouncementsFeed eventId={event.id} />
+          )}
+
+          {event.teamEnabled && (
+            <section id="teams" aria-label="Teams">
+              <h2 className="mb-3 mt-8 text-lg font-semibold text-slate-900">Teams</h2>
+              {isParticipant && registration && ['pending', 'approved', 'confirmed'].includes(registration.status) ? (
+                <TeamsPanel event={event} />
+              ) : (
+                <p className="rounded-lg bg-slate-50 p-4 text-sm text-slate-600">
+                  {isParticipant ? 'Register for this event to create or join a team.' : 'Participants who register can create and join teams here.'}
+                </p>
+              )}
+            </section>
+          )}
+
+          {event.teamEnabled && event.leaderboardPublished && <LeaderboardPanel eventId={event.id} />}
+
+          {isParticipant && registration && ['pending', 'approved', 'confirmed'].includes(registration.status) && <FeedbackPanel event={event} />}
 
           <h2 className="mb-3 mt-8 text-lg font-semibold text-slate-900">Organizer</h2>
           <Card className="p-5">
@@ -95,26 +116,23 @@ export default function EventDetailsPage() {
         <aside>
           <Card className="space-y-5 p-5 lg:sticky lg:top-24">
             <dl className="space-y-4">
-              <Detail icon="calendar" label="Date">{formatDate(event.date)}</Detail>
-              <Detail icon="clock" label="Time">{formatTimeRange(event.startTime, event.endTime)}</Detail>
+              <Detail icon="calendar" label="Date">{formatEventDates(event)}</Detail>
+              <Detail icon="clock" label="Time">
+                {formatTimeRange(event.startTime, event.endTime)}
+                {event.endDate !== event.date && <span className="block text-xs font-normal text-slate-500">Starts day 1, ends on the last day</span>}
+              </Detail>
               <Detail icon="pin" label="Venue">{event.venue}</Detail>
               <Detail icon="users" label="Capacity">
-                {event.maxParticipants} participants ({event.availableSeats} seats available)
+                {event.maxParticipants} participants
+                <span className="block text-xs font-normal text-slate-500">
+                  {event.availableSeats} of {event.maxParticipants} seats available
+                </span>
               </Detail>
               <Detail icon="clock" label="Registration deadline">{formatDateTime(event.registrationDeadline)}</Detail>
             </dl>
 
-            {confirmed ? (
-              <Alert type="success">
-                Thanks for your interest in <strong>{event.name}</strong>! Your registration has been noted. Full registration is coming soon.
-              </Alert>
-            ) : isParticipant ? (
-              <>
-                <Button size="lg" className="w-full" disabled={!canRegister} onClick={() => setConfirming(true)}>
-                  Register
-                </Button>
-                {!canRegister && <p className="text-center text-sm text-slate-500">{blockedReason}</p>}
-              </>
+            {isParticipant ? (
+              <RegistrationPanel event={event} registration={registration} onChange={reload} />
             ) : (
               <p className="rounded-lg bg-slate-50 p-3 text-center text-sm text-slate-500">
                 Only participants can register. You are viewing this event as {user.role === ROLES.ADMIN ? 'an admin' : 'an organizer'}.
@@ -123,29 +141,6 @@ export default function EventDetailsPage() {
           </Card>
         </aside>
       </div>
-
-      <Modal
-        open={confirming}
-        onClose={() => setConfirming(false)}
-        title="Register for this event?"
-        footer={
-          <>
-            <Button variant="secondary" onClick={() => setConfirming(false)}>Cancel</Button>
-            <Button
-              onClick={() => {
-                setConfirming(false);
-                setConfirmed(true);
-              }}
-            >
-              Confirm registration
-            </Button>
-          </>
-        }
-      >
-        <p>
-          You are about to register for <strong className="text-slate-900">{event.name}</strong> on {formatDate(event.date)} at {event.venue}.
-        </p>
-      </Modal>
     </>
   );
 }

@@ -18,7 +18,7 @@ export default function RegisterPage() {
   const { register } = useAuth();
   const navigate = useNavigate();
 
-  const [values, setValues] = useState({ name: '', email: '', password: '', confirmPassword: '', role: ROLES.PARTICIPANT });
+  const [values, setValues] = useState({ name: '', email: '', password: '', confirmPassword: '', role: ROLES.PARTICIPANT, department: '', college: '' });
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -42,6 +42,8 @@ export default function RegisterPage() {
         email: values.email.trim(),
         password: values.password,
         role: values.role,
+        department: values.department.trim(),
+        college: values.college.trim(),
       });
       navigate(homePathFor(user.role), { replace: true });
     } catch (err) {
@@ -77,6 +79,12 @@ export default function RegisterPage() {
 
         <Input label="Full name" autoComplete="name" value={values.name} onChange={set('name')} error={errors.name} />
         <Input label="Email" type="email" autoComplete="email" value={values.email} onChange={set('email')} error={errors.email} placeholder="you@college.edu" />
+        {values.role === ROLES.PARTICIPANT && (
+          <div className="grid gap-5 sm:grid-cols-2">
+            <Input label="Department" required value={values.department} onChange={set('department')} error={errors.department} placeholder="e.g. Computer Science" maxLength={100} />
+            <Input label="College" required value={values.college} onChange={set('college')} error={errors.college} placeholder="e.g. Sunrise Institute" maxLength={150} />
+          </div>
+        )}
         <Input
           label="Password"
           type="password"

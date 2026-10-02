@@ -1,7 +1,10 @@
 import bcrypt from 'bcryptjs';
 import { closeDb, initSchema, query } from '../db.js';
 import { createEvent } from '../models/eventModel.js';
-import { createUser } from '../models/userModel.js';
+import { create as createSession } from '../models/scheduleModel.js';
+import * as judging from '../models/judgingModel.js';
+import * as teams from '../models/teamModel.js';
+import { createUser, updateProfile } from '../models/userModel.js';
 
 // Development sample data. WARNING: wipes all users and events first.
 export const SAMPLE_PASSWORD = 'Password123';
@@ -14,24 +17,34 @@ const dayOffset = (days) => {
 };
 
 await initSchema();
-await query('TRUNCATE events, users RESTART IDENTITY CASCADE');
+// CASCADE also empties every table that references users/events (registrations, and later phases).
+await query('TRUNCATE users RESTART IDENTITY CASCADE');
+await query('ALTER SEQUENCE participant_code_seq RESTART');
+await query('ALTER SEQUENCE certificate_seq RESTART');
 
 const passwordHash = await bcrypt.hash(SAMPLE_PASSWORD, 10);
-const make = (name, email, role) => createUser({ name, email, role, passwordHash });
+const make = (name, email, role, department, college) =>
+  createUser({ name, email, role, passwordHash, department, college });
 
 const admin = await make('Admin User', 'admin@eventflow.test', 'admin');
 const priya = await make('Priya Nair', 'organizer@eventflow.test', 'organizer');
 const arjun = await make('Arjun Mehta', 'organizer2@eventflow.test', 'organizer');
-await make('Sam Participant', 'participant@eventflow.test', 'participant');
-await make('Riya Sharma', 'participant2@eventflow.test', 'participant');
+const sam = await make('Sam Participant', 'participant@eventflow.test', 'participant', 'Computer Science', 'Sunrise Institute of Technology');
+const riya = await make('Riya Sharma', 'participant2@eventflow.test', 'participant', 'Information Technology', 'Sunrise Institute of Technology');
+const extra = [
+  await make('Karthik Raja', 'karthik@eventflow.test', 'participant', 'Electronics', 'Lakeview Engineering College'),
+  await make('Meera Iyer', 'meera@eventflow.test', 'participant', 'Computer Science', 'Lakeview Engineering College'),
+  await make('Aditya Verma', 'aditya@eventflow.test', 'participant', 'Mechanical', 'Northfield University'),
+  await make('Fatima Khan', 'fatima@eventflow.test', 'participant', 'Information Technology', 'Northfield University'),
+];
 
 const contact = (user, phone) => ({ organizerName: user.name, organizerContact: phone });
 const deadline = (days, time = '17:00') => `${dayOffset(days)}T${time}`;
 
 const events = [
   [priya, {
-    name: 'CodeStorm 24h Hackathon', type: 'Hackathon', date: dayOffset(14), startTime: '09:00', endTime: '21:00',
-    venue: 'Main Auditorium', maxParticipants: 150, registrationDeadline: deadline(10),
+    name: 'CodeStorm 24h Hackathon', type: 'Hackathon', date: dayOffset(14), endDate: dayOffset(15), startTime: '09:00', endTime: '09:00',
+    venue: 'Main Auditorium', maxParticipants: 150, registrationDeadline: deadline(10), requiresApproval: true, teamEnabled: true, minTeamSize: 2, maxTeamSize: 4,
     description: 'A day-long hackathon where teams of up to four build working prototypes around campus sustainability. Mentors from industry will review projects and the best builds win prizes and internship referrals.',
   }, contact(priya, 'priya.nair@college.edu')],
   [priya, {
@@ -71,23 +84,125 @@ const events = [
   }, contact(arjun, 'arjun.mehta@college.edu')],
 ];
 
+const created = [];
 for (const [organizer, data, organizerInfo] of events) {
-  await createEvent(organizer.id, { ...data, ...organizerInfo });
+  created.push(await createEvent(organizer.id, { ...data, ...organizerInfo }));
 }
 
+// Sample registrations (inserted directly so the demo data does not depend on today's deadlines).
+const [hackathon, mlWorkshop, , cloudSeminar, codingContest] = created;
+const addRegistration = (event, user, status) =>
+  query(
+    `INSERT INTO registrations (event_id, user_id, participant_code, status)
+     VALUES ($1, $2, 'EF-' || to_char(NOW(), 'YYYY') || '-' || lpad(nextval('participant_code_seq')::text, 6, '0'), $3)`,
+    [event.id, user.id, status],
+  );
+const sessions = (event, list) =>
+  Promise.all(list.map(([date, startTime, endTime, title, sessionType, venue = event.venue, speaker = '', description = '']) =>
+    createSession(event, { date, startTime, endTime, title, sessionType, venue, speaker, description })));
+
+await sessions(hackathon, [
+  [dayOffset(14), '09:00', '10:00', 'Opening ceremony and problem statements', 'talk', 'Main Auditorium', 'Dr. Meenakshi Rao', 'Welcome, rules, and the three problem tracks.'],
+  [dayOffset(14), '10:00', '13:00', 'Hacking begins', 'competition', 'Computer Labs 1-4'],
+  [dayOffset(14), '13:00', '14:00', 'Lunch', 'break', 'Cafeteria'],
+  [dayOffset(14), '16:00', '17:00', 'Mentor round 1', 'session', 'Lab corridor', 'Industry mentors'],
+  [dayOffset(14), '21:00', '22:00', 'Midnight snacks', 'break', 'Cafeteria'],
+  [dayOffset(15), '06:00', '07:00', 'Final push check-in', 'session', 'Computer Labs 1-4'],
+  [dayOffset(15), '07:30', '09:00', 'Judging round', 'evaluation_round', 'Main Auditorium', 'Panel of judges'],
+]);
+await sessions(mlWorkshop, [
+  [mlWorkshop.date, '14:00', '14:45', 'What is machine learning?', 'talk', 'Computer Lab 3', 'Priya Nair'],
+  [mlWorkshop.date, '14:45', '16:15', 'Hands-on: train your first model', 'workshop', 'Computer Lab 3', 'Priya Nair', 'Bring a laptop with Python installed.'],
+  [mlWorkshop.date, '16:15', '17:00', 'Questions and next steps', 'session', 'Computer Lab 3'],
+]);
+const openSource = created[created.length - 1];
+await sessions(openSource, [
+  [openSource.date, '09:00', '09:30', 'Kick-off and picking issues', 'session', 'Library Annex'],
+  [openSource.date, '10:00', '13:00', 'Contribution sprint', 'workshop', 'Online + Library Annex'],
+  [openSource.date, '13:00', '14:00', 'Lunch break', 'break', 'Cafeteria'],
+  [openSource.date, '14:00', '15:00', 'Maintainer Q&A', 'talk', 'Online', 'Guest maintainers'],
+  [openSource.date, '16:00', '17:00', 'Demo and wrap-up', 'session', 'Library Annex'],
+]);
+
+// Skills (used for teammate suggestions) and a couple of teams for the hackathon.
+const setSkills = (user, department, college, skills) => updateProfile(user.id, { name: user.name, department, college, skills });
+await setSkills(sam, sam.department, sam.college, ['React', 'JavaScript', 'Public speaking']);
+await setSkills(riya, riya.department, riya.college, ['UI/UX', 'Figma']);
+await setSkills(extra[0], extra[0].department, extra[0].college, ['Arduino', 'IoT', 'Python']);
+await setSkills(extra[1], extra[1].department, extra[1].college, ['Python', 'Machine learning']);
+await setSkills(extra[2], extra[2].department, extra[2].college, ['Product design', 'Presentation']);
+await setSkills(extra[3], extra[3].department, extra[3].college, ['Node.js', 'PostgreSQL', 'AWS']);
+
+await addRegistration(hackathon, sam, 'pending');
+await addRegistration(hackathon, riya, 'approved');
+await addRegistration(hackathon, extra[0], 'pending');
+await addRegistration(hackathon, extra[1], 'rejected');
+const byteBuilders = await teams.create(hackathon.id, sam.id, {
+  name: 'Byte Builders', projectTitle: 'Campus carbon tracker', skills: ['UI/UX Designer', 'Python'],
+  projectDescription: 'A web app that shows each department\'s energy use and suggests savings.',
+});
+const circuit = await teams.create(hackathon.id, extra[0].id, { name: 'Circuit Breakers', projectTitle: 'Smart lab monitor', skills: ['Node.js'], projectDescription: '' });
+void byteBuilders; void circuit;
+
+// Judging setup for the hackathon: criteria summing to 100, two judges, every team gets both.
+for (const [name, maxScore, description] of [
+  ['Innovation', 30, 'How original is the idea?'],
+  ['Technical depth', 30, 'Quality and difficulty of the build'],
+  ['Impact', 20, 'Value to the campus or community'],
+  ['Presentation', 20, 'Clarity of the demo and pitch'],
+]) {
+  await judging.createCriterion(hackathon.id, { name, maxScore, description });
+}
+const judgeStaff = (user) =>
+  query(`INSERT INTO event_staff (event_id, user_id, staff_role, added_by) VALUES ($1, $2, 'judge', $3)`, [hackathon.id, user.id, priya.id]);
+await judgeStaff(await make('Dr. Kiran Rao', 'judge1@eventflow.test', 'participant', 'Faculty', 'Sunrise Institute of Technology'));
+await judgeStaff(await make('Prof. Anita Das', 'judge2@eventflow.test', 'participant', 'Faculty', 'Lakeview Engineering College'));
+await judging.autoAssign(hackathon.id, 2);
+await addRegistration(mlWorkshop, sam, 'confirmed');
+await addRegistration(mlWorkshop, extra[1], 'confirmed');
+await addRegistration(mlWorkshop, extra[2], 'confirmed');
+await addRegistration(mlWorkshop, extra[3], 'cancelled');
+await addRegistration(cloudSeminar, riya, 'confirmed');
+await addRegistration(cloudSeminar, extra[0], 'confirmed');
+await addRegistration(codingContest, sam, 'confirmed');
+await addRegistration(codingContest, extra[3], 'confirmed');
+
 // A finished event so the organizer dashboard has a past entry (not shown to participants).
-await createEvent(priya.id, {
+const orientation = await createEvent(priya.id, {
   name: 'Freshers Orientation Talk', type: 'Seminar', date: dayOffset(-10), startTime: '10:00', endTime: '12:00',
   venue: 'Main Auditorium', maxParticipants: 200, registrationDeadline: `${dayOffset(-12)}T17:00`,
   description: 'Welcome session for new students covering campus resources, clubs and academic support.',
   ...contact(priya, 'priya.nair@college.edu'),
 });
 
-console.log(`Seeded 5 users and ${events.length + 1} events. (admin id ${admin.id})`);
+
+// The finished event has real history: registrations, check-ins and a speaker session, so
+// certificates and feedback can be tried straight away.
+for (const [user, checkedIn] of [[sam, true], [riya, true], [extra[0], true], [extra[1], false]]) {
+  const rows = await query(
+    `INSERT INTO registrations (event_id, user_id, participant_code, status)
+     VALUES ($1, $2, 'EF-' || to_char(NOW(), 'YYYY') || '-' || lpad(nextval('participant_code_seq')::text, 6, '0'), 'confirmed') RETURNING id`,
+    [orientation.id, user.id],
+  );
+  if (checkedIn) {
+    await query(
+      `INSERT INTO attendance (registration_id, event_id, user_id, status, check_in_time) VALUES ($1, $2, $3, 'checked_in', $4)`,
+      [rows[0].id, orientation.id, user.id, `${orientation.date}T10:05:00`],
+    );
+  }
+}
+await createSession(orientation, {
+  date: orientation.date, startTime: '10:00', endTime: '11:00', title: 'Welcome address', sessionType: 'talk',
+  venue: 'Main Auditorium', speaker: 'Prof. R. Iyer', description: 'Introduction to the college and its support services.',
+});
+
+console.log(`Seeded 9 users and ${events.length + 1} events with sample registrations. (admin id ${admin.id})`);
 console.log(`All sample accounts use the password "${SAMPLE_PASSWORD}":`);
 console.log('  admin@eventflow.test        (admin)');
 console.log('  organizer@eventflow.test    (organizer)');
 console.log('  organizer2@eventflow.test   (organizer)');
 console.log('  participant@eventflow.test  (participant)');
 console.log('  participant2@eventflow.test (participant)');
+console.log('  karthik@, meera@, aditya@, fatima@eventflow.test (participants)');
+console.log('  judge1@, judge2@eventflow.test (participants who judge the hackathon)');
 await closeDb();

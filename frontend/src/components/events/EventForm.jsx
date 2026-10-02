@@ -9,12 +9,13 @@ import { validateEvent, validateImage } from '../../utils/validation.js';
 import Alert from '../ui/Alert.jsx';
 import Button from '../ui/Button.jsx';
 import Card from '../ui/Card.jsx';
-import { Input, Select, Textarea } from '../ui/FormField.jsx';
+import { Checkbox, Input, Select, Textarea } from '../ui/FormField.jsx';
 import Icon from '../ui/Icon.jsx';
 
 const FIELDS = [
   'name', 'description', 'type', 'date', 'startTime', 'endTime', 'venue',
-  'maxParticipants', 'registrationDeadline', 'organizerName', 'organizerContact',
+  'maxParticipants', 'registrationDeadline', 'organizerName', 'organizerContact', 'endDate',
+  'minTeamSize', 'maxTeamSize',
 ];
 
 function Section({ title, description, children }) {
@@ -36,9 +37,10 @@ export default function EventForm() {
   const fileInput = useRef(null);
 
   const [values, setValues] = useState({
-    name: '', description: '', type: '', date: '', startTime: '', endTime: '', venue: '',
+    name: '', description: '', type: '', date: '', endDate: '', startTime: '', endTime: '', venue: '',
     maxParticipants: '', registrationDeadline: '',
-    organizerName: user.name, organizerContact: user.email,
+    organizerName: user.name, organizerContact: user.email, requiresApproval: false,
+    teamEnabled: false, allowMultipleTeams: false, minTeamSize: '1', maxTeamSize: '4',
   });
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -91,6 +93,9 @@ export default function EventForm() {
 
     const body = new FormData();
     FIELDS.forEach((key) => body.append(key, String(values[key]).trim()));
+    body.append('requiresApproval', String(values.requiresApproval));
+    body.append('teamEnabled', String(values.teamEnabled));
+    body.append('allowMultipleTeams', String(values.allowMultipleTeams));
     if (image) body.append('image', image);
 
     setSubmitting(true);
@@ -121,13 +126,28 @@ export default function EventForm() {
         </Section>
 
         <Section title="Schedule & venue" description="When and where it takes place, and how long registration stays open.">
-          <div className="sm:col-span-2">
-            <Input label="Date" required type="date" min={todayISO()} value={values.date} onChange={set('date')} error={errors.date} />
-          </div>
+          <Input label="Date" required type="date" min={todayISO()} value={values.date} onChange={set('date')} error={errors.date} />
+          <Input
+            label="End date"
+            type="date"
+            min={values.date || todayISO()}
+            value={values.endDate}
+            onChange={set('endDate')}
+            error={errors.endDate}
+            hint="Only for events that run past midnight or over several days."
+          />
           <Input label="Start time" required type="time" value={values.startTime} onChange={set('startTime')} error={errors.startTime} />
           <Input label="End time" required type="time" value={values.endTime} onChange={set('endTime')} error={errors.endTime} />
           <div className="sm:col-span-2">
             <Input label="Venue" required value={values.venue} onChange={set('venue')} error={errors.venue} maxLength={200} placeholder="e.g. Main Auditorium" />
+          </div>
+          <div className="sm:col-span-2">
+            <Checkbox
+              label="Require approval for registrations"
+              hint="New registrations stay pending (and hold a seat) until you approve or reject them."
+              checked={values.requiresApproval}
+              onChange={(e) => setValues((v) => ({ ...v, requiresApproval: e.target.checked }))}
+            />
           </div>
           <div className="sm:col-span-2">
             <Input
@@ -141,6 +161,31 @@ export default function EventForm() {
               hint="Must be on or before the event start."
             />
           </div>
+        </Section>
+
+        <Section title="Teams" description="For hackathons and competitions where participants work in teams.">
+          <div className="sm:col-span-2">
+            <Checkbox
+              label="Participants form teams"
+              hint="Registered participants can create teams, invite people and request to join."
+              checked={values.teamEnabled}
+              onChange={(e) => setValues((v) => ({ ...v, teamEnabled: e.target.checked }))}
+            />
+          </div>
+          {values.teamEnabled && (
+            <>
+              <Input label="Minimum team size" type="number" min="1" value={values.minTeamSize} onChange={set('minTeamSize')} error={errors.minTeamSize} />
+              <Input label="Maximum team size" type="number" min="1" max="50" value={values.maxTeamSize} onChange={set('maxTeamSize')} error={errors.maxTeamSize} />
+              <div className="sm:col-span-2">
+                <Checkbox
+                  label="Allow a participant to be in more than one team"
+                  hint="When off, each participant can belong to a single team."
+                  checked={values.allowMultipleTeams}
+                  onChange={(e) => setValues((v) => ({ ...v, allowMultipleTeams: e.target.checked }))}
+                />
+              </div>
+            </>
+          )}
         </Section>
 
         <Section title="Banner" description="Optional image shown on the event card and details page.">

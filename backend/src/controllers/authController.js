@@ -4,13 +4,20 @@ import * as users from '../models/userModel.js';
 import { conflict, unauthorized } from '../utils/httpError.js';
 
 export async function register(req, res) {
-  const { name, email, password, role } = req.body;
+  const { name, email, password, role, department, college } = req.body;
 
   if (await users.findByEmail(email)) {
     throw conflict('Email is already registered', { email: 'An account with this email already exists' });
   }
 
-  const user = await users.createUser({ name, email, role, passwordHash: await bcrypt.hash(password, 10) });
+  const user = await users.createUser({
+    name,
+    email,
+    role,
+    department,
+    college,
+    passwordHash: await bcrypt.hash(password, 10),
+  });
   res.status(201).json({ user, token: signToken(user) });
 }
 
@@ -32,6 +39,6 @@ export function me(req, res) {
 }
 
 export async function updateProfile(req, res) {
-  const user = await users.updateName(req.user.id, req.body.name);
+  const user = await users.updateProfile(req.user.id, req.body);
   res.json({ user });
 }
