@@ -66,6 +66,25 @@ export const registerSchema = z
     if (!data.college) ctx.addIssue({ code: 'custom', path: ['college'], message: 'College is required' });
   });
 
+export const verifyEmailSchema = z.object({
+  token: z.string({ required_error: 'The verification link is incomplete' }).trim().min(32, 'Verification link is invalid.').max(200, 'Verification link is invalid.'),
+});
+
+// Either the email address, or the token from a link that expired.
+export const resendVerificationSchema = z
+  .object({ email: email.optional(), token: z.string().trim().min(32).max(200).optional() })
+  .refine((v) => v.email || v.token, { message: 'Enter your email address', path: ['email'] });
+
+export const changeEmailSchema = z.object({
+  email,
+  password: z.string({ required_error: 'Password is required' }).min(1, 'Password is required'),
+  newEmail: email,
+});
+
+export const emailPreferencesSchema = z
+  .object({ reminders: z.boolean().optional(), announcements: z.boolean().optional(), team: z.boolean().optional(), certificates: z.boolean().optional(), platform: z.boolean().optional() })
+  .refine((v) => Object.keys(v).length > 0, 'Nothing to update');
+
 export const loginSchema = z.object({
   email,
   password: z.string({ required_error: 'Password is required' }).min(1, 'Password is required'),

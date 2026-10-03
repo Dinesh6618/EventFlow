@@ -3,6 +3,10 @@ import { closeDb, initSchema, query } from '../db.js';
 import { createEvent } from '../models/eventModel.js';
 import { create as createSession } from '../models/scheduleModel.js';
 import * as certificates from '../models/certificateModel.js';
+import * as help from '../models/helpModel.js';
+import * as volunteerOps from '../models/volunteerOpsModel.js';
+import * as volunteerTasks from '../models/volunteerTaskModel.js';
+import * as volunteerApplications from '../models/volunteerModel.js';
 import * as judging from '../models/judgingModel.js';
 import * as teams from '../models/teamModel.js';
 import { createUser, updateProfile } from '../models/userModel.js';
@@ -25,7 +29,7 @@ await query('ALTER SEQUENCE certificate_seq RESTART');
 
 const passwordHash = await bcrypt.hash(SAMPLE_PASSWORD, 10);
 const make = (name, email, role, department, college) =>
-  createUser({ name, email, role, passwordHash, department, college });
+  createUser({ name, email, role, passwordHash, department, college, emailVerified: true });
 
 const admin = await make('Admin User', 'admin@eventflow.test', 'admin');
 const priya = await make('Priya Nair', 'organizer@eventflow.test', 'organizer');
@@ -124,6 +128,44 @@ await sessions(openSource, [
   [openSource.date, '14:00', '15:00', 'Maintainer Q&A', 'talk', 'Online', 'Guest maintainers'],
   [openSource.date, '16:00', '17:00', 'Demo and wrap-up', 'session', 'Library Annex'],
 ]);
+
+// Help Center demo. The Open Source drive is on today, so help is open for it: Sam and Riya are
+// registered, Meera volunteers, and a few requests are already in different states.
+await addRegistration(openSource, sam, 'confirmed');
+await addRegistration(openSource, riya, 'confirmed');
+await addRegistration(openSource, extra[1], 'confirmed');
+await query(`INSERT INTO event_staff (event_id, user_id, staff_role, added_by) VALUES ($1, $2, 'volunteer', $3)`, [openSource.id, extra[1].id, arjun.id]);
+const helpCategories = await help.listCategories();
+const helpCategory = (code) => helpCategories.find((c) => c.code === code);
+const wifi = await help.create({ event: openSource, userId: riya.id, category: helpCategory('technical'), description: 'The Wi-Fi keeps dropping in the Library Annex, so we cannot push our changes.', location: 'Library Annex', contactPreference: 'app', details: {} });
+await help.assign(wifi, extra[1], arjun.id);
+await help.transition(wifi, 'in_progress', extra[1].id);
+await help.addUpdate(wifi, extra[1].id, 'Network team is on the way.');
+await help.create({ event: openSource, userId: sam.id, category: helpCategory('venue'), description: 'Not enough power sockets near the front row.', location: 'Library Annex', contactPreference: 'in_person', details: {} });
+await help.create({ event: openSource, userId: riya.id, category: helpCategory('lost_found'), description: 'Blue steel bottle with a sticker on the side.', location: 'Library Annex', contactPreference: 'app', details: { kind: 'lost', itemName: 'Blue water bottle' } });
+
+// Volunteer Management demo for the same event: three departments, two approved volunteers on duty
+// today (all day, so check-in is open whenever you try it), a task, an announcement and two applications.
+await query(`INSERT INTO event_staff (event_id, user_id, staff_role, added_by) VALUES ($1, $2, 'volunteer', $3)`, [openSource.id, extra[2].id, arjun.id]);
+await addRegistration(openSource, extra[2], 'confirmed');
+const volunteerDept = (name, requiredCount, location, instructions, priority = 'medium') =>
+  volunteerOps.createDepartment(openSource.id, { name, description: '', requiredCount, location, shiftStart: '08:00', shiftEnd: '18:00', instructions, priority });
+const registrationDept = await volunteerDept('Registration', 2, 'Main Entrance', 'Verify each participant\'s QR pass and guide them to the right hall. Report registration problems to the organizer.', 'high');
+const techDept = await volunteerDept('Technical Support', 3, 'Library Annex - Lab 3', 'Assist participants with technical issues during the event.', 'high');
+await volunteerDept('Help Desk', 2, 'Library Annex', 'Answer questions and escalate anything you cannot solve.');
+for (const [name, startTime, endTime] of [['Morning Shift', '08:00', '12:00'], ['Afternoon Shift', '12:00', '16:00'], ['Evening Shift', '16:00', '19:00']]) {
+  await volunteerOps.createShift(openSource.id, { departmentId: techDept.id, name, date: openSource.date, startTime, endTime, requiredCount: 1 });
+}
+const dutyToday = (user, department, task) =>
+  volunteerOps.createAssignment(openSource, { userId: user.id, departmentId: department.id, shiftId: null, date: openSource.date, startTime: '00:00', endTime: '23:59', location: department.location, task, allowOverflow: false }, arjun.id);
+const meeraDuty = await dutyToday(extra[1], techDept, 'Help participants with technical problems');
+await volunteerOps.accept(meeraDuty);
+await dutyToday(extra[2], registrationDept, 'Verify participant registration and guide students');
+await volunteerTasks.createTask(openSource, { userId: extra[1].id, departmentId: techDept.id, title: 'Fix the projector in the annex', description: '', location: 'Library Annex', date: openSource.date, startTime: '09:00', endTime: '17:00', priority: 'urgent', instructions: '1. Check the HDMI cable.\n2. Replace the lamp if the picture is dim.' }, arjun.id);
+const announcement = await volunteerTasks.createAnnouncement(openSource, { title: 'Welcome, volunteers', message: 'Please read your instructions and check in when you arrive. Thank you for helping!', scope: 'all' }, arjun.id);
+void announcement;
+await volunteerApplications.apply(openSource, sam.id, 'I helped at the freshers event.', { phone: '+91 98765 43210', year: 3, skills: ['React', 'Communication'], interests: 'Open source', availability: 'Full day', experience: 'Registration desk at the freshers event', preferredDepartment: 'Registration' });
+await volunteerApplications.apply(openSource, riya.id, '', { availability: 'Morning', preferredDepartment: 'Help Desk', skills: ['UI/UX'] });
 
 // Skills (used for teammate suggestions) and a couple of teams for the hackathon.
 const setSkills = (user, department, college, skills) => updateProfile(user.id, { name: user.name, department, college, skills });

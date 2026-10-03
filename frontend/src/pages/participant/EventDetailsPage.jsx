@@ -6,6 +6,7 @@ import EventBanner from '../../components/events/EventBanner.jsx';
 import { FaqsPanel, PrizesPanel, RulesPanel } from '../../components/events/EventInfoPanels.jsx';
 import RegistrationPanel from '../../components/events/RegistrationPanel.jsx';
 import FeedbackPanel from '../../components/feedback/FeedbackPanel.jsx';
+import GetHelpButton from '../../components/help/GetHelpButton.jsx';
 import LeaderboardPanel from '../../components/judging/LeaderboardPanel.jsx';
 import SchedulePanel from '../../components/schedule/SchedulePanel.jsx';
 import TeamsPanel from '../../components/teams/TeamsPanel.jsx';
@@ -21,6 +22,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { useApi } from '../../hooks/useApi.js';
 import { ROLES, homePathFor, modeLabel } from '../../utils/constants.js';
 import { formatEventDates, formatTimeRange } from '../../utils/format.js';
+import { isHelpWindow } from '../../utils/help.js';
 
 const HOLDS_SEAT = ['pending', 'approved', 'confirmed'];
 
@@ -172,7 +174,17 @@ export default function EventDetailsPage() {
                 </section>
               </div>
             )}
-            {active === 'schedule' && <SchedulePanel eventId={event.id} />}
+            {active === 'schedule' && (
+              <>
+                {hasSeat && isHelpWindow(event) && (
+                  <div className="mb-5 flex items-center justify-between gap-3 rounded-2xl bg-slate-900 p-4 text-white">
+                    <p className="text-sm font-semibold">Something wrong at the event?</p>
+                    <GetHelpButton inline eventId={event.id} className="bg-white !text-slate-900 hover:!bg-indigo-50" />
+                  </div>
+                )}
+                <SchedulePanel eventId={event.id} />
+              </>
+            )}
             {active === 'prizes' && <PrizesPanel prizes={event.prizes} />}
             {active === 'rules' && <RulesPanel rules={event.rules} />}
             {active === 'faqs' && <FaqsPanel faqs={event.faqs} />}

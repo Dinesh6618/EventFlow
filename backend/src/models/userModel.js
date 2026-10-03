@@ -1,7 +1,7 @@
 import { query, transaction } from '../db.js';
 import { cleanSkills, skillKey } from '../services/skillMatch.js';
 
-const PUBLIC_COLUMNS = `id, name, email, role, department, college, year, phone, created_at AS "createdAt",
+const PUBLIC_COLUMNS = `id, name, email, role, department, college, year, phone, email_verified AS "emailVerified", email_verified_at AS "emailVerifiedAt", created_at AS "createdAt",
   COALESCE((SELECT array_agg(s.skill ORDER BY s.skill) FROM user_skills s WHERE s.user_id = users.id), '{}') AS skills`;
 
 export async function findByEmail(email) {
@@ -14,11 +14,11 @@ export async function findById(id) {
   return rows[0];
 }
 
-export async function createUser({ name, email, passwordHash, role, department = null, college = null, year = null, phone = null }) {
+export async function createUser({ name, email, passwordHash, role, department = null, college = null, year = null, phone = null, emailVerified = false }) {
   const rows = await query(
-    `INSERT INTO users (name, email, password, role, department, college, year, phone)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING ${PUBLIC_COLUMNS}`,
-    [name, email, passwordHash, role, department, college, year, phone],
+    `INSERT INTO users (name, email, password, role, department, college, year, phone, email_verified, email_verified_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CASE WHEN $9 THEN NOW() END) RETURNING ${PUBLIC_COLUMNS}`,
+    [name, email, passwordHash, role, department, college, year, phone, emailVerified],
   );
   return rows[0];
 }
@@ -49,4 +49,15 @@ export async function countByRole() {
   const counts = { organizer: 0, participant: 0, admin: 0 };
   for (const row of rows) counts[row.role] = row.count;
   return counts;
+}
+
+/** The address changes and is unverified again, so a new link has to be confirmed. Returns false when it is taken. */
+export async function changeEmail(id, email) {
+  try {
+    await query(`UPDATE users SET email = $2, email_verified = FALSE, email_verified_at = NULL WHERE id = $1`, [id, email]);
+    return true;
+  } catch (err) {
+    if (err.code === '23505') return false;
+    throw err;
+  }
 }

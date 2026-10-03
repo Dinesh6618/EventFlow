@@ -23,8 +23,17 @@ const BOTTOM_NAV = [
   { to: '/home', label: 'Home', icon: 'home' },
   { to: '/events', label: 'Explore', icon: 'compass', end: false },
   { to: '/my/registrations', label: 'My Events', icon: 'ticket', end: false },
+  { to: '/help', label: 'Help', icon: 'shield', end: false },
   { to: '/my/certificates', label: 'Certificates', icon: 'award' },
   { to: '/profile', label: 'Profile', icon: 'user' },
+];
+
+const VOLUNTEER_BOTTOM_NAV = [
+  { to: '/volunteer', label: 'Home', icon: 'home' },
+  { to: '/volunteer/tasks', label: 'Tasks', icon: 'check' },
+  { to: '/volunteer/schedule', label: 'Schedule', icon: 'calendar' },
+  { to: '/notifications', label: 'Alerts', icon: 'bell' },
+  { to: '/volunteer/profile', label: 'Profile', icon: 'user' },
 ];
 
 function TopSearch() {
@@ -60,6 +69,7 @@ export default function StudentLayout() {
   const { data: assigned } = useApi((signal) => meApi.assignments(signal), []);
 
   const extra = [];
+  extra.push({ to: '/help', label: 'Get Help', icon: 'shield', prefix: true });
   extra.push({ to: '/volunteer', label: 'Volunteer', icon: 'qr', prefix: true });
   if (assigned?.assignments.some((a) => a.staffRole === 'judge')) extra.push({ to: '/judging', label: 'Judging', icon: 'trophy', prefix: true });
   const items = [...STUDENT_NAV.slice(0, 5), ...extra, STUDENT_NAV[5]];
@@ -106,7 +116,7 @@ export default function StudentLayout() {
         </main>
       </div>
 
-      <BottomNavigation items={BOTTOM_NAV} label="Student" />
+      <BottomNavigation items={location.pathname.startsWith('/volunteer') ? VOLUNTEER_BOTTOM_NAV : BOTTOM_NAV} label={location.pathname.startsWith('/volunteer') ? 'Volunteer' : 'Student'} />
     </div>
   );
 }

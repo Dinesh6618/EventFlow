@@ -117,6 +117,35 @@ export default function ControlCenterPage() {
         <StatCard label="Sessions today" value={sessions.today} icon="calendar" tone="amber" />
       </div>
 
+      <Section title="Volunteers" hint="Live from Volunteer Management.">
+        <div className="grid grid-cols-3 gap-3 text-center sm:grid-cols-6">
+          {[['Volunteers', c.volunteers.total], ['Checked in', c.volunteers.checkedIn], ['Active', c.volunteers.active], ['Unassigned', c.volunteers.unassigned], ['Urgent tasks', c.volunteers.urgentTasks], ['Pending tasks', c.volunteers.pendingTasks]].map(([label, value]) => (
+            <div key={label} className="rounded-xl bg-slate-50 p-3"><p className="text-2xl font-extrabold text-slate-900">{value}</p><p className="text-xs text-slate-500">{label}</p></div>
+          ))}
+        </div>
+        {c.volunteers.alerts.length > 0 && (
+          <ul className="mt-4 space-y-2" aria-label="Volunteer alerts">
+            {c.volunteers.alerts.map((a) => <li key={a.key} className={`rounded-xl px-4 py-2.5 text-sm ${a.severity === 'important' ? 'border border-red-200 bg-red-50 text-red-800' : 'border border-amber-200 bg-amber-50 text-amber-900'}`}>{a.message}</li>)}
+          </ul>
+        )}
+        <Link to={`/organizer/events/${event.id}/volunteers`} className="mt-3 inline-block text-sm font-medium text-indigo-600 hover:text-indigo-700">Open Volunteer Management</Link>
+      </Section>
+
+      <Section title="Help requests" hint="Live from the Help Center. Open the tab to respond.">
+        <div className="grid grid-cols-3 gap-3 text-center">
+          <div className="rounded-xl bg-emerald-50 p-3"><p className="text-2xl font-extrabold text-emerald-700" data-testid="help-open">{c.help.open}</p><p className="text-xs text-emerald-800">Open</p></div>
+          <div className="rounded-xl bg-amber-50 p-3"><p className="text-2xl font-extrabold text-amber-700">{c.help.inProgress}</p><p className="text-xs text-amber-800">In progress</p></div>
+          <div className="rounded-xl bg-red-50 p-3"><p className="text-2xl font-extrabold text-red-700">{c.help.urgent}</p><p className="text-xs text-red-800">Urgent</p></div>
+        </div>
+        {c.help.recentAlert && (
+          <Alert type="error" className="mt-4" action={<Link to={`/organizer/help/${c.help.recentAlert.id}?event=${event.id}`} className="shrink-0 font-medium underline">View request</Link>}>
+            <p className="font-medium">Urgent: {c.help.recentAlert.categoryName} requested</p>
+            <p className="mt-0.5 text-red-700">Location: {c.help.recentAlert.location}</p>
+          </Alert>
+        )}
+        <Link to={`/organizer/events/${event.id}/help`} className="mt-3 inline-block text-sm font-medium text-indigo-600 hover:text-indigo-700">Open the Help Center</Link>
+      </Section>
+
       <div className="grid gap-5 lg:grid-cols-2">
         <Section title="Sessions" hint="From your schedule and the scans volunteers have recorded.">
           {sessions.total === 0 ? (

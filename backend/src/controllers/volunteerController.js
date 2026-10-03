@@ -1,6 +1,8 @@
 import * as events from '../models/eventModel.js';
 import * as notifications from '../models/notificationModel.js';
 import * as volunteers from '../models/volunteerModel.js';
+import * as ops from '../models/volunteerOpsModel.js';
+import { query } from '../db.js';
 import { requireEventAccess } from '../services/access.js';
 import { conflict, notFound } from '../utils/httpError.js';
 import { idParam } from '../utils/params.js';
@@ -14,14 +16,17 @@ export async function apply(req, res) {
   const event = await events.findById(idParam(req.params.id, 'Event'));
   if (!event) throw notFound('Event not found');
   if (event.status === 'ended') throw conflict('This event has already ended');
-  await volunteers.apply(event, req.user.id, req.body.message);
+  if (await ops.isSuspended(req.user.id)) throw conflict('Your volunteer access has been suspended by an administrator');
+  const { message, ...details } = req.body;
+  await volunteers.apply(event, req.user.id, message, details);
+  await ops.ensureProfile(req.user.id);
   await notifications.safely(() =>
     notifications.notify(event.organizerId, {
       eventId: event.id,
       type: 'volunteer_application',
       title: 'New volunteer application',
       message: `${req.user.name} offered to volunteer at ${event.name}.`,
-      link: `/organizer/events/${event.id}/staff`,
+      link: `/organizer/events/${event.id}/volunteers/people`,
     }),
   );
   res.status(201).json({ ok: true });
@@ -48,6 +53,19 @@ export async function decide(req, res) {
     throw conflict('This application was already decided');
   }
   const approved = decided.status === 'approved';
+  if (approved) {
+    // Approved students get a volunteer profile, seeded from what they wrote on the application.
+    await ops.ensureProfile(decided.userId);
+    const form = (await query(`SELECT interests, availability, experience FROM volunteer_applications WHERE id = $1`, [id]))[0];
+    if (form) {
+      await query(
+        `UPDATE volunteer_profiles SET interests = CASE WHEN interests = '' THEN $2 ELSE interests END, availability = CASE WHEN availability = '' THEN $3 ELSE availability END,
+                experience = CASE WHEN experience = '' THEN $4 ELSE experience END, updated_at = NOW() WHERE user_id = $1`,
+        [decided.userId, form.interests, form.availability, form.experience],
+      );
+    }
+    await query(`INSERT INTO volunteer_audit (event_id, actor_id, user_id, action, message) VALUES ($1, $2, $3, 'application_approved', 'Application approved: now an event volunteer')`, [eventId, req.user.id, decided.userId]);
+  }
   await notifications.safely(() =>
     notifications.notify(decided.userId, {
       eventId,

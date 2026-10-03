@@ -3,6 +3,7 @@ dist/
 .env
 .env.local
 .data/
+backend/private/
 backend/uploads/*
 !backend/uploads/.gitkeep
 *.log

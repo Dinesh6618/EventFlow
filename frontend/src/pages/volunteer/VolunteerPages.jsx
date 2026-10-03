@@ -1,18 +1,21 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ApiError, meApi, volunteerApi } from '../../api';
+import { helpApi, meApi, volunteerApi, volunteerOpsApi } from '../../api';
 import ScanPanel from '../../components/attendance/ScanPanel.jsx';
 import { ZoneReporter } from '../../components/insights/ZonePanel.jsx';
+import { timeAgo } from '../../components/notifications/NotificationBell.jsx';
+import ApplyForm from '../../components/volunteer/ApplyForm.jsx';
+import DutyCard from '../../components/volunteer/DutyCard.jsx';
+import TaskCard from '../../components/volunteer/TaskCard.jsx';
 import Badge from '../../components/ui/Badge.jsx';
 import Button, { buttonClasses } from '../../components/ui/Button.jsx';
 import Card from '../../components/ui/Card.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
-import { Textarea } from '../../components/ui/FormField.jsx';
 import Icon from '../../components/ui/Icon.jsx';
 import LoadError from '../../components/ui/LoadError.jsx';
-import Modal from '../../components/ui/Modal.jsx';
 import PageHeader from '../../components/ui/PageHeader.jsx';
 import { PageLoader } from '../../components/ui/Spinner.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { useApi } from '../../hooks/useApi.js';
 import { formatDate, formatTimeRange } from '../../utils/format.js';
@@ -40,7 +43,7 @@ function Opportunity({ item, onApply, onWithdraw, busy }) {
       <p className="mt-1 flex items-center gap-2 text-sm text-slate-600"><Icon name="pin" className="h-4 w-4 text-slate-400" />{item.venue}</p>
       <div className="mt-auto pt-4">
         {item.isVolunteer ? (
-          <Link to={`/volunteer/events/${item.eventId}`} className={buttonClasses('primary', 'md', 'w-full')}>Open check-in</Link>
+          <Link to={`/volunteer/events/${item.eventId}`} className={buttonClasses('primary', 'md', 'w-full')}>Open check-in tools</Link>
         ) : status === 'pending' ? (
           <Button variant="secondary" className="w-full" loading={busy} onClick={() => onWithdraw(item)}>Withdraw application</Button>
         ) : (
@@ -51,43 +54,19 @@ function Opportunity({ item, onApply, onWithdraw, busy }) {
   );
 }
 
-/** The volunteer area: events I help at, and events I can apply to. */
-export function VolunteerHome() {
+/** Events looking for volunteers, with the full application form. */
+function Opportunities({ onApplied }) {
   const toast = useToast();
-  const assignments = useApi((signal) => meApi.assignments(signal));
   const opportunities = useApi((signal) => volunteerApi.opportunities(signal));
-  const mine = assignments.data?.assignments.filter((a) => a.staffRole === 'volunteer') ?? [];
   const [applying, setApplying] = useState(null);
-  const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(null);
-
-  const refresh = () => {
-    assignments.reload();
-    opportunities.reload();
-  };
-
-  const submit = async (e) => {
-    e.preventDefault();
-    setBusy('apply');
-    try {
-      await volunteerApi.apply(applying.eventId, message.trim());
-      toast.success(`Application sent for ${applying.eventName}. The organizer will review it.`);
-      setApplying(null);
-      setMessage('');
-      refresh();
-    } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : 'Could not send your application.');
-    } finally {
-      setBusy(null);
-    }
-  };
 
   const withdraw = async (item) => {
     setBusy(item.eventId);
     try {
       await volunteerApi.withdraw(item.eventId);
       toast.success('Application withdrawn.');
-      refresh();
+      opportunities.reload();
     } catch (err) {
       toast.error(err.message);
     } finally {
@@ -98,18 +77,116 @@ export function VolunteerHome() {
   const open = opportunities.data?.opportunities.filter((o) => !o.isVolunteer) ?? [];
 
   return (
-    <>
-      <PageHeader eyebrow="Volunteer" title="Volunteer platform" description="Help run campus events: scan QR passes at the door and report crowd levels. Apply below and the organizer will approve you." />
+    <section aria-labelledby="open-events">
+      <h2 id="open-events" className="mb-3 text-xl font-bold text-slate-900">Events looking for volunteers</h2>
+      {!opportunities.data && opportunities.loading ? (
+        <PageLoader />
+      ) : opportunities.error ? (
+        <LoadError error={opportunities.error} onRetry={opportunities.reload} />
+      ) : open.length === 0 ? (
+        <EmptyState icon="calendar" title="No upcoming events right now" description="New events will show up here as organizers publish them." />
+      ) : (
+        <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {open.map((o) => <li key={o.eventId}><Opportunity item={o} busy={busy === o.eventId} onApply={setApplying} onWithdraw={withdraw} /></li>)}
+        </ul>
+      )}
+      {applying && <ApplyForm opportunity={applying} onClose={() => setApplying(null)} onSent={() => { setApplying(null); opportunities.reload(); onApplied?.(); }} />}
+    </section>
+  );
+}
 
-      <section aria-labelledby="my-volunteering" className="mb-10">
-        <h2 id="my-volunteering" className="mb-3 text-xl font-bold text-slate-900">Events I volunteer at</h2>
-        {!assignments.data && assignments.loading ? (
-          <PageLoader />
-        ) : assignments.error ? (
-          <LoadError error={assignments.error} onRetry={assignments.reload} />
-        ) : mine.length === 0 ? (
-          <EmptyState icon="users" title="No volunteer assignments yet" description="Apply to an event below, or wait for an organizer to add you. Approved events appear here." />
-        ) : (
+/** The volunteer's dashboard: today's duty with check-in, tasks, announcements, and events to apply to. */
+export function VolunteerHome() {
+  const { user } = useAuth();
+  const dash = useApi((signal) => volunteerOpsApi.dashboard(signal), [], { refreshMs: 20000 });
+  const assignments = useApi((signal) => meApi.assignments(signal));
+  const helpRequests = useApi((signal) => helpApi.assignedToMe(signal), [], { refreshMs: 30000 });
+  const helpOpen = helpRequests.data?.requests.length ?? 0;
+  const mine = assignments.data?.assignments.filter((a) => a.staffRole === 'volunteer') ?? [];
+
+  const refresh = () => {
+    dash.reload();
+    assignments.reload();
+  };
+  const d = dash.data;
+  const today = d?.current ?? d?.today?.[0] ?? null;
+  const upcoming = d?.next && d.next.id !== today?.id ? d.next : null;
+
+  return (
+    <>
+      <PageHeader eyebrow="Volunteer" title={`Hello, ${user.name.split(' ')[0]}`} description="Your Volunteer Dashboard" action={d && <Badge tone="indigo">{d.volunteer.volunteerCode}</Badge>} />
+
+      {dash.error ? (
+        <LoadError error={dash.error} onRetry={dash.reload} />
+      ) : !d ? (
+        <PageLoader />
+      ) : (
+        <div className="space-y-8">
+          {today ? (
+            <DutyCard duty={today} featured onChanged={refresh} />
+          ) : (
+            <Card className="p-6 text-center sm:p-8">
+              <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600"><Icon name="calendar" className="h-6 w-6" /></span>
+              <h2 className="mt-3 text-lg font-bold text-slate-900">No duty today</h2>
+              <p className="mt-1 text-sm text-slate-500">{upcoming ? 'Your next duty is below.' : 'When an organizer assigns you a shift, it shows up here with a check-in button.'}</p>
+            </Card>
+          )}
+
+          {upcoming && (
+            <section aria-labelledby="next-duty">
+              <h2 id="next-duty" className="mb-3 text-lg font-bold text-slate-900">Next duty</h2>
+              <DutyCard duty={upcoming} onChanged={refresh} />
+            </section>
+          )}
+
+          {d.tasks.today.length > 0 && (
+            <section aria-labelledby="today-tasks">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 id="today-tasks" className="text-lg font-bold text-slate-900">Today&apos;s tasks</h2>
+                <Link to="/volunteer/tasks" className="text-sm font-semibold text-indigo-600 hover:text-indigo-700">All tasks</Link>
+              </div>
+              <ul className="space-y-4">{d.tasks.today.map((t) => <li key={t.id}><TaskCard task={t} onChanged={refresh} /></li>)}</ul>
+            </section>
+          )}
+
+          {d.announcements.length > 0 && (
+            <section aria-labelledby="announcements">
+              <h2 id="announcements" className="mb-3 text-lg font-bold text-slate-900">From the organizer</h2>
+              <ul className="space-y-3">
+                {d.announcements.map((a) => (
+                  <li key={a.id}>
+                    <Card className="p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-bold text-slate-900">{a.title}</h3><span className="text-xs text-slate-400">{a.eventName} - {timeAgo(a.createdAt)}</span></div>
+                      <p className="mt-1 whitespace-pre-line text-sm text-slate-600">{a.message}</p>
+                    </Card>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          <div className="grid gap-4 sm:grid-cols-3">
+            <Card className="p-4 text-center"><p className="text-2xl font-extrabold text-slate-900">{d.summary.hours} h</p><p className="text-xs text-slate-500">volunteered</p></Card>
+            <Card className="p-4 text-center"><p className="text-2xl font-extrabold text-slate-900">{d.summary.completedDuties}</p><p className="text-xs text-slate-500">duties completed</p></Card>
+            <Card className="p-4 text-center"><p className="text-2xl font-extrabold text-slate-900">{d.summary.tasksCompleted}</p><p className="text-xs text-slate-500">tasks completed</p></Card>
+          </div>
+        </div>
+      )}
+
+      <Link to="/volunteer/help" className="mt-8 flex items-center justify-between gap-4 rounded-2xl bg-slate-900 p-5 text-white shadow-lg transition-transform hover:-translate-y-0.5">
+        <div className="flex items-center gap-4">
+          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10"><Icon name="shield" className="h-6 w-6" /></span>
+          <div>
+            <p className="font-extrabold">Help requests assigned to you</p>
+            <p className="text-sm text-slate-300">{helpOpen ? `${helpOpen} waiting for you` : 'Nothing assigned right now'}</p>
+          </div>
+        </div>
+        {helpOpen > 0 ? <Badge tone="amber">{helpOpen}</Badge> : <Icon name="arrow-right" className="h-5 w-5 text-slate-400" />}
+      </Link>
+
+      {mine.length > 0 && (
+        <section aria-labelledby="my-events" className="mt-10">
+          <h2 id="my-events" className="mb-3 text-xl font-bold text-slate-900">Events I volunteer at</h2>
           <ul className="grid gap-4 sm:grid-cols-2">
             {mine.map((a) => (
               <li key={a.eventId}>
@@ -118,45 +195,20 @@ export function VolunteerHome() {
                   <h3 className="mt-2 text-lg font-semibold text-slate-900">{a.eventName}</h3>
                   <p className="mt-1 flex items-center gap-2 text-sm text-slate-600"><Icon name="calendar" className="h-4 w-4 text-slate-400" />{formatDate(a.date)}, {formatTimeRange(a.startTime, a.endTime)}</p>
                   <p className="mt-1 flex items-center gap-2 text-sm text-slate-600"><Icon name="pin" className="h-4 w-4 text-slate-400" />{a.venue}</p>
-                  <Link to={`/volunteer/events/${a.eventId}`} className={buttonClasses('primary', 'md', 'mt-4 w-full')}>Open check-in</Link>
+                  <Link to={`/volunteer/events/${a.eventId}`} className={buttonClasses('secondary', 'md', 'mt-4 w-full')}>Open QR check-in tools</Link>
                 </Card>
               </li>
             ))}
           </ul>
-        )}
-      </section>
+        </section>
+      )}
 
-      <section aria-labelledby="open-events">
-        <h2 id="open-events" className="mb-3 text-xl font-bold text-slate-900">Events looking for volunteers</h2>
-        {!opportunities.data && opportunities.loading ? (
-          <PageLoader />
-        ) : opportunities.error ? (
-          <LoadError error={opportunities.error} onRetry={opportunities.reload} />
-        ) : open.length === 0 ? (
-          <EmptyState icon="calendar" title="No upcoming events right now" description="New events will show up here as organizers publish them." />
-        ) : (
-          <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {open.map((o) => (
-              <li key={o.eventId}><Opportunity item={o} busy={busy === o.eventId} onApply={(item) => { setMessage(''); setApplying(item); }} onWithdraw={withdraw} /></li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <Modal open={Boolean(applying)} onClose={() => setApplying(null)} title={`Volunteer at ${applying?.eventName ?? ''}`}>
-        <form onSubmit={submit} className="space-y-4">
-          <Textarea label="Why would you like to help? (optional)" rows={4} maxLength={500} value={message} onChange={(e) => setMessage(e.target.value)} hint="Mention any experience or the times you are free." />
-          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <Button variant="secondary" onClick={() => setApplying(null)} disabled={busy === 'apply'}>Cancel</Button>
-            <Button type="submit" loading={busy === 'apply'}>Send application</Button>
-          </div>
-        </form>
-      </Modal>
+      <div className="mt-10"><Opportunities onApplied={refresh} /></div>
     </>
   );
 }
 
-/** Volunteer's check-in screen for one event. Access is enforced by the API; this just shows its answer. */
+/** Volunteer's QR check-in and crowd reporting for one event. Access is enforced by the API. */
 export function VolunteerEvent() {
   const { eventId } = useParams();
   const { data, error } = useApi((signal) => meApi.assignments(signal));

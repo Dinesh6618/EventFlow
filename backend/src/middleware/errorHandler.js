@@ -19,7 +19,7 @@ export function errorHandler(err, req, res, _next) {
     return res.status(400).json({ message: 'Request body is not valid JSON' });
   }
   if (err.status) {
-    return res.status(err.status).json({ message: err.message, ...(err.errors && { errors: err.errors }) });
+    return res.status(err.status).json({ message: err.message, ...(err.errors && { errors: err.errors }), ...(err.errorCode && { code: err.errorCode }) });
   }
   if (err.code === '23505') {
     return res.status(409).json({ message: 'That record already exists' });

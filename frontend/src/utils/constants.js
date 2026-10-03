@@ -83,3 +83,6 @@ export const SESSION_TYPES = {
 };
 
 export const SESSION_TYPE_OPTIONS = Object.entries(SESSION_TYPES).map(([value, { label }]) => ({ value, label }));
+
+/** Seconds before another email can be requested for the same address. The server enforces it and says if it differs. */
+export const EMAIL_COOLDOWN_SECONDS = 60;

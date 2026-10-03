@@ -2,6 +2,7 @@ import * as events from '../models/eventModel.js';
 import * as notifications from '../models/notificationModel.js';
 import * as schedule from '../models/scheduleModel.js';
 import { requireEventAccess } from '../services/access.js';
+import { queueScheduleChange } from '../services/email/broadcasts.js';
 import { notFound } from '../utils/httpError.js';
 import { idParam } from '../utils/params.js';
 
@@ -16,6 +17,7 @@ export async function list(req, res) {
 /** Tell registered participants the schedule changed (never blocks or fails the request). */
 function announceChange(event, message) {
   if (event.status === 'ended') return Promise.resolve();
+  queueScheduleChange(event, message);
   return notifications.safely(() =>
     notifications.notifyEvent(event.id, {
       type: 'schedule_change',

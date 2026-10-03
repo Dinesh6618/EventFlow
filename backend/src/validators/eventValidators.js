@@ -77,6 +77,14 @@ const baseEventSchema = z.object({
   teamEnabled: z.preprocess((v) => v === true || v === 'true', z.boolean()).default(false),
   allowMultipleTeams: z.preprocess((v) => v === true || v === 'true', z.boolean()).default(false),
   mode: z.enum(['offline', 'online', 'hybrid'], { errorMap: () => ({ message: 'Choose offline, online or hybrid' }) }).default('offline'),
+  // Where online and hybrid events are held. Included in reminder emails.
+  meetingUrl: z
+    .string()
+    .trim()
+    .max(500, 'Meeting link must be at most 500 characters')
+    .optional()
+    .refine((v) => !v || /^https?:\/\/[^\s]+$/i.test(v), 'Enter a link starting with http:// or https://')
+    .transform((v) => v || null),
   department: z.string().trim().max(100, 'Department must be at most 100 characters').optional().transform((v) => v || null),
   prizes: jsonList(z.object({ title: z.string().trim().min(1, 'Prize title is required').max(100), description: z.string().trim().max(300).default('') }), 10, 'Prizes'),
   rules: jsonList(z.string().trim().min(1, 'A rule cannot be empty').max(300, 'Each rule must be at most 300 characters'), 20, 'Rules'),

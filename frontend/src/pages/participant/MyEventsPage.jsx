@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ApiError, registrationsApi } from '../../api';
 import { AttendanceBadge } from '../../components/attendance/AttendanceSummary.jsx';
 import EventBanner from '../../components/events/EventBanner.jsx';
+import GetHelpButton from '../../components/help/GetHelpButton.jsx';
 import Badge, { RegistrationStatusBadge } from '../../components/ui/Badge.jsx';
 import Button, { buttonClasses } from '../../components/ui/Button.jsx';
 import Card from '../../components/ui/Card.jsx';
@@ -16,6 +17,7 @@ import Tabs from '../../components/ui/Tabs.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { useApi } from '../../hooks/useApi.js';
 import { formatEventDates, formatTimeRange } from '../../utils/format.js';
+import { isHelpWindow } from '../../utils/help.js';
 
 const ACTIVE = ['pending', 'approved', 'confirmed'];
 
@@ -48,6 +50,7 @@ function EventRow({ registration: r, onCancel }) {
             </Link>
           )}
           <Link to={`/events/${r.eventId}`} className={buttonClasses('secondary', 'sm')}>View Event</Link>
+          {active && isHelpWindow({ status: r.eventStatus, date: r.eventDate, endDate: r.eventEndDate }) && <GetHelpButton inline eventId={r.eventId} />}
           {active && r.eventStatus === 'ended' && (
             <Link to={`/events/${r.eventId}/feedback`} className={buttonClasses('secondary', 'sm')}>
               <Icon name="message" className="h-4 w-4" />

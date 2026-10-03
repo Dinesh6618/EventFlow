@@ -1,7 +1,8 @@
 import jwt from 'jsonwebtoken';
 import { config } from '../config.js';
 import * as users from '../models/userModel.js';
-import { forbidden, unauthorized } from '../utils/httpError.js';
+import { UNVERIFIED_MESSAGE, verificationRequired } from '../services/email/index.js';
+import { HttpError, forbidden, unauthorized } from '../utils/httpError.js';
 
 export const signToken = (user) =>
   jwt.sign({ sub: user.id, role: user.role }, config.jwtSecret, { expiresIn: config.jwtExpiresIn });
@@ -21,6 +22,10 @@ export async function authenticate(req, _res, next) {
 
   const user = await users.findById(payload.sub);
   if (!user) throw unauthorized('Account no longer exists');
+  // Where verification is required, an unverified account gets no access at all until it is verified.
+  if (verificationRequired() && !user.emailVerified) {
+    throw new HttpError(403, UNVERIFIED_MESSAGE, undefined, 'EMAIL_NOT_VERIFIED');
+  }
   req.user = user;
   next();
 }

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { analyticsApi, organizerApi } from '../../api';
+import { analyticsApi, helpApi, organizerApi } from '../../api';
 import ChartCard from '../../components/charts/ChartCard.jsx';
 import TrendChart from '../../components/charts/TrendChart.jsx';
 import EventsTable from '../../components/events/EventsTable.jsx';
@@ -41,6 +41,7 @@ export default function OrganizerDashboard() {
   const stats = useApi((signal) => organizerApi.stats(signal));
   const analytics = useApi((signal) => analyticsApi.get({}, signal), []);
   const activity = useApi((signal) => organizerApi.activity(signal), [], { refreshMs: 30000 });
+  const help = useApi((signal) => helpApi.organizerSummary(signal), [], { refreshMs: 15000 });
 
   const summary = analytics.data?.summary;
   const trend = analytics.data?.charts.registrationTrend ?? [];
@@ -104,6 +105,36 @@ export default function OrganizerDashboard() {
               <div className="mt-2">{activity.error ? <LoadError error={activity.error} onRetry={activity.reload} /> : <Activity items={activity.data?.activity ?? []} />}</div>
             </Card>
           </div>
+
+          <section className="mt-8" aria-labelledby="help-heading">
+            <Card className="p-5">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 id="help-heading" className="text-base font-bold text-slate-900">Help Center</h2>
+                  <p className="text-sm text-slate-500">Requests from participants across your events.</p>
+                </div>
+                <Link to="/organizer/section/help" className={buttonClasses('secondary', 'sm')}>Open Help Center</Link>
+              </div>
+              <dl className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {[['Open requests', help.data?.summary.open], ['Urgent', help.data?.summary.urgent], ['In progress', help.data?.summary.inProgress], ['Resolved', help.data?.summary.resolved]].map(([label, value]) => (
+                  <div key={label} className="rounded-xl bg-slate-50 p-3.5">
+                    <dt className="text-xs font-medium text-slate-500">{label}</dt>
+                    <dd className="mt-0.5 text-2xl font-extrabold text-slate-900">{value ?? '-'}</dd>
+                  </div>
+                ))}
+              </dl>
+              {help.data?.urgent.length > 0 && (
+                <ul className="mt-4 space-y-2" aria-label="Urgent requests">
+                  {help.data.urgent.map((u) => (
+                    <li key={u.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-900">
+                      <span><span className="font-bold">Urgent:</span> {u.categoryName} at {u.location} <span className="text-red-700/70">({u.eventName})</span></span>
+                      <Link to={`/organizer/help/${u.id}?event=${u.eventId}`} className="font-semibold underline">View request</Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Card>
+          </section>
 
           <section className="mt-10" aria-labelledby="upcoming-heading">
             <div className="mb-4 flex items-center justify-between">

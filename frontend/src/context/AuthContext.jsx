@@ -23,7 +23,9 @@ export function AuthProvider({ children }) {
       .me(controller.signal)
       .then(({ user: me }) => setUser(me))
       .catch((err) => {
-        if (err.name !== 'AbortError') signOut();
+        // The client already ends the session on a 401 or an unverified account. Anything else (a busy
+        // server, a lost connection) says nothing about the session, so the stored login is kept.
+        if (err.name !== 'AbortError' && (err.status === 401 || err.code === 'EMAIL_NOT_VERIFIED')) signOut();
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false);
@@ -42,7 +44,12 @@ export function AuthProvider({ children }) {
       user,
       loading,
       login: async (credentials) => startSession(await authApi.login(credentials)),
-      register: async (details) => startSession(await authApi.register(details)),
+      // Where the email must be verified first there is no session yet: the result says so instead.
+      register: async (details) => {
+        const result = await authApi.register(details);
+        if (result.token) startSession(result);
+        return result;
+      },
       logout: signOut,
       setUser,
     }),

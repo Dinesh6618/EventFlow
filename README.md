@@ -16,6 +16,8 @@ College event planning and management platform: organizers create and run events
 | 8 | Analytics | Registrations, attendance rate, conversion, engagement and completion, per event or overall, CSV export |
 | UI | Student experience and redesign | Landing page, role selection, student home with recommendations, explore with filters and saved events, tabbed event pages, 3-step registration wizard, digital event pass with downloadable QR, My Events, timeline schedule, My Team, notification centre, certificate gallery, feedback screen, 5-step event wizard, sortable participants table, bottom navigation on phones |
 | Vol | Volunteer platform | Students browse events and apply to volunteer, organizers approve or decline, approved volunteers scan QR check-ins and report crowd levels |
+| Vol+ | Volunteer Management | Departments with required headcounts, shifts, assignments that cannot overlap, tasks, volunteer check-in and check-out, announcements, reassignment requests, analytics, Command Center alerts and an admin audit log |
+| Help | Emergency & Help Center | Participants report medical, security, technical, venue and lost & found problems during an event; organizers prioritise and assign, volunteers respond, admins set categories, official contacts, response teams and escalation timings. It never contacts emergency services |
 | 10 | Recommendations and control center | Rule-based recommendations from the event's own numbers, optional AI ideas, a live control center with crowd-level reports |
 
 Definitions of every number (for example attendance rate or conversion) are in [docs/API.md](docs/API.md).
@@ -25,7 +27,7 @@ Definitions of every number (for example attendance rate or conversion) are in [
 ```text
 EventFlow/
 ├── backend/                     Node.js + Express REST API
-│   ├── db/migrations/           Versioned SQL migrations 001..010, applied automatically at start
+│   ├── db/migrations/           Versioned SQL migrations 001..017, applied automatically at start
 │   ├── src/
 │   │   ├── server.js, app.js, config.js, db.js, constants.js
 │   │   ├── routes/              URL -> controller mapping and access rules
@@ -102,6 +104,11 @@ Migrations live in [backend/db/migrations](backend/db/migrations) and are applie
 | 011 | more schedule session types |
 | 012 | event college (printed on certificates) |
 | 013 | volunteer applications |
+| 014 | Help Center: categories, requests, updates, photos, contacts, response teams, settings |
+| 015 | Volunteer Management: profiles, departments, shifts, assignments, tasks, duty attendance, announcements, reassignment requests, audit log, department templates |
+| 016 | (password reset; removed again by 018) |
+| 017 | email system: verification tokens, email preferences, email log, event meeting link |
+| 018 | removes the password reset table and its session column |
 
 **Two ways to run the database**
 
@@ -127,10 +134,55 @@ Stop the backend before running `npm run seed` when using the embedded database;
 | CLIENT_ORIGIN | http://localhost:5173 | Allowed browser origin(s) for CORS, comma separated |
 | JWT_SECRET | dev-only value | Secret used to sign login tokens. Use a long random string outside development |
 | PUBLIC_APP_URL | http://localhost:5173 | Address of the web app; certificate QR codes link to `<PUBLIC_APP_URL>/verify/<id>` |
+| EMAIL_PROVIDER_API_KEY / EMAIL_FROM | empty | Real email through [Resend](https://resend.com): verification, registration, reminders and more. The key stays on the server. `EMAIL_FROM` must be on a domain verified with Resend. Empty = no email is sent (see [Email](#email)) |
+| APP_URL | PUBLIC_APP_URL | Where the web app runs. Links in emails start with it, so set it to the real frontend address |
+| EMAIL_VERIFICATION_REQUIRED | auto | Verification is required whenever email is configured, and always in production. `false` switches it off, `true` forces it. See [Email](#email) |
+| EMAIL_SEND_INTERVAL_MS | 600 | The pause between queued emails in milliseconds (Resend allows about two a second) |
+| RATE_LIMIT_WINDOW_MS / RATE_LIMIT_MAX | 900000 / 100 | General limit for visitors who are **not** signed in, per IP address |
+| USER_RATE_LIMIT_MAX | 1500 | General limit per signed-in account in that window. Far above normal use (the busiest page makes about 20 requests a minute) |
+| AUTH_RATE_LIMIT_WINDOW_MS / AUTH_RATE_LIMIT_MAX / AUTH_RATE_LIMIT_IP_MAX | 900000 / 10 / 50 | **Failed** logins per IP address and email, and per IP address across all emails. Correct logins never count |
+| SIGNUP_RATE_LIMIT_WINDOW_MS / SIGNUP_RATE_LIMIT_MAX | 3600000 / 5 | Sign-up attempts per IP address. Raise the number if many students sign up from one college network at once |
+| EMAIL_RATE_LIMIT_WINDOW_MS / EMAIL_RATE_LIMIT_MAX / EMAIL_RATE_LIMIT_IP_MAX | 3600000 / 3 / 20 | Verification resend and change of address: per email address, and per IP address |
+| EMAIL_RESEND_COOLDOWN_SECONDS | 60 | Pause between two emails to the same address |
+| LINK_RATE_LIMIT_MAX | 200 | Opening the emailed verification link, per IP address in 15 minutes |
+| RATE_LIMIT_DEV_MULTIPLIER | 10 | On localhost in development every limit is this many times higher. No effect in production; `1` tries the real numbers |
+| RATE_LIMIT_LOG | true | One log line per blocked client (never passwords, keys or tokens) |
+| TRUST_PROXY | false | Behind nginx or a hosting platform set the number of proxies (for example `1`), or every visitor looks like the proxy and shares one limit |
 | ANTHROPIC_API_KEY | empty | Enables the AI recommendation ideas. Server-side only, never sent to the browser. Empty = AI features show "not set up" and nothing else changes |
 | AI_MODEL / AI_EFFORT | claude-opus-5-5 / medium | Model and effort used for AI features |
 | DATABASE_URL | empty | PostgreSQL connection string. Empty = embedded PGlite |
 | PGLITE_DIR | .data/pglite | Where the embedded database is stored |
+
+### Rate limiting
+
+Rate limits stop password guessing, sign-up floods and email abuse. They are deliberately *not* one strict limit on everything:
+
+- **Login** counts only failed attempts, per IP address and email, so a correct login is never blocked and one person's typos do not lock out their classmates.
+- **Sending email** (resend verification, change of address) has a 60 second pause between emails to an address, 3 an hour per address and 20 an hour per IP address. It is the same for addresses with no account, so it reveals nothing. Nothing is counted while email is not configured, and an email that failed to send is given back.
+- **Everything else** is counted per signed-in account (1500 per 15 minutes), not per network, so a whole college on one Wi-Fi does not share an allowance. Visitors who are not signed in are counted per IP address.
+- A blocked request gets `429 { success: false, message, retryAfter }` and a `Retry-After` header. The web app shows "Please try again in 14 minutes", counts the time down on the button, and never retries by itself.
+
+The counters live in the API process's memory (a few bytes per client, swept every minute and capped at 50,000 per limiter), which is right for one server. If you ever run several copies of the API, move the counters to a shared store such as Redis (only `take()` in `backend/src/middleware/rateLimit.js` changes).
+
+### Email
+
+EventFlow sends real email through [Resend](https://resend.com), from the backend only. To switch it on:
+
+1. Create a Resend account, verify your sending domain, and create an API key.
+2. In `backend/.env` set `EMAIL_PROVIDER_API_KEY`, `EMAIL_FROM` (an address on that domain) and `APP_URL` (where the frontend runs, because every link in an email starts with it). `.env` is git-ignored.
+3. Restart the backend. Log in as an admin and open **Email** in the sidebar to see the status, send yourself a test, and read the delivery log.
+
+What it sends: account verification (a link valid for 24 hours, single use), registration received / approved / rejected, schedule changes, announcements, team invitations, certificate notices, and a reminder 24 hours before an event with the QR pass (and the meeting link for online events). People choose which optional emails they get under **Profile → Email preferences**; security emails always arrive.
+
+**One address per account.** The email entered at sign-up is the account email: it is used to log in, to verify the account and for every email about the account.
+
+- **Verify:** a new account must verify its email (a link valid for 24 hours, once) before it can log in. Until then login says "Please verify your email before logging in." with a "Resend Verification Email" button.
+- **Limits:** 60 seconds between emails to an address and 3 an hour; the pages show a countdown.
+- **No password reset.** EventFlow has no "forgot password" feature and never emails a password or a password link.
+
+**The sender is not an account.** `EMAIL_FROM` is the single "from" address every EventFlow email comes from (for example `EventFlow <no-reply@yourcollege.edu>`); people never log in to it. With Resend's free test sender (`onboarding@resend.dev`) mail is only delivered to the email address you opened your Resend account with, so to email everyone verify your own domain in Resend. Admins see failed deliveries on their dashboard and in **Admin → Email**.
+
+Without a key nothing is sent. On a development machine sign-up still works and does not ask for verification (nobody could receive the link), "Resend Verification Email" says the email could not be sent, and admins see a warning on their dashboard. In production, with no email, new accounts wait: they cannot log in until email is set up. Details and the API are in [docs/API.md](docs/API.md).
 
 `frontend/.env` (optional, see [frontend/.env.example](frontend/.env.example)): `VITE_API_URL` is only needed when the API is on a different origin than the site. There are no secrets in the frontend.
 

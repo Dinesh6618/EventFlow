@@ -4,6 +4,8 @@ import * as notifications from '../models/notificationModel.js';
 import { renderCertificate } from '../services/certificatePdf.js';
 import { requireEventAccess } from '../services/access.js';
 import { notFound } from '../utils/httpError.js';
+import * as users from '../models/userModel.js';
+import { appLink, queueEmail } from '../services/email/index.js';
 import { idParam } from '../utils/params.js';
 
 const organizerOf = (req) => requireEventAccess(req.user, idParam(req.params.id, 'Event'), ['organizer']);
@@ -39,6 +41,15 @@ export async function issue(req, res) {
         ),
       ),
   );
+  // Holders only hear about it once they can open it, by email too.
+  if (certificates.hasStarted(event)) {
+    for (const c of issued.filter((x) => x.userId)) {
+      users.findById(c.userId).then((person) => person && queueEmail({
+        to: person.email, template: 'certificateAvailable', userId: person.id, category: 'certificates',
+        data: { name: person.name, eventName: event.name, typeLabel: label.toLowerCase(), certificatesUrl: appLink('/my/certificates') },
+      })).catch((err) => console.error('Certificate email failed:', err.message));
+    }
+  }
   res.status(201).json({ issued: issued.length, certificates: issued });
 }
 

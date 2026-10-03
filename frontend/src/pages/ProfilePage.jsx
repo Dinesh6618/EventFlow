@@ -5,6 +5,7 @@ import Badge from '../components/ui/Badge.jsx';
 import Button from '../components/ui/Button.jsx';
 import Card from '../components/ui/Card.jsx';
 import { Input, Select } from '../components/ui/FormField.jsx';
+import EmailPreferences from '../components/auth/EmailPreferences.jsx';
 import PageHeader from '../components/ui/PageHeader.jsx';
 import ProfileAvatar from '../components/ui/ProfileAvatar.jsx';
 import TagInput from '../components/ui/TagInput.jsx';
@@ -116,6 +117,7 @@ export default function ProfilePage() {
           </Button>
         </form>
       </Card>
+      <EmailPreferences />
     </>
   );
 }

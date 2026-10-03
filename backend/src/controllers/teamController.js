@@ -3,6 +3,8 @@ import * as events from '../models/eventModel.js';
 import * as notifications from '../models/notificationModel.js';
 import * as registrations from '../models/registrationModel.js';
 import * as teams from '../models/teamModel.js';
+import * as users from '../models/userModel.js';
+import { appLink, queueEmail } from '../services/email/index.js';
 import { requireEventAccess } from '../services/access.js';
 import { forbidden, notFound } from '../utils/httpError.js';
 import { idParam } from '../utils/params.js';
@@ -100,8 +102,19 @@ export async function requestToJoin(req, res) {
   res.status(201).json({ invitation: { id: result.id, kind: 'request' } });
 }
 
+/** The same invitation, by email, for people who are not looking at the app. */
+async function inviteByEmail(userId, inviterName, result) {
+  const [person, event] = await Promise.all([users.findById(userId), events.findById(result.eventId)]);
+  if (!person || !event) return;
+  await queueEmail({
+    to: person.email, template: 'teamInvitation', userId: person.id, category: 'team',
+    data: { name: person.name, teamName: result.teamName, eventName: event.name, inviterName, url: appLink(`/events/${event.id}`) },
+  });
+}
+
 export async function invite(req, res) {
   const result = await teams.invite(idParam(req.params.teamId, 'Team'), req.user.id, req.body.userId);
+  inviteByEmail(req.body.userId, req.user.name, result).catch((err) => console.error('Team invitation email failed:', err.message));
   await tell(req.body.userId, result.eventId, {
     type: 'team_invitation',
     title: 'Team invitation',

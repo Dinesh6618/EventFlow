@@ -101,7 +101,8 @@ export const ORGANIZER_NAV = [
   { to: '/organizer/section/scan', label: 'QR Scan', icon: 'qr' },
   { to: '/organizer/section/attendance', label: 'Attendance', icon: 'check' },
   { to: '/organizer/section/schedule', label: 'Schedule', icon: 'clock' },
-  { to: '/organizer/section/volunteers', label: 'Volunteers', icon: 'heart' },
+  { to: '/organizer/section/volunteers', label: 'Volunteer Management', icon: 'heart' },
+  { to: '/organizer/section/help', label: 'Help Center', icon: 'shield' },
   { to: '/organizer/section/teams', label: 'Teams', icon: 'user-plus' },
   { to: '/organizer/section/judging', label: 'Judging', icon: 'trophy' },
   { to: '/organizer/section/certificates', label: 'Certificates', icon: 'award' },
@@ -119,5 +120,8 @@ export const ORGANIZER_BOTTOM = [
 
 export const ADMIN_NAV = [
   { to: '/admin/dashboard', label: 'Dashboard', icon: 'dashboard' },
+  { to: '/admin/help', label: 'Help Management', icon: 'shield', prefix: true },
+  { to: '/admin/volunteers', label: 'Volunteers', icon: 'heart', prefix: true },
+  { to: '/admin/email', label: 'Email', icon: 'mail' },
   { to: '/admin/profile', label: 'Settings', icon: 'settings' },
 ];

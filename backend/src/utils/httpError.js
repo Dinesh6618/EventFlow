@@ -1,8 +1,10 @@
 export class HttpError extends Error {
-  constructor(status, message, errors) {
+  constructor(status, message, errors, errorCode) {
     super(message);
     this.status = status;
     this.errors = errors;
+    // For the browser to branch on (for example EMAIL_NOT_VERIFIED). Not the same as a database error's `code`.
+    this.errorCode = errorCode;
   }
 }
 

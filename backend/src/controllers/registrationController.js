@@ -2,6 +2,8 @@ import * as events from '../models/eventModel.js';
 import * as notifications from '../models/notificationModel.js';
 import * as registrations from '../models/registrationModel.js';
 import { ROLES } from '../constants.js';
+import * as users from '../models/userModel.js';
+import { appLink, queueEmail } from '../services/email/index.js';
 import { toCsv } from '../utils/csv.js';
 import { forbidden, notFound } from '../utils/httpError.js';
 import { idParam } from '../utils/params.js';
@@ -35,6 +37,14 @@ export async function register(req, res) {
       });
     }
   });
+  // The confirmation email goes out in the background; it never holds up or fails the registration.
+  const pending = registration.status === 'pending';
+  queueEmail({
+    to: req.user.email,
+    template: 'registrationConfirmed',
+    data: { name: req.user.name, event, participantCode: registration.participantCode, pending, passUrl: pending ? appLink(`/events/${eventId}`) : appLink(`/my/registrations/${registration.id}/pass`) },
+    userId: req.user.id,
+  });
   res.status(201).json({ registration, event });
 }
 
@@ -66,6 +76,15 @@ export async function decide(req, res) {
       link: `/events/${result.eventId}`,
     }),
   );
+  const person = await users.findById(result.userId);
+  if (person) {
+    queueEmail({
+      to: person.email,
+      template: approved ? 'registrationApproved' : 'registrationRejected',
+      data: approved ? { name: person.name, event, passUrl: appLink(`/my/registrations/${result.id}/pass`) } : { name: person.name, event, eventsUrl: appLink('/events') },
+      userId: person.id,
+    });
+  }
   res.json({ registration: await registrations.findById(result.id) });
 }
 

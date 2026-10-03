@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ApiError } from '../api';
+import VerificationPending from '../components/auth/VerificationPending.jsx';
+import { useCooldown, useSingleFlight } from '../hooks/useCooldown.js';
+import { formatClock } from '../utils/format.js';
 import AuthShell from '../components/layout/AuthShell.jsx';
 import Alert from '../components/ui/Alert.jsx';
 import Button from '../components/ui/Button.jsx';
@@ -28,6 +31,9 @@ export default function RegisterPage() {
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [pending, setPending] = useState(null);
+  const guard = useSingleFlight(); // one click is one request
+  const cooldown = useCooldown();
 
   const accountRole = values.role === VOLUNTEER ? ROLES.PARTICIPANT : values.role;
 
@@ -36,30 +42,46 @@ export default function RegisterPage() {
     setErrors((prev) => ({ ...prev, [key]: undefined }));
   };
 
-  const submit = async (e) => {
+  const submit = (e) => {
     e.preventDefault();
-    setFormError('');
-    const found = validateRegister({ ...values, role: accountRole });
-    setErrors(found);
-    if (Object.keys(found).length) return;
+    return guard(async () => {
+      setFormError('');
+      const found = validateRegister({ ...values, role: accountRole });
+      setErrors(found);
+      if (Object.keys(found).length) return;
 
-    setSubmitting(true);
-    try {
-      const user = await register({
-        name: values.name.trim(),
-        email: values.email.trim(),
-        password: values.password,
-        role: accountRole,
-        department: values.department.trim(),
-        college: values.college.trim(),
-      });
-      navigate(values.role === VOLUNTEER ? '/volunteer' : homePathFor(user.role), { replace: true });
-    } catch (err) {
-      if (err instanceof ApiError && err.errors) setErrors(err.errors);
-      setFormError(err.message);
-      setSubmitting(false);
-    }
+      setSubmitting(true);
+      try {
+        const result = await register({
+          name: values.name.trim(),
+          email: values.email.trim(),
+          password: values.password,
+          role: accountRole,
+          department: values.department.trim(),
+          college: values.college.trim(),
+        });
+        if (result.verificationRequired && !result.token) {
+          // The link was emailed. Nothing about it is shown here.
+          setPending({ email: values.email.trim(), emailSent: result.emailSent });
+          return;
+        }
+        navigate(values.role === VOLUNTEER ? '/volunteer' : homePathFor(result.user.role), { replace: true });
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 429 && err.retryAfter) cooldown.start(err.retryAfter);
+        if (err instanceof ApiError && err.errors) setErrors(err.errors);
+        setFormError(err.message);
+        setSubmitting(false);
+      }
+    });
   };
+
+  if (pending) {
+    return (
+      <AuthShell title="Check your email" subtitle="Your account is created. One more step.">
+        <VerificationPending email={pending.email} emailSent={pending.emailSent} password={values.password} />
+      </AuthShell>
+    );
+  }
 
   return (
     <AuthShell title="Create your account" subtitle="Join EventFlow to organize or attend college events.">
@@ -104,8 +126,8 @@ export default function RegisterPage() {
         />
         <Input label="Confirm password" type="password" autoComplete="new-password" value={values.confirmPassword} onChange={set('confirmPassword')} error={errors.confirmPassword} />
 
-        <Button type="submit" size="lg" loading={submitting} className="w-full">
-          {submitting ? 'Creating account...' : 'Create account'}
+        <Button type="submit" size="lg" loading={submitting} disabled={cooldown.active} className="w-full">
+          {submitting ? 'Creating account...' : cooldown.active ? `Try again in ${formatClock(cooldown.seconds)}` : 'Create account'}
         </Button>
       </form>
 

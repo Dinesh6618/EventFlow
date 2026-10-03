@@ -5,6 +5,30 @@ import { ProtectedRoute, PublicOnlyRoute } from './components/layout/RouteGuards
 import { PageLoader } from './components/ui/Spinner.jsx';
 import { useAuth } from './context/AuthContext.jsx';
 import AdminDashboard from './pages/admin/AdminDashboard.jsx';
+import VerifyEmailPage from './pages/VerifyEmailPage.jsx';
+import AdminEmailPage from './pages/admin/AdminEmailPage.jsx';
+import AdminHelpPage from './pages/admin/AdminHelpPage.jsx';
+import HelpRequestPage from './pages/HelpRequestPage.jsx';
+import HelpCenterPage from './pages/participant/HelpCenterPage.jsx';
+import HelpEntryPage from './pages/participant/HelpEntryPage.jsx';
+import MyHelpRequestsPage from './pages/participant/MyHelpRequestsPage.jsx';
+import VolunteerHelpPage from './pages/volunteer/VolunteerHelpPage.jsx';
+import VolunteerTasksPage from './pages/volunteer/VolunteerTasksPage.jsx';
+import VolunteerSchedulePage from './pages/volunteer/VolunteerSchedulePage.jsx';
+import VolunteerProfilePage from './pages/volunteer/VolunteerProfilePage.jsx';
+import AdminVolunteersPage from './pages/admin/AdminVolunteersPage.jsx';
+import HelpCenterTab from './pages/organizer/event/HelpCenterTab.jsx';
+import VolunteerManagementLayout from './pages/organizer/event/volunteers/VolunteerManagementLayout.jsx';
+import VolunteerOverviewTab from './pages/organizer/event/volunteers/OverviewTab.jsx';
+import VolunteerPeopleTab from './pages/organizer/event/volunteers/PeopleTab.jsx';
+import VolunteerDetailPage from './pages/organizer/event/volunteers/VolunteerDetailPage.jsx';
+import VolunteerDepartmentsTab from './pages/organizer/event/volunteers/DepartmentsTab.jsx';
+import VolunteerShiftsTab from './pages/organizer/event/volunteers/ShiftsTab.jsx';
+import VolunteerAssignmentsTab from './pages/organizer/event/volunteers/AssignmentsTab.jsx';
+import VolunteerTasksTab from './pages/organizer/event/volunteers/TasksTab.jsx';
+import VolunteerAttendanceTab from './pages/organizer/event/volunteers/AttendanceTab.jsx';
+import VolunteerAnnouncementsTab from './pages/organizer/event/volunteers/AnnouncementsTab.jsx';
+import VolunteerAnalyticsTab from './pages/organizer/event/volunteers/AnalyticsTab.jsx';
 import LandingPage from './pages/LandingPage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import NotFoundPage from './pages/NotFoundPage.jsx';
@@ -58,6 +82,7 @@ export default function App() {
       <Route path="/" element={<Landing />} />
 
       {/* Certificate verification is public: anyone holding a certificate can check it */}
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
       <Route path="/verify" element={<VerifyPage />} />
       <Route path="/verify/:code" element={<VerifyPage />} />
 
@@ -91,6 +116,15 @@ export default function App() {
           <Route path="/judging/events/:eventId/teams/:teamId" element={<JudgingTeam />} />
           <Route path="/volunteer" element={<VolunteerHome />} />
           <Route path="/volunteer/events/:eventId" element={<VolunteerEvent />} />
+          <Route path="/volunteer/help" element={<VolunteerHelpPage />} />
+          <Route path="/volunteer/tasks" element={<VolunteerTasksPage />} />
+          <Route path="/volunteer/schedule" element={<VolunteerSchedulePage />} />
+          <Route path="/volunteer/profile" element={<VolunteerProfilePage />} />
+          <Route path="/volunteer/help/:id" element={<HelpRequestPage area="volunteer" />} />
+          <Route path="/help" element={<HelpEntryPage />} />
+          <Route path="/events/:eventId/help" element={<HelpCenterPage />} />
+          <Route path="/my/help" element={<MyHelpRequestsPage />} />
+          <Route path="/help/requests/:id" element={<HelpRequestPage area="participant" />} />
         </Route>
       </Route>
 
@@ -103,6 +137,7 @@ export default function App() {
           <Route path="events/:eventId" element={<EventManageLayout />}>
             <Route index element={<OverviewPage />} />
             <Route path="control-center" element={<ControlCenterPage />} />
+            <Route path="help" element={<HelpCenterTab />} />
             <Route path="insights" element={<InsightsPage />} />
             <Route path="attendance" element={<AttendancePage />} />
             <Route path="schedule" element={<SchedulePage />} />
@@ -113,7 +148,20 @@ export default function App() {
             <Route path="scan" element={<ScanPage />} />
             <Route path="announcements" element={<AnnouncementsPage />} />
             <Route path="staff" element={<StaffPage />} />
+            <Route path="volunteers" element={<VolunteerManagementLayout />}>
+              <Route index element={<VolunteerOverviewTab />} />
+              <Route path="people" element={<VolunteerPeopleTab />} />
+              <Route path="people/:userId" element={<VolunteerDetailPage />} />
+              <Route path="departments" element={<VolunteerDepartmentsTab />} />
+              <Route path="shifts" element={<VolunteerShiftsTab />} />
+              <Route path="assignments" element={<VolunteerAssignmentsTab />} />
+              <Route path="tasks" element={<VolunteerTasksTab />} />
+              <Route path="attendance" element={<VolunteerAttendanceTab />} />
+              <Route path="announcements" element={<VolunteerAnnouncementsTab />} />
+              <Route path="analytics" element={<VolunteerAnalyticsTab />} />
+            </Route>
           </Route>
+          <Route path="help/:id" element={<HelpRequestPage area="organizer" />} />
           <Route path="section/:section" element={<EventSectionPicker />} />
           <Route path="participants" element={<ParticipantsPage />} />
           <Route path="analytics" element={<AnalyticsPage />} />
@@ -125,6 +173,10 @@ export default function App() {
         <Route path="/admin" element={<DashboardLayout items={ADMIN_NAV} />}>
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="help" element={<AdminHelpPage />} />
+          <Route path="volunteers" element={<AdminVolunteersPage />} />
+          <Route path="email" element={<AdminEmailPage />} />
+          <Route path="help/:id" element={<HelpRequestPage area="admin" />} />
           <Route path="profile" element={<ProfilePage />} />
         </Route>
       </Route>

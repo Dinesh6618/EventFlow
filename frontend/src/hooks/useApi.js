@@ -9,6 +9,8 @@ export function useApi(fetcher, deps = [], { refreshMs } = {}) {
   const [state, setState] = useState({ data: null, error: null, loading: true });
   const [version, setVersion] = useState(0);
   const quiet = useRef(false);
+  // After a 429 the background refresh waits out the time the server asked for.
+  const pausedUntil = useRef(0);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -23,6 +25,7 @@ export function useApi(fetcher, deps = [], { refreshMs } = {}) {
       })
       .catch((error) => {
         if (controller.signal.aborted || error.name === 'AbortError') return;
+        if (error.status === 429 && error.retryAfter) pausedUntil.current = Date.now() + error.retryAfter * 1000;
         setState((prev) => (silent ? prev : { data: null, error, loading: false }));
       });
 
@@ -33,6 +36,7 @@ export function useApi(fetcher, deps = [], { refreshMs } = {}) {
   useEffect(() => {
     if (!refreshMs) return undefined;
     const timer = setInterval(() => {
+      if (Date.now() < pausedUntil.current) return;
       quiet.current = true;
       setVersion((v) => v + 1);
     }, refreshMs);

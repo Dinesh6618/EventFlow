@@ -1,5 +1,9 @@
 import { query } from '../db.js';
+import * as help from '../models/helpModel.js';
+import * as volunteerOps from '../models/volunteerOpsModel.js';
+import * as volunteerReports from '../models/volunteerReportModel.js';
 import * as zones from '../models/zoneModel.js';
+import { localNow } from '../utils/eventStatus.js';
 import { collectMetrics } from './eventMetrics.js';
 import { evaluateRules } from './recommendationRules.js';
 
@@ -18,7 +22,8 @@ function phaseOf(m) {
  */
 export async function controlCenter(event, now = new Date()) {
   const m = await collectMetrics(event, now);
-  const [zoneRows, recent] = await Promise.all([
+  const volunteerSettings = await volunteerOps.getSettings();
+  const [zoneRows, recent, helpSummary, helpAlert, volunteerSummary] = await Promise.all([
     zones.list(event.id),
     query(
       `SELECT u.name, a.status, GREATEST(a.check_in_time, COALESCE(a.check_out_time, a.check_in_time)) AS "at"
@@ -26,6 +31,9 @@ export async function controlCenter(event, now = new Date()) {
         WHERE a.event_id = $1 ORDER BY "at" DESC LIMIT 8`,
       [event.id],
     ),
+    help.summary({ eventId: event.id }),
+    help.latestUrgent(event.id),
+    volunteerReports.commandCenter(event, localNow(now), volunteerSettings),
   ]);
 
   return {
@@ -60,6 +68,10 @@ export async function controlCenter(event, now = new Date()) {
     judging: { enabled: m.judging.criteria > 0 || m.staff.judges > 0, evaluationsSubmitted: m.judging.submitted, evaluationsAssigned: m.judging.assigned, judges: m.staff.judges, leaderboardPublished: m.event.leaderboardPublished },
     feedback: { responses: m.feedback.responses, average: m.feedback.overall },
     communication: { announcementsLast24h: m.announcements.last24h, lastAnnouncementAt: m.announcements.latest },
+    // Help requests: counts only, plus the newest open urgent one. Details stay on the Help Center tab.
+    help: { ...helpSummary, recentAlert: helpAlert },
+    // Volunteer Management: counts and what needs attention (a short department, no-shows, overdue tasks).
+    volunteers: volunteerSummary,
     activity: recent.map((r) => ({ name: r.name, action: r.status === 'checked_out' ? 'checked out' : 'checked in', at: r.at })),
     // Only the ones that need action now; the full list lives on the Insights tab.
     alerts: evaluateRules(m)

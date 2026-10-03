@@ -12,7 +12,7 @@ const organizerOnly = requireRole(ROLES.ORGANIZER);
 const participantOnly = requireRole(ROLES.PARTICIPANT);
 
 // Public: anyone holding a certificate (or its QR code) can check it.
-router.get('/verify/:code', rateLimit({ windowMs: 60_000, max: 30 }), certificateCtrl.verify);
+router.get('/verify/:code', rateLimit({ name: 'certificate-verify', windowMs: 60_000, max: 30 }), certificateCtrl.verify);
 
 router.get('/certificates/mine', authenticate, participantOnly, certificateCtrl.mine);
 router.get('/certificates/:code/pdf', authenticate, certificateCtrl.pdf);

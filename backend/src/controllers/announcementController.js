@@ -4,6 +4,8 @@ import * as events from '../models/eventModel.js';
 import * as notifications from '../models/notificationModel.js';
 import * as registrations from '../models/registrationModel.js';
 import { requireEventAccess } from '../services/access.js';
+import { appLink } from '../services/email/index.js';
+import { emailRegistrants } from '../services/email/broadcasts.js';
 import { forbidden, notFound } from '../utils/httpError.js';
 import { idParam } from '../utils/params.js';
 
@@ -20,6 +22,12 @@ export async function create(req, res) {
     { type: 'announcement', title: req.body.title, message: req.body.message, link: `/events/${event.id}` },
     { includeStaff: true },
   );
+  emailRegistrants(
+    event.id,
+    'eventAnnouncement',
+    (p) => ({ name: p.name, eventName: event.name, title: req.body.title, message: req.body.message, eventUrl: appLink(`/events/${event.id}`) }),
+    { category: 'announcements' },
+  ).catch((err) => console.error('Announcement email failed:', err.message));
   res.status(201).json({ announcement: rows[0], notified });
 }
 

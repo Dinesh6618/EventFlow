@@ -13,6 +13,7 @@
     "dev": "node --watch src/server.js",
     "db:setup": "node src/scripts/setupDb.js",
     "seed": "node src/scripts/seed.js",
+    "seed:volunteers": "node src/scripts/seedVolunteers.js",
     "test": "node --test \"test/**/*.test.js\""
   },
   "dependencies": {

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { scheduleApi, studentApi } from '../../api';
 import EventBanner from '../../components/events/EventBanner.jsx';
 import EventCard, { EventCardSkeleton } from '../../components/events/EventCard.jsx';
+import GetHelpButton from '../../components/help/GetHelpButton.jsx';
 import { RegistrationStatusBadge } from '../../components/ui/Badge.jsx';
 import Badge from '../../components/ui/Badge.jsx';
 import { buttonClasses } from '../../components/ui/Button.jsx';
@@ -14,6 +15,7 @@ import Timeline from '../../components/ui/Timeline.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useApi } from '../../hooks/useApi.js';
 import { formatEventDates, formatTimeRange } from '../../utils/format.js';
+import { isHelpWindow } from '../../utils/help.js';
 
 function NextEvent({ r }) {
   return (
@@ -42,6 +44,7 @@ function NextEvent({ r }) {
             <Icon name="qr" className="h-4 w-4" />
             Event Pass
           </Link>
+          {isHelpWindow({ status: r.eventStatus, date: r.eventDate, endDate: r.eventEndDate }) && <GetHelpButton inline eventId={r.eventId} className="py-2.5" />}
         </div>
       </div>
     </Card>
@@ -62,6 +65,14 @@ export default function HomePage() {
         <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">Hi {first}! <span aria-hidden="true">👋</span></h1>
         <p className="mt-1.5 font-medium text-slate-500">Discover <span aria-hidden="true">•</span> Participate <span aria-hidden="true">•</span> Grow</p>
       </div>
+
+      <section aria-label="Help" className="mb-8 flex flex-col gap-4 rounded-2xl bg-slate-900 p-5 text-white shadow-lg sm:flex-row sm:items-center sm:justify-between sm:p-6">
+        <div>
+          <h2 className="text-lg font-extrabold">Need help at an event?</h2>
+          <p className="mt-0.5 text-sm text-slate-300">Medical, security, technical, venue or lost &amp; found. Report it in a few taps and follow the reply.</p>
+        </div>
+        <GetHelpButton label="GET HELP" className="shrink-0" />
+      </section>
 
       {error ? (
         <LoadError error={error} onRetry={reload} />

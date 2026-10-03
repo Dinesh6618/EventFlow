@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { registrationsApi } from '../../api';
 import QRPass, { useQrDataUrl } from '../../components/attendance/QRPass.jsx';
+import GetHelpButton from '../../components/help/GetHelpButton.jsx';
 import Button from '../../components/ui/Button.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
 import Icon from '../../components/ui/Icon.jsx';
@@ -11,6 +12,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { useApi } from '../../hooks/useApi.js';
 import { downloadIcs } from '../../utils/calendar.js';
+import { isHelpWindow } from '../../utils/help.js';
 import { downloadPassPng } from '../../utils/passImage.js';
 
 export default function EventPassPage() {
@@ -59,6 +61,12 @@ export default function EventPassPage() {
           Add to Calendar
         </Button>
       </div>
+      {isHelpWindow({ status: r.eventStatus, date: r.eventDate, endDate: r.eventEndDate }) && (
+        <div className="mt-5 flex items-center justify-between gap-3 rounded-2xl bg-slate-900 p-4 text-white">
+          <p className="text-sm font-semibold">Something wrong at the event?</p>
+          <GetHelpButton inline eventId={r.eventId} className="bg-white !text-slate-900 hover:!bg-indigo-50" />
+        </div>
+      )}
       <Link to={`/events/${r.eventId}`} className="mt-5 block text-center text-sm font-semibold text-indigo-600 hover:text-indigo-700">View event</Link>
     </div>
   );

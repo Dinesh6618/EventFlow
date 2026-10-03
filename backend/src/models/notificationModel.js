@@ -34,7 +34,12 @@ export async function notify(userId, { eventId = null, type, title, message, lin
  * Notify everyone holding a registration for the event (and optionally its staff).
  * `statuses` picks which registration statuses count. Returns how many notifications were created.
  */
-export async function notifyEvent(eventId, { type, title, message, link = null, dedupeKey = null }, { statuses = ACTIVE, includeStaff = false } = {}) {
+export async function notifyEvent(eventId, payload, options) {
+  return (await notifyEventDetailed(eventId, payload, options)).length;
+}
+
+/** Like notifyEvent, but returns the ids of the people who were newly notified (duplicates are skipped). */
+export async function notifyEventDetailed(eventId, { type, title, message, link = null, dedupeKey = null }, { statuses = ACTIVE, includeStaff = false } = {}) {
   const rows = await query(
     `${INSERT_TARGET}
      SELECT recipients.user_id, $1, $2, $3, $4, $5, $6
@@ -43,10 +48,10 @@ export async function notifyEvent(eventId, { type, title, message, link = null, 
          ${includeStaff ? 'UNION SELECT s.user_id FROM event_staff s WHERE s.event_id = $1' : ''}
        ) recipients
      ${NO_DUPLICATES}
-     RETURNING id`,
+     RETURNING user_id AS "userId"`,
     [eventId, type, title, message, link, dedupeKey, statuses],
   );
-  return rows.length;
+  return rows.map((r) => r.userId);
 }
 
 export async function list(userId, { unreadOnly = false, limit = 20, before } = {}) {

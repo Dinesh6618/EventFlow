@@ -1,3 +1,5 @@
+import { formatWait } from '../utils/format.js';
+
 const BASE = import.meta.env.VITE_API_URL || '';
 const TOKEN_KEY = 'eventflow_token';
 
@@ -27,10 +29,14 @@ export const tokenStore = {
 };
 
 export class ApiError extends Error {
-  constructor(message, status, errors) {
+  constructor(message, status, errors, code, retryAfter) {
     super(message);
     this.status = status;
     this.errors = errors || {};
+    // A machine-readable reason from the server, for example EMAIL_NOT_VERIFIED.
+    this.code = code || null;
+    // Set on a 429: how many seconds until the request may be tried again.
+    this.retryAfter = retryAfter || null;
   }
 }
 
@@ -41,6 +47,21 @@ export const setUnauthorizedHandler = (handler) => {
 
 /** Turn a stored upload path (/uploads/x.png) into a loadable URL. */
 export const assetUrl = (path) => (path ? `${BASE}${path}` : null);
+
+/**
+ * A 429 is the server asking us to slow down. It becomes a friendly message that says how long to wait
+ * (from the body, or the Retry-After header). The request is never repeated automatically: only a person
+ * pressing the button again, after the wait, sends another one.
+ */
+function tooManyRequests(response, data) {
+  const fromBody = Number(data?.retryAfter);
+  const fromHeader = Number(response.headers.get('Retry-After')); // a date instead of seconds is ignored
+  const seconds = [fromBody, fromHeader].find((n) => Number.isFinite(n) && n > 0);
+  const retryAfter = seconds ? Math.ceil(seconds) : null;
+  const base = (data?.message || 'Too many requests. Please try again later.').replace(/\s*Please try again later\.?$/i, '').trim();
+  const message = retryAfter ? `${base} Please try again in ${formatWait(retryAfter)}.` : `${base} Please try again later.`;
+  return new ApiError(message, 429, undefined, 'RATE_LIMITED', retryAfter);
+}
 
 export async function request(path, { method = 'GET', body, signal, auth = true } = {}) {
   const headers = { Accept: 'application/json' };
@@ -67,8 +88,9 @@ export async function request(path, { method = 'GET', body, signal, auth = true 
   // Reading the body can be cut short by an abort; surface that as an abort, not as empty data.
   if (signal?.aborted) throw new DOMException('Request aborted', 'AbortError');
   if (!response.ok) {
-    if (response.status === 401 && auth && token) onUnauthorized();
-    throw new ApiError(data?.message || `Request failed (${response.status})`, response.status, data?.errors);
+    if (auth && token && (response.status === 401 || (response.status === 403 && data?.code === 'EMAIL_NOT_VERIFIED'))) onUnauthorized();
+    if (response.status === 429) throw tooManyRequests(response, data);
+    throw new ApiError(data?.message || `Request failed (${response.status})`, response.status, data?.errors, data?.code);
   }
   return data;
 }

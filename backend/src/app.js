@@ -6,6 +6,8 @@ import routes from './routes/index.js';
 
 export function createApp() {
   const app = express();
+  // Behind a reverse proxy every request would otherwise come from the proxy's address and share one rate limit.
+  app.set('trust proxy', config.trustProxy);
 
   app.use(cors({ origin: config.clientOrigins }));
   app.use(express.json({ limit: '100kb' }));

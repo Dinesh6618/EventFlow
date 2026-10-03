@@ -6,6 +6,26 @@ import path from 'node:path';
 // Must be set before the app modules are imported.
 process.env.PGLITE_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'eventflow-test-'));
 process.env.DATABASE_URL = '';
+// Help Center rate limit: high enough for the shared test users, and the limit itself is tested explicitly.
+process.env.HELP_CREATE_LIMIT = '30';
+process.env.EMAIL_SEND_INTERVAL_MS = '0';
+process.env.EMAIL_FROM = 'EventFlow <no-reply@test.example>';
+process.env.APP_URL = 'https://app.eventflow.test';
+process.env.EMAIL_SCHEDULE_DIGEST_MS = '0';
+// Rate limits: the shared test accounts all come from one address, so the suite runs with roomy limits and
+// the rules themselves are tested in ratelimit.test.js, which sets the real values.
+process.env.RATE_LIMIT_DEV_MULTIPLIER = '1';
+process.env.RATE_LIMIT_LOG = 'false';
+process.env.RATE_LIMIT_MAX = '100000';
+process.env.USER_RATE_LIMIT_MAX = '100000';
+process.env.LINK_RATE_LIMIT_MAX = '100000';
+process.env.SIGNUP_RATE_LIMIT_MAX = '100000';
+process.env.AUTH_RATE_LIMIT_MAX = '1000';
+process.env.AUTH_RATE_LIMIT_IP_MAX = '5000';
+process.env.EMAIL_RATE_LIMIT_MAX = '100';
+process.env.EMAIL_RATE_LIMIT_IP_MAX = '1000';
+process.env.EMAIL_RESEND_COOLDOWN_SECONDS = '0';
+process.env.HELP_UPLOAD_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'eventflow-help-'));
 
 const { createApp } = await import('../src/app.js');
 const { closeDb, initSchema, query } = await import('../src/db.js');
@@ -43,6 +63,7 @@ export async function startServer() {
     await closeDb();
     for (const file of uploaded) fs.rmSync(path.join(config.uploadDir, file), { force: true });
     fs.rmSync(process.env.PGLITE_DIR, { recursive: true, force: true });
+    fs.rmSync(process.env.HELP_UPLOAD_DIR, { recursive: true, force: true });
   }
 
   /** Create an account and return { token, user }. */

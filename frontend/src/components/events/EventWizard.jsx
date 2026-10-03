@@ -26,7 +26,7 @@ const STEP_FIELDS = [
 
 const SCALAR_FIELDS = [
   'name', 'description', 'type', 'date', 'startTime', 'endTime', 'venue', 'maxParticipants',
-  'registrationDeadline', 'organizerName', 'organizerContact', 'college', 'endDate', 'minTeamSize', 'maxTeamSize', 'mode', 'department',
+  'registrationDeadline', 'organizerName', 'organizerContact', 'college', 'endDate', 'minTeamSize', 'maxTeamSize', 'mode', 'department', 'meetingUrl',
 ];
 
 /** Problems with the optional lists, keyed like the server's errors (for example "prizes.0.title"). */
@@ -76,7 +76,7 @@ export default function EventWizard() {
 
   const [step, setStep] = useState(0);
   const [values, setValues] = useState({
-    name: '', description: '', type: '', date: '', endDate: '', startTime: '', endTime: '', venue: '', mode: 'offline', department: '',
+    name: '', description: '', type: '', date: '', endDate: '', startTime: '', endTime: '', venue: '', mode: 'offline', meetingUrl: '', department: '',
     maxParticipants: '', registrationDeadline: '',
     organizerName: user.name, organizerContact: user.email, college: user.college || '', requiresApproval: false,
     teamEnabled: false, allowMultipleTeams: false, minTeamSize: '1', maxTeamSize: '4',
@@ -266,6 +266,9 @@ export default function EventWizard() {
                 ))}
               </div>
             </fieldset>
+            {values.mode !== 'offline' && (
+              <Input label="Meeting link" type="url" value={values.meetingUrl} onChange={set('meetingUrl')} error={errors.meetingUrl} maxLength={500} placeholder="https://meet.example.com/your-event" hint="Optional. Included in the reminder email sent the day before." />
+            )}
             <Select label="Open to department" value={values.department} onChange={set('department')} placeholder="All departments" options={DEPARTMENTS} hint="Students can filter events by department. Leave open if everyone may join." />
             <div className="flex justify-between pt-2">
               <Button variant="secondary" size="lg" onClick={() => setStep(1)}><Icon name="arrow-left" className="h-4 w-4" />Back</Button>

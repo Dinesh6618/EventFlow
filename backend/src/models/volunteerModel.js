@@ -21,15 +21,18 @@ export async function opportunities(userId) {
 }
 
 /** Apply (or re-apply after a decline). A pending or approved application cannot be repeated. */
-export async function apply(event, userId, message) {
+export async function apply(event, userId, message, details = {}) {
   const staffed = await query(`SELECT 1 FROM event_staff WHERE event_id = $1 AND user_id = $2 AND staff_role = 'volunteer'`, [event.id, userId]);
   if (staffed.length) throw conflict('You are already a volunteer for this event');
   const rows = await query(
-    `INSERT INTO volunteer_applications (event_id, user_id, message) VALUES ($1, $2, $3)
-     ON CONFLICT (event_id, user_id) DO UPDATE SET message = EXCLUDED.message, status = 'pending', decided_at = NULL, created_at = NOW()
+    `INSERT INTO volunteer_applications (event_id, user_id, message, phone, year, skills, interests, availability, experience, preferred_department)
+     VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9, $10)
+     ON CONFLICT (event_id, user_id) DO UPDATE SET message = EXCLUDED.message, phone = EXCLUDED.phone, year = EXCLUDED.year, skills = EXCLUDED.skills, interests = EXCLUDED.interests,
+            availability = EXCLUDED.availability, experience = EXCLUDED.experience, preferred_department = EXCLUDED.preferred_department,
+            status = 'pending', decided_at = NULL, created_at = NOW()
        WHERE volunteer_applications.status = 'declined'
      RETURNING id`,
-    [event.id, userId, message],
+    [event.id, userId, message, details.phone ?? '', details.year ?? null, JSON.stringify(details.skills ?? []), details.interests ?? '', details.availability ?? '', details.experience ?? '', details.preferredDepartment ?? ''],
   );
   if (!rows[0]) throw conflict('You have already applied to volunteer for this event');
   return rows[0].id;
@@ -43,7 +46,8 @@ export async function withdraw(eventId, userId) {
 
 export async function listForEvent(eventId) {
   return query(
-    `SELECT ${APPLICATION}, u.id AS "userId", u.name, u.email, u.department, u.college, u.year
+    `SELECT ${APPLICATION}, a.phone, a.year AS "applicationYear", a.skills, a.interests, a.availability, a.experience, a.preferred_department AS "preferredDepartment",
+            u.id AS "userId", u.name, u.email, u.department, u.college, u.year
        FROM volunteer_applications a JOIN users u ON u.id = a.user_id
       WHERE a.event_id = $1
       ORDER BY (a.status = 'pending') DESC, a.created_at DESC`,

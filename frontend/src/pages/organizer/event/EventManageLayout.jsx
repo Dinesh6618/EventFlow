@@ -13,6 +13,7 @@ import { formatEventWhen } from '../../../utils/format.js';
 const TABS = [
   { to: '', label: 'Overview', end: true },
   { to: 'control-center', label: 'Control center' },
+  { to: 'help', label: 'Help Center' },
   { to: 'insights', label: 'Insights' },
   { to: 'scan', label: 'QR Scan' },
   { to: 'attendance', label: 'Attendance' },
@@ -22,7 +23,8 @@ const TABS = [
   { to: 'feedback', label: 'Feedback' },
   { to: 'certificates', label: 'Certificates' },
   { to: 'announcements', label: 'Announcements' },
-  { to: 'staff', label: 'Volunteers' },
+  { to: 'volunteers', label: 'Volunteers' },
+  { to: 'staff', label: 'Team' },
 ];
 
 /** Shell for everything an organizer does with one event. Child pages read the event via useEvent(). */

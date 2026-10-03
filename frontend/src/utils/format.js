@@ -59,3 +59,19 @@ export function formatEventWhen(event) {
   if ((event.endDate || event.date) === event.date) return `${formatDate(event.date)}, ${formatTimeRange(event.startTime, event.endTime)}`;
   return `${formatEventDates(event)} (${formatTime(event.startTime)} to ${formatTime(event.endTime)})`;
 }
+
+/** 45 -> '45 seconds', 840 -> '14 minutes', 3600 -> '1 hour': how long until something may be tried again. */
+export function formatWait(seconds) {
+  const s = Math.max(1, Math.ceil(seconds));
+  if (s < 90) return `${s} second${s === 1 ? '' : 's'}`;
+  const minutes = Math.ceil(s / 60);
+  if (minutes < 90) return `${minutes} minute${minutes === 1 ? '' : 's'}`;
+  const hours = Math.ceil(minutes / 60);
+  return `${hours} hour${hours === 1 ? '' : 's'}`;
+}
+
+/** 75 -> '1:15', 9 -> '9s': a short countdown for a button label. */
+export function formatClock(seconds) {
+  const s = Math.max(0, Math.ceil(seconds));
+  return s < 60 ? `${s}s` : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
