@@ -71,6 +71,7 @@ const baseEventSchema = z.object({
     CONTACT_RE,
     'Enter a valid email address or phone number',
   ),
+  college: z.string().trim().max(150, 'College must be at most 150 characters').optional().transform((v) => v || null),
   // Multipart forms send booleans as the strings "true"/"false".
   requiresApproval: z.preprocess((v) => v === true || v === 'true', z.boolean()).default(false),
   teamEnabled: z.preprocess((v) => v === true || v === 'true', z.boolean()).default(false),

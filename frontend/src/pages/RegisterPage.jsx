@@ -9,8 +9,11 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { ROLES, homePathFor } from '../utils/constants.js';
 import { validateRegister } from '../utils/validation.js';
 
+// Volunteers have a student account; the choice only decides where they land after signing up.
+const VOLUNTEER = 'volunteer';
 const ROLE_OPTIONS = [
   { value: ROLES.PARTICIPANT, title: 'Student', text: 'Discover and join events' },
+  { value: VOLUNTEER, title: 'Volunteer', text: 'Help run events' },
   { value: ROLES.ORGANIZER, title: 'Organizer', text: 'Create and manage events' },
 ];
 
@@ -18,12 +21,15 @@ export default function RegisterPage() {
   const { register } = useAuth();
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const startRole = params.get('role') === ROLES.ORGANIZER ? ROLES.ORGANIZER : ROLES.PARTICIPANT;
+  // Only the volunteer area may be requested, so this cannot be turned into an open redirect.
+  const startRole = params.get('role') === ROLES.ORGANIZER ? ROLES.ORGANIZER : params.get('next') === '/volunteer' ? VOLUNTEER : ROLES.PARTICIPANT;
 
   const [values, setValues] = useState({ name: '', email: '', password: '', confirmPassword: '', role: startRole, department: '', college: '' });
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  const accountRole = values.role === VOLUNTEER ? ROLES.PARTICIPANT : values.role;
 
   const set = (key) => (e) => {
     setValues((v) => ({ ...v, [key]: e.target.value }));
@@ -33,7 +39,7 @@ export default function RegisterPage() {
   const submit = async (e) => {
     e.preventDefault();
     setFormError('');
-    const found = validateRegister(values);
+    const found = validateRegister({ ...values, role: accountRole });
     setErrors(found);
     if (Object.keys(found).length) return;
 
@@ -43,11 +49,11 @@ export default function RegisterPage() {
         name: values.name.trim(),
         email: values.email.trim(),
         password: values.password,
-        role: values.role,
+        role: accountRole,
         department: values.department.trim(),
         college: values.college.trim(),
       });
-      navigate(homePathFor(user.role), { replace: true });
+      navigate(values.role === VOLUNTEER ? '/volunteer' : homePathFor(user.role), { replace: true });
     } catch (err) {
       if (err instanceof ApiError && err.errors) setErrors(err.errors);
       setFormError(err.message);
@@ -62,7 +68,7 @@ export default function RegisterPage() {
 
         <fieldset>
           <legend className="mb-1.5 text-sm font-medium text-slate-700">I want to</legend>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             {ROLE_OPTIONS.map((option) => (
               <label
                 key={option.value}
@@ -81,7 +87,7 @@ export default function RegisterPage() {
 
         <Input label="Full name" autoComplete="name" value={values.name} onChange={set('name')} error={errors.name} />
         <Input label="Email" type="email" autoComplete="email" value={values.email} onChange={set('email')} error={errors.email} placeholder="you@college.edu" />
-        {values.role === ROLES.PARTICIPANT && (
+        {accountRole === ROLES.PARTICIPANT && (
           <div className="grid gap-5 sm:grid-cols-2">
             <Input label="Department" required value={values.department} onChange={set('department')} error={errors.department} placeholder="e.g. Computer Science" maxLength={100} />
             <Input label="College" required value={values.college} onChange={set('college')} error={errors.college} placeholder="e.g. Sunrise Institute" maxLength={150} />

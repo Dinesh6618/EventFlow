@@ -13,8 +13,10 @@ import { formatEventDates } from '../../utils/format.js';
 
 // Sidebar entry -> the event tab it opens, and how to introduce it.
 const SECTIONS = {
+  scan: { tab: 'scan', title: 'QR Scan', text: 'Scan participant QR codes to confirm their attendance.', icon: 'qr' },
   attendance: { tab: 'attendance', title: 'Attendance', text: 'See who checked in and export the list.', icon: 'qr' },
   schedule: { tab: 'schedule', title: 'Schedule', text: 'Plan sessions, talks and breaks.', icon: 'clock' },
+  volunteers: { tab: 'staff', title: 'Volunteers', text: 'Review volunteer applications and manage your volunteers and judges.', icon: 'heart' },
   teams: { tab: 'teams', title: 'Teams', text: 'Team rules, teams and participants without a team.', icon: 'user-plus' },
   judging: { tab: 'judging', title: 'Judging', text: 'Criteria, judges, scoring progress and the leaderboard.', icon: 'trophy' },
   certificates: { tab: 'certificates', title: 'Certificates', text: 'Issue and manage certificates.', icon: 'award' },

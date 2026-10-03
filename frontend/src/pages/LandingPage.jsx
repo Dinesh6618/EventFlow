@@ -12,7 +12,7 @@ const FEATURES = [
   { icon: 'ticket', title: 'Smart Registration', text: 'Seat limits, optional approval and instant event passes, so nobody is double-booked.', tone: 'bg-pink-100 text-pink-600' },
   { icon: 'qr', title: 'QR Attendance', text: 'Volunteers scan a personal QR pass at the door. Attendance is recorded the moment it happens.', tone: 'bg-emerald-100 text-emerald-600' },
   { icon: 'users', title: 'Team Collaboration', text: 'Form teams, invite people with the skills you need, and keep your project together.', tone: 'bg-sky-100 text-sky-600' },
-  { icon: 'sparkles', title: 'AI Insights', text: 'Practical suggestions drawn from your own event numbers, and an AI planner that drafts, never publishes.', tone: 'bg-violet-100 text-violet-600' },
+  { icon: 'sparkles', title: 'AI Insights', text: 'Practical suggestions drawn from your own event numbers.', tone: 'bg-violet-100 text-violet-600' },
   { icon: 'award', title: 'Certificates', text: 'Numbered certificates anyone can verify online, delivered as PDFs.', tone: 'bg-amber-100 text-amber-600' },
 ];
 

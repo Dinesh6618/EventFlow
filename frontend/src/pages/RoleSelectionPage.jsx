@@ -25,6 +25,16 @@ const ROLES = [
     text: 'Plan and run events with registration, QR check-in and analytics.',
   },
   {
+    key: 'volunteer',
+    title: 'Volunteer',
+    to: '/register?role=participant&next=/volunteer',
+    cta: 'Join as a volunteer',
+    icon: 'heart',
+    art: 'from-emerald-500 to-teal-600',
+    points: ['Find events needing help', 'Apply in one tap', 'Scan QR check-ins'],
+    text: 'Help run campus events. Sign up, apply to the events you like, and get approved by the organizer.',
+  },
+  {
     key: 'admin',
     title: 'Admin',
     to: '/login',
@@ -58,13 +68,13 @@ export default function RoleSelectionPage() {
         <Link to="/login" className="text-sm font-semibold text-slate-600 hover:text-indigo-700">I already have an account</Link>
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 pb-20 pt-8 sm:px-6">
+      <main className="mx-auto max-w-6xl px-4 pb-20 pt-8 sm:px-6">
         <div className="page-enter text-center">
           <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">Choose Your Role</h1>
           <p className="mt-3 text-lg text-slate-500">Select how you want to use EventFlow</p>
         </div>
 
-        <ul className="mt-12 grid gap-6 md:grid-cols-3">
+        <ul className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {ROLES.map((role, i) => (
             <li key={role.key} className="page-enter" style={{ animationDelay: `${i * 70}ms` }}>
               <article className="surface surface-lift flex h-full flex-col p-5" aria-labelledby={`role-${role.key}`}>

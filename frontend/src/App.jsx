@@ -9,13 +9,10 @@ import LandingPage from './pages/LandingPage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import NotFoundPage from './pages/NotFoundPage.jsx';
 import CreateEventPage from './pages/organizer/CreateEventPage.jsx';
-import AiPlanPage from './pages/organizer/AiPlanPage.jsx';
-import AiPlannerPage from './pages/organizer/AiPlannerPage.jsx';
 import AnalyticsPage from './pages/organizer/AnalyticsPage.jsx';
 import EventSectionPicker from './pages/organizer/EventSectionPicker.jsx';
 import MyEventsPage from './pages/organizer/MyEventsPage.jsx';
 import OrganizerDashboard from './pages/organizer/OrganizerDashboard.jsx';
-import AiPlanTab from './pages/organizer/event/AiPlanTab.jsx';
 import AnnouncementsPage from './pages/organizer/event/AnnouncementsPage.jsx';
 import AttendancePage from './pages/organizer/event/AttendancePage.jsx';
 import ControlCenterPage from './pages/organizer/event/ControlCenterPage.jsx';
@@ -115,14 +112,11 @@ export default function App() {
             <Route path="feedback" element={<FeedbackPage />} />
             <Route path="scan" element={<ScanPage />} />
             <Route path="announcements" element={<AnnouncementsPage />} />
-            <Route path="ai-plan" element={<AiPlanTab />} />
             <Route path="staff" element={<StaffPage />} />
           </Route>
           <Route path="section/:section" element={<EventSectionPicker />} />
           <Route path="participants" element={<ParticipantsPage />} />
           <Route path="analytics" element={<AnalyticsPage />} />
-          <Route path="ai-planner" element={<AiPlannerPage />} />
-          <Route path="ai-planner/:id" element={<AiPlanPage />} />
           <Route path="profile" element={<ProfilePage />} />
         </Route>
       </Route>

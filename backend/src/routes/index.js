@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import aiRoutes from './ai.js';
 import analyticsRoutes from './analytics.js';
 import attendanceRoutes from './attendance.js';
 import certificateRoutes from './certificates.js';
@@ -7,6 +6,7 @@ import insightsRoutes from './insights.js';
 import judgingRoutes from './judging.js';
 import scheduleRoutes from './schedule.js';
 import teamRoutes from './teams.js';
+import volunteerRoutes from './volunteers.js';
 import * as admin from '../controllers/adminController.js';
 import * as auth from '../controllers/authController.js';
 import * as eventCtrl from '../controllers/eventController.js';
@@ -76,10 +76,10 @@ router.get('/admin/stats', authenticate, requireRole(ROLES.ADMIN), admin.stats);
 router.use(attendanceRoutes);
 router.use(scheduleRoutes);
 router.use(teamRoutes);
+router.use(volunteerRoutes);
 router.use(judgingRoutes);
 router.use(certificateRoutes);
 router.use(analyticsRoutes);
-router.use(aiRoutes);
 router.use(insightsRoutes);
 
 export default router;

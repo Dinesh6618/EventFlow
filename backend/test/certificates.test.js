@@ -57,15 +57,27 @@ const finishEvent = () =>
   query(`UPDATE events SET date = CURRENT_DATE - 2, end_date = NULL, registration_deadline = NOW() - INTERVAL '5 days' WHERE id = $1`, [event.id]);
 
 describe('issuing certificates', () => {
-  it('waits until the event has started and is organizer-only', async () => {
-    const early = await issue({ type: 'participant' });
-    assert.equal(early.status, 409);
-    assert.match(early.body.message, /event has started/);
+  it('lets the organizer issue before the event starts, hides it from the holder until then, and is organizer-only', async () => {
+    const early = await issue({ type: 'participant', scope: 'registered' });
+    assert.equal(early.status, 201);
+    assert.ok(early.body.issued > 0);
+    assert.equal((await listCerts()).visibleToHolders, false);
+    const code = early.body.certificates[0].code;
+    // Participants see nothing, and cannot download, before the start time.
+    for (const person of Object.values(p)) {
+      assert.deepEqual((await api('GET', '/api/certificates/mine', person.token)).body.certificates, []);
+      assert.equal((await api('GET', `/api/certificates/${code}/pdf`, person.token)).status, 404);
+    }
+    assert.equal((await api('GET', `/api/certificates/${code}/pdf`, org.token)).status, 200);
     assert.equal((await issue({ type: 'participant' }, p.ann.token)).status, 403);
     assert.equal((await issue({ type: 'participant' }, org2.token)).status, 403);
     assert.equal((await api('GET', `${base()}/certificates`, org2.token)).status, 403);
     assert.equal((await issue({ type: 'trophy' })).status, 422);
+    // Start the event: the same certificates now reach their holders.
     await finishEvent();
+    const counts = await Promise.all(Object.values(p).map(async (person) => (await api('GET', '/api/certificates/mine', person.token)).body.certificates.length));
+    assert.ok(counts.some((n) => n > 0), 'holders see their certificates once the event has started');
+    await query(`DELETE FROM certificates WHERE event_id = $1`, [event.id]);
   });
 
   it('issues participation certificates only to people who attended, with unique IDs', async () => {
@@ -162,6 +174,31 @@ describe('certificate PDFs', () => {
     assert.equal((await t.api('GET', `/api/certificates/${ann.code}/pdf`, { token: org2.token })).status, 404);
     assert.equal((await t.api('GET', `/api/certificates/${ann.code}/pdf`)).status, 401);
     assert.equal((await t.api('GET', '/api/certificates/NOPE/pdf', { token: p.ann.token })).status, 404);
+  });
+
+  it('lets only the organizer preview each design, as a sample that cannot be verified', async () => {
+    for (const type of ['participant', 'winner', 'speaker']) {
+      const res = await t.api('GET', `${base()}/certificates/preview?type=${type}`, { token: org.token });
+      assert.equal(res.status, 200);
+      assert.equal(res.headers.get('content-type'), 'application/pdf');
+      assert.ok(res.body.startsWith('%PDF-') && res.body.length > 2000);
+    }
+    assert.equal((await t.api('GET', `${base()}/certificates/preview?type=trophy`, { token: org.token })).status, 404);
+    assert.equal((await t.api('GET', `${base()}/certificates/preview?type=winner`, { token: p.ann.token })).status, 403);
+    assert.equal((await t.api('GET', `${base()}/certificates/preview?type=winner`, { token: org2.token })).status, 403);
+    // The sample ID is never a real certificate.
+    assert.equal((await t.api('GET', '/api/verify/EVF-SAMPLE')).status, 404);
+  });
+
+  it('stores the conducting college on the event and prints it on the certificate', async () => {
+    const made = await t.createEvent(org.token, { college: '  Lakeview Engineering College ' });
+    assert.equal(made.college, 'Lakeview Engineering College');
+    assert.equal((await t.api('GET', `/api/events/${event.id}`, { token: org.token })).body.event.college ?? null, event.college ?? null);
+    assert.equal((await t.api('POST', '/api/events', { token: org.token, form: t.eventForm({ college: 'x'.repeat(151) }) })).status, 422);
+    const sample = await t.api('GET', `/api/events/${made.id}/certificates/preview?type=participant`, { token: org.token });
+    assert.equal(sample.status, 200);
+    assert.ok(sample.body.startsWith('%PDF-'));
+    await query(`DELETE FROM events WHERE id = $1`, [made.id]);
   });
 
   it('points the verification QR at the public verify page', () => {

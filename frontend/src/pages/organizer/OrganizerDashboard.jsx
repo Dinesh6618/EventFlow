@@ -53,10 +53,16 @@ export default function OrganizerDashboard() {
         title={`Welcome back, ${user.name.split(' ')[0]}`}
         description="Here is how your events are doing."
         action={
-          <Link to="/organizer/create-event" className={buttonClasses('primary')}>
-            <Icon name="plus" className="h-4 w-4" />
-            Create event
-          </Link>
+          <div className="flex flex-wrap gap-3">
+            <Link to="/organizer/section/scan" className={buttonClasses('secondary')}>
+              <Icon name="qr" className="h-4 w-4" />
+              Scan QR
+            </Link>
+            <Link to="/organizer/create-event" className={buttonClasses('primary')}>
+              <Icon name="plus" className="h-4 w-4" />
+              Create event
+            </Link>
+          </div>
         }
       />
 

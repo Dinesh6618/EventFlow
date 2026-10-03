@@ -98,14 +98,15 @@ export const ORGANIZER_NAV = [
   { to: '/organizer/events', label: 'My Events', icon: 'calendar', prefix: true },
   { to: '/organizer/create-event', label: 'Create Event', icon: 'plus' },
   { to: '/organizer/participants', label: 'Participants', icon: 'users' },
-  { to: '/organizer/section/attendance', label: 'Attendance', icon: 'qr' },
+  { to: '/organizer/section/scan', label: 'QR Scan', icon: 'qr' },
+  { to: '/organizer/section/attendance', label: 'Attendance', icon: 'check' },
   { to: '/organizer/section/schedule', label: 'Schedule', icon: 'clock' },
+  { to: '/organizer/section/volunteers', label: 'Volunteers', icon: 'heart' },
   { to: '/organizer/section/teams', label: 'Teams', icon: 'user-plus' },
   { to: '/organizer/section/judging', label: 'Judging', icon: 'trophy' },
   { to: '/organizer/section/certificates', label: 'Certificates', icon: 'award' },
   { to: '/organizer/section/feedback', label: 'Feedback', icon: 'message' },
   { to: '/organizer/analytics', label: 'Analytics', icon: 'chart' },
-  { to: '/organizer/ai-planner', label: 'AI Planner', icon: 'sparkles', prefix: true },
   { to: '/organizer/profile', label: 'Settings', icon: 'settings' },
 ];
 

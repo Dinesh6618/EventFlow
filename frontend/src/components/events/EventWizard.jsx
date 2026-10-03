@@ -26,7 +26,7 @@ const STEP_FIELDS = [
 
 const SCALAR_FIELDS = [
   'name', 'description', 'type', 'date', 'startTime', 'endTime', 'venue', 'maxParticipants',
-  'registrationDeadline', 'organizerName', 'organizerContact', 'endDate', 'minTeamSize', 'maxTeamSize', 'mode', 'department',
+  'registrationDeadline', 'organizerName', 'organizerContact', 'college', 'endDate', 'minTeamSize', 'maxTeamSize', 'mode', 'department',
 ];
 
 /** Problems with the optional lists, keyed like the server's errors (for example "prizes.0.title"). */
@@ -78,7 +78,7 @@ export default function EventWizard() {
   const [values, setValues] = useState({
     name: '', description: '', type: '', date: '', endDate: '', startTime: '', endTime: '', venue: '', mode: 'offline', department: '',
     maxParticipants: '', registrationDeadline: '',
-    organizerName: user.name, organizerContact: user.email, requiresApproval: false,
+    organizerName: user.name, organizerContact: user.email, college: user.college || '', requiresApproval: false,
     teamEnabled: false, allowMultipleTeams: false, minTeamSize: '1', maxTeamSize: '4',
     prizes: [], rules: [], faqs: [],
   });
@@ -157,8 +157,8 @@ export default function EventWizard() {
     setSubmitting(true);
     try {
       const { event } = await eventsApi.create(body);
-      toast.success(`"${event.name}" was created.`);
-      navigate('/organizer/events');
+      toast.success(`"${event.name}" was created. Now plan its schedule.`);
+      navigate(`/organizer/events/${event.id}/schedule`);
     } catch (err) {
       if (err instanceof ApiError && err.status === 422 && err.errors) {
         setErrors(err.errors);
@@ -282,14 +282,34 @@ export default function EventWizard() {
               <Input label="Registration deadline" required type="datetime-local" min={nowLocalISO()} value={values.registrationDeadline} onChange={set('registrationDeadline')} error={errors.registrationDeadline} hint="Must be on or before the event start." />
             </div>
             <Checkbox label="Require approval for registrations" hint="New registrations stay pending (and hold a seat) until you approve or reject them." checked={values.requiresApproval} onChange={toggle('requiresApproval')} />
-            <Checkbox label="Participants form teams" hint="Registered participants can create teams, invite people and request to join." checked={values.teamEnabled} onChange={toggle('teamEnabled')} />
+            <fieldset>
+              <legend className="mb-2 text-sm font-medium text-slate-700">Who can take part?</legend>
+              <div className="grid gap-2.5 sm:grid-cols-2">
+                {[
+                  [false, 'Individuals only', 'Each participant joins on their own (1 person).'],
+                  [true, 'Teams', 'Participants form teams. You decide how many members a team can have.'],
+                ].map(([value, title, text]) => (
+                  <label
+                    key={title}
+                    className={`cursor-pointer rounded-xl border-2 px-4 py-3 transition-all has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-indigo-600 ${
+                      values.teamEnabled === value ? 'border-indigo-600 bg-indigo-50' : 'border-slate-200 bg-white hover:border-indigo-300'
+                    }`}
+                  >
+                    <input type="radio" name="participation-type" checked={values.teamEnabled === value} onChange={() => setValues((v) => ({ ...v, teamEnabled: value }))} className="sr-only" />
+                    <span className="block text-sm font-semibold text-slate-900">{title}</span>
+                    <span className="mt-0.5 block text-xs text-slate-500">{text}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
             {values.teamEnabled && (
               <div className="page-enter grid gap-5 rounded-2xl bg-slate-50 p-4 sm:grid-cols-2">
-                <Input label="Minimum team size" type="number" min="1" value={values.minTeamSize} onChange={set('minTeamSize')} error={errors.minTeamSize} />
-                <Input label="Maximum team size" type="number" min="1" max="50" value={values.maxTeamSize} onChange={set('maxTeamSize')} error={errors.maxTeamSize} />
+                <Input label="Minimum members per team" type="number" min="1" value={values.minTeamSize} onChange={set('minTeamSize')} error={errors.minTeamSize} hint="Use 1 to allow solo entries." />
+                <Input label="Maximum members per team" type="number" min="1" max="50" value={values.maxTeamSize} onChange={set('maxTeamSize')} error={errors.maxTeamSize} hint="Teams cannot grow beyond this." />
                 <div className="sm:col-span-2"><Checkbox label="Allow a participant to be in more than one team" checked={values.allowMultipleTeams} onChange={toggle('allowMultipleTeams')} /></div>
               </div>
             )}
+            <Input label="College / institution" value={values.college} onChange={set('college')} error={errors.college} maxLength={150} placeholder="e.g. Lakeview Engineering College" hint="The college conducting the event. It is printed at the top of every certificate." />
             <div className="grid gap-5 sm:grid-cols-2">
               <Input label="Organizer name" required value={values.organizerName} onChange={set('organizerName')} error={errors.organizerName} maxLength={100} />
               <Input label="Organizer contact" required value={values.organizerContact} onChange={set('organizerContact')} error={errors.organizerContact} hint="Email address or phone number" />
@@ -333,6 +353,7 @@ export default function EventWizard() {
               <Item label="Deadline">{values.registrationDeadline && formatDateTime(values.registrationDeadline)}</Item>
               <Item label="Approval">{values.requiresApproval ? 'Required' : 'Not required'}</Item>
               <Item label="Teams">{values.teamEnabled ? `${values.minTeamSize} to ${values.maxTeamSize} members` : 'Off'}</Item>
+              {values.college.trim() && <Item label="College">{values.college.trim()}</Item>}
               <Item label="Contact">{`${values.organizerName.trim()} - ${values.organizerContact.trim()}`}</Item>
               <Item label="Page details">{[[values.prizes.length, "prize"], [values.rules.length, "rule"], [values.faqs.length, "FAQ"]].map(([n, w]) => `${n} ${w}${n === 1 ? "" : "s"}`).join(", ")}</Item>
             </Summary>

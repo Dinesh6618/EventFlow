@@ -1,4 +1,4 @@
-import { download, request } from './client.js';
+import { blobUrl, download, request } from './client.js';
 
 export { ApiError, assetUrl } from './client.js';
 
@@ -127,6 +127,8 @@ export const certificatesApi = {
   revoke: (eventId, id, reason) => request(`/api/events/${eventId}/certificates/${id}/revoke`, { method: 'POST', body: { reason } }),
   mine: (signal) => request('/api/certificates/mine', { signal }),
   download: (code) => download(`/api/certificates/${code}/pdf`, `${code}.pdf`),
+  viewUrl: (code) => blobUrl(`/api/certificates/${code}/pdf`),
+  previewUrl: (eventId, type) => blobUrl(`/api/events/${eventId}/certificates/preview?type=${encodeURIComponent(type)}`),
   verify: (code, signal) => request(`/api/verify/${encodeURIComponent(code)}`, { signal, auth: false }),
 };
 
@@ -141,17 +143,12 @@ export const analyticsApi = {
   exportCsv: (filters) => download(`/api/organizer/analytics/export${query(filters)}`, 'event-analytics.csv'),
 };
 
-export const aiApi = {
-  status: (signal) => request('/api/organizer/ai/status', { signal }),
-  list: (signal) => request('/api/organizer/ai/plans', { signal }),
-  get: (id, signal) => request(`/api/organizer/ai/plans/${id}`, { signal }),
-  generate: (body) => request('/api/organizer/ai/plans', { method: 'POST', body }),
-  save: (id, plan) => request(`/api/organizer/ai/plans/${id}`, { method: 'PUT', body: { plan } }),
-  suggestSchedule: (id, body) => request(`/api/organizer/ai/plans/${id}/schedule`, { method: 'POST', body }),
-  confirm: (id) => request(`/api/organizer/ai/plans/${id}/confirm`, { method: 'POST' }),
-  publish: (id, body) => request(`/api/organizer/ai/plans/${id}/publish`, { method: 'POST', body }),
-  remove: (id) => request(`/api/organizer/ai/plans/${id}`, { method: 'DELETE' }),
-  forEvent: (eventId, signal) => request(`/api/organizer/ai/events/${eventId}/plan`, { signal }),
+export const volunteerApi = {
+  opportunities: (signal) => request('/api/volunteer/opportunities', { signal }),
+  apply: (eventId, message) => request(`/api/events/${eventId}/volunteer-applications`, { method: 'POST', body: { message } }),
+  withdraw: (eventId) => request(`/api/events/${eventId}/volunteer-applications/mine`, { method: 'DELETE' }),
+  forEvent: (eventId, signal) => request(`/api/events/${eventId}/volunteer-applications`, { signal }),
+  decide: (eventId, id, status) => request(`/api/events/${eventId}/volunteer-applications/${id}`, { method: 'PATCH', body: { status } }),
 };
 
 export const meApi = {

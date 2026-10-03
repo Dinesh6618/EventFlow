@@ -229,7 +229,7 @@ function scheduleMissing(m) {
     severity: m.timing.minutesToStart <= 72 * 60 ? 'important' : 'suggestion',
     title: 'No schedule published yet',
     message: `The event starts in ${span(m.timing.minutesToStart)} and participants cannot see what is planned.`,
-    suggestion: 'Add the sessions, talks and breaks. The AI Planner can draft a schedule for you to edit.',
+    suggestion: 'Add the sessions, talks and breaks.',
     evidence: [ev('Sessions', 0), ev('Starts in', span(m.timing.minutesToStart))],
     link: eventLink(m, 'schedule'),
   };

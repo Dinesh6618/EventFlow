@@ -19,7 +19,7 @@ export const aiStatus = () => ({ configured: Boolean(config.ai.apiKey) || client
 function getClient() {
   if (client) return client;
   if (!config.ai.apiKey) {
-    throw new HttpError(503, 'The AI planner is not set up on this server. Ask the administrator to set ANTHROPIC_API_KEY.');
+    throw new HttpError(503, 'The AI service is not set up on this server. Ask the administrator to set ANTHROPIC_API_KEY.');
   }
   client = new Anthropic({ apiKey: config.ai.apiKey, timeout: config.ai.timeoutMs });
   return client;

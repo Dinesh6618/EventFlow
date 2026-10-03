@@ -9,6 +9,7 @@ import Logo from './Logo.jsx';
 const LINKS = [
   { href: '/#home', label: 'Home' },
   { to: '/events', label: 'Events' },
+  { to: '/register?role=participant&next=/volunteer', label: 'Volunteer' },
   { href: '/#features', label: 'Features' },
   { href: '/#about', label: 'About' },
   { href: '/#contact', label: 'Contact' },

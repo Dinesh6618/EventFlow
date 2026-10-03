@@ -1,9 +1,13 @@
 import { Link } from 'react-router-dom';
+import { scheduleApi } from '../../../api';
 import EventBanner from '../../../components/events/EventBanner.jsx';
+import ScheduleList from '../../../components/schedule/ScheduleList.jsx';
 import Badge from '../../../components/ui/Badge.jsx';
 import { buttonClasses } from '../../../components/ui/Button.jsx';
 import Card from '../../../components/ui/Card.jsx';
+import LoadError from '../../../components/ui/LoadError.jsx';
 import StatCard from '../../../components/ui/StatCard.jsx';
+import { useApi } from '../../../hooks/useApi.js';
 import { formatDateTime } from '../../../utils/format.js';
 import { useEvent } from './EventManageLayout.jsx';
 
@@ -43,6 +47,47 @@ export default function OverviewPage() {
           </div>
         </div>
       </Card>
+
+      <SchedulePlan event={event} />
     </div>
+  );
+}
+
+/** Read-only snapshot of the event's programme, with a way into the full editor. */
+function SchedulePlan({ event }) {
+  const { data, error, loading, reload } = useApi((signal) => scheduleApi.list(event.id, signal), [event.id]);
+  const items = data?.items ?? [];
+  const days = new Set(items.map((s) => s.date)).size;
+
+  return (
+    <Card className="p-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-base font-bold text-slate-900">Schedule plan</h2>
+          {data && (
+            <p className="text-sm text-slate-500">
+              {items.length === 0 ? 'No sessions planned yet.' : `${items.length} session${items.length === 1 ? '' : 's'} across ${days} day${days === 1 ? '' : 's'}`}
+            </p>
+          )}
+        </div>
+        <Link to="schedule" className={buttonClasses(items.length ? 'secondary' : 'primary', 'sm')}>
+          {items.length ? 'Edit schedule' : 'Plan schedule'}
+        </Link>
+      </div>
+      <div className="mt-4">
+        {error ? (
+          <LoadError error={error} onRetry={reload} />
+        ) : !data && loading ? (
+          <div className="h-24 animate-pulse rounded-xl bg-slate-100" aria-label="Loading schedule" />
+        ) : items.length === 0 ? (
+          <p className="text-sm text-slate-500">Add talks, workshops, breaks and rounds so participants know what happens and when.</p>
+        ) : (
+          <>
+            <ScheduleList items={items.slice(0, 6)} nextId={data.next?.id} />
+            {items.length > 6 && <p className="mt-3 text-sm text-slate-500">and {items.length - 6} more in the full schedule.</p>}
+          </>
+        )}
+      </div>
+    </Card>
   );
 }

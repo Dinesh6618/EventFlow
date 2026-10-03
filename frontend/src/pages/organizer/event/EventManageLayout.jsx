@@ -14,16 +14,15 @@ const TABS = [
   { to: '', label: 'Overview', end: true },
   { to: 'control-center', label: 'Control center' },
   { to: 'insights', label: 'Insights' },
+  { to: 'scan', label: 'QR Scan' },
   { to: 'attendance', label: 'Attendance' },
   { to: 'schedule', label: 'Schedule' },
   { to: 'teams', label: 'Teams' },
   { to: 'judging', label: 'Judging' },
-  { to: 'scan', label: 'Check-in' },
   { to: 'feedback', label: 'Feedback' },
   { to: 'certificates', label: 'Certificates' },
   { to: 'announcements', label: 'Announcements' },
-  { to: 'ai-plan', label: 'AI plan' },
-  { to: 'staff', label: 'Team' },
+  { to: 'staff', label: 'Volunteers' },
 ];
 
 /** Shell for everything an organizer does with one event. Child pages read the event via useEvent(). */

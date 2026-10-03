@@ -17,6 +17,7 @@ const SELECT_EVENT = `
          e.image,
          e.organizer_name AS "organizerName",
          e.organizer_contact AS "organizerContact",
+         e.college,
          e.requires_approval AS "requiresApproval",
          e.leaderboard_published AS "leaderboardPublished",
          e.share_judge_comments AS "shareJudgeComments",
@@ -129,8 +130,8 @@ export async function createEvent(organizerId, data) {
     `INSERT INTO events (organizer_id, name, description, type, date, start_time, end_time, venue,
                          max_participants, registration_deadline, image, organizer_name, organizer_contact,
                          requires_approval, end_date, team_enabled, min_team_size, max_team_size, allow_multiple_teams,
-                         mode, department, prizes, rules, faqs)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22::jsonb, $23::jsonb, $24::jsonb)
+                         mode, department, prizes, rules, faqs, college)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22::jsonb, $23::jsonb, $24::jsonb, $25)
      RETURNING id`,
     [
       organizerId,
@@ -157,6 +158,7 @@ export async function createEvent(organizerId, data) {
       JSON.stringify(data.prizes ?? []),
       JSON.stringify(data.rules ?? []),
       JSON.stringify(data.faqs ?? []),
+      data.college ?? null,
     ],
   );
   return findById(rows[0].id);

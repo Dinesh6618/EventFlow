@@ -3,7 +3,10 @@ import { ACTIVE } from './registrationModel.js';
 import { localNow } from '../utils/eventStatus.js';
 import { notFound, unprocessable } from '../utils/httpError.js';
 
-export const SESSION_TYPES = ['session', 'workshop', 'talk', 'break', 'competition', 'evaluation_round'];
+export const SESSION_TYPES = [
+  'session', 'registration', 'ceremony', 'keynote', 'talk', 'panel', 'workshop', 'presentation',
+  'competition', 'evaluation_round', 'mentoring', 'networking', 'break',
+];
 
 const SELECT = `
   SELECT s.id, s.event_id AS "eventId", s.title, s.description,

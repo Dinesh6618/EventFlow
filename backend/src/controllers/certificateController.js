@@ -11,7 +11,7 @@ const organizerOf = (req) => requireEventAccess(req.user, idParam(req.params.id,
 export async function listForEvent(req, res) {
   const { event } = await organizerOf(req);
   const [list, eligibility] = await Promise.all([certificates.listForEvent(event.id), certificates.eligibility(event)]);
-  res.json({ certificates: list, eligibility, types: certificates.TYPE_LABELS, canIssue: event.status !== 'upcoming' });
+  res.json({ certificates: list, eligibility, types: certificates.TYPE_LABELS, canIssue: true, visibleToHolders: certificates.hasStarted(event) });
 }
 
 export async function issue(req, res) {
@@ -22,10 +22,11 @@ export async function issue(req, res) {
     ? await certificates.issueManual(event, type, recipients, req.user.id)
     : await certificates.issueBulk(event, type, req.user.id, { scope, finalistUpToRank });
 
+  // Holders cannot see a certificate before the event starts, so only tell them when they can open it.
   const label = certificates.TYPE_LABELS[type];
   await Promise.all(
     issued
-      .filter((c) => c.userId)
+      .filter((c) => c.userId && certificates.hasStarted(event))
       .map((c) =>
         notifications.safely(() =>
           notifications.notify(c.userId, {
@@ -58,7 +59,7 @@ export async function pdf(req, res) {
   const found = certificates.CODE_PATTERN.test(code) ? await certificates.findForPdf(code) : undefined;
   const allowed =
     found &&
-    ((req.user.role === ROLES.PARTICIPANT && found.userId === req.user.id && !found.revokedAt) ||
+    ((req.user.role === ROLES.PARTICIPANT && found.userId === req.user.id && !found.revokedAt && certificates.hasStarted({ date: found.eventDate, startTime: found.eventStartTime })) ||
       (req.user.role === ROLES.ORGANIZER && found.organizerId === req.user.id));
   if (!allowed) throw notFound('Certificate not found');
 
@@ -67,6 +68,29 @@ export async function pdf(req, res) {
     .set('Content-Type', 'application/pdf')
     .set('Content-Disposition', `attachment; filename="${found.code}.pdf"`)
     .send(file);
+}
+
+/** Organizer only: a sample of the design for one type, with this event's details, to check before issuing. */
+export async function preview(req, res) {
+  const { event } = await organizerOf(req);
+  const type = String(req.query.type || 'participant');
+  if (!certificates.TYPES.includes(type)) throw notFound('Unknown certificate type');
+  const file = await renderCertificate({
+    code: 'EVF-SAMPLE',
+    sample: true,
+    type,
+    recipientName: type === 'speaker' ? 'Guest Speaker' : 'Recipient Name',
+    eventName: event.name,
+    eventType: event.type,
+    college: event.college || req.user.college || null,
+    venue: event.venue,
+    eventDate: event.date,
+    eventEndDate: event.endDate || event.date,
+    organizerName: event.organizerName,
+    organizerContact: event.organizerContact,
+    issuedAt: new Date(),
+  });
+  res.set('Content-Type', 'application/pdf').set('Content-Disposition', `inline; filename="sample-${type}.pdf"`).send(file);
 }
 
 /** Public. Rate limited; returns only what is needed to confirm authenticity. */

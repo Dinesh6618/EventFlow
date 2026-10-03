@@ -16,6 +16,7 @@ router.get('/verify/:code', rateLimit({ windowMs: 60_000, max: 30 }), certificat
 
 router.get('/certificates/mine', authenticate, participantOnly, certificateCtrl.mine);
 router.get('/certificates/:code/pdf', authenticate, certificateCtrl.pdf);
+router.get('/events/:id/certificates/preview', authenticate, organizerOnly, certificateCtrl.preview);
 router.get('/events/:id/certificates', authenticate, organizerOnly, certificateCtrl.listForEvent);
 router.post('/events/:id/certificates', authenticate, organizerOnly, validate(issueSchema), certificateCtrl.issue);
 router.post('/events/:id/certificates/:certId/revoke', authenticate, organizerOnly, validate(revokeSchema), certificateCtrl.revoke);

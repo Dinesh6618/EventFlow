@@ -14,8 +14,8 @@ College event planning and management platform: organizers create and run events
 | 6 | Judging | Criteria, judge assignment, scoring, progress tracking, leaderboard with a publish step and privacy controls |
 | 7 | Certificates and feedback | Numbered PDF certificates, public verification page, anonymous feedback |
 | 8 | Analytics | Registrations, attendance rate, conversion, engagement and completion, per event or overall, CSV export |
-| 9 | AI Event Planner | Describe an idea, get a structured plan, edit, confirm, publish as a real event (needs an Anthropic API key) |
 | UI | Student experience and redesign | Landing page, role selection, student home with recommendations, explore with filters and saved events, tabbed event pages, 3-step registration wizard, digital event pass with downloadable QR, My Events, timeline schedule, My Team, notification centre, certificate gallery, feedback screen, 5-step event wizard, sortable participants table, bottom navigation on phones |
+| Vol | Volunteer platform | Students browse events and apply to volunteer, organizers approve or decline, approved volunteers scan QR check-ins and report crowd levels |
 | 10 | Recommendations and control center | Rule-based recommendations from the event's own numbers, optional AI ideas, a live control center with crowd-level reports |
 
 Definitions of every number (for example attendance rate or conversion) are in [docs/API.md](docs/API.md).
@@ -96,9 +96,12 @@ Migrations live in [backend/db/migrations](backend/db/migrations) and are applie
 | 005 | teams, members, invitations, skills |
 | 006 | judging criteria, assignments, scores, leaderboard settings |
 | 007 | certificates, feedback |
-| 008 | AI plans |
+| 008 | AI plans (unused; the planner was removed) |
 | 009 | recommendations, crowd-level zones |
 | 010 | student year/phone, event format/department/prizes/rules/FAQs, saved events |
+| 011 | more schedule session types |
+| 012 | event college (printed on certificates) |
+| 013 | volunteer applications |
 
 **Two ways to run the database**
 
@@ -124,7 +127,7 @@ Stop the backend before running `npm run seed` when using the embedded database;
 | CLIENT_ORIGIN | http://localhost:5173 | Allowed browser origin(s) for CORS, comma separated |
 | JWT_SECRET | dev-only value | Secret used to sign login tokens. Use a long random string outside development |
 | PUBLIC_APP_URL | http://localhost:5173 | Address of the web app; certificate QR codes link to `<PUBLIC_APP_URL>/verify/<id>` |
-| ANTHROPIC_API_KEY | empty | Enables the AI planner and AI recommendation ideas. Server-side only, never sent to the browser. Empty = AI features show "not set up" and nothing else changes |
+| ANTHROPIC_API_KEY | empty | Enables the AI recommendation ideas. Server-side only, never sent to the browser. Empty = AI features show "not set up" and nothing else changes |
 | AI_MODEL / AI_EFFORT | claude-opus-5-5 / medium | Model and effort used for AI features |
 | DATABASE_URL | empty | PostgreSQL connection string. Empty = embedded PGlite |
 | PGLITE_DIR | .data/pglite | Where the embedded database is stored |
@@ -153,7 +156,7 @@ Fonts: Plus Jakarta Sans. Colours are defined once in `frontend/src/index.css` (
 ```text
 Organizer   -> /organizer/dashboard: create events, then per event: overview, control center, insights,
                attendance, schedule, teams, judging, check-in, feedback, certificates, announcements,
-               AI plan, team and volunteers. Also: participants, analytics, AI planner.
+               team and volunteers. Also: participants, analytics.
 Student     -> /home: dashboard, /events explore, register (3 steps), /my/registrations (My Events + event pass),
                /my/team, /notifications, /my/certificates, /events/:id/feedback, /profile.
                If assigned: /judging (score teams) and /volunteer (scan QR codes, report crowd levels).
@@ -176,7 +179,7 @@ cd backend
 npm test
 ```
 
-Runs the backend suites against temporary embedded databases: auth and validation, registration concurrency, QR attendance, schedule and notifications, teams, judging, certificates and feedback, analytics, the AI planner (against a scripted stand-in for the model), and the Phase 10 rule engine, recommendations, zones and control center.
+Runs the backend suites against temporary embedded databases: auth and validation, registration concurrency, QR attendance, schedule and notifications, teams, judging, certificates and feedback, analytics, and the Phase 10 rule engine, recommendations, zones and control center.
 
 **About AI testing.** Without an Anthropic API key the AI features were verified against a scripted stub, against the real Anthropic SDK pointed at a local mock server (to check the request and response format), and in the browser against that mock. They have not been run against the live Anthropic API in this repository.
 

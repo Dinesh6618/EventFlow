@@ -94,3 +94,19 @@ export async function download(path, fallbackName) {
   link.remove();
   URL.revokeObjectURL(url);
 }
+
+/** Fetch a file with the sign-in token and return a temporary blob URL (revoke it when done). */
+export async function blobUrl(path) {
+  const token = tokenStore.get();
+  let response;
+  try {
+    response = await fetch(`${BASE}${path}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+  } catch {
+    throw new ApiError('Cannot reach the server. Make sure the backend is running.', 0);
+  }
+  if (!response.ok) {
+    const data = await response.json().catch(() => null);
+    throw new ApiError(data?.message || `Could not open the file (${response.status})`, response.status);
+  }
+  return URL.createObjectURL(await response.blob());
+}

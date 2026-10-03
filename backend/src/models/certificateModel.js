@@ -1,6 +1,7 @@
 import { query, transaction } from '../db.js';
 import * as judging from './judgingModel.js';
 import { conflict, notFound, unprocessable } from '../utils/httpError.js';
+import { getEventStatus } from '../utils/eventStatus.js';
 
 export const TYPES = ['participant', 'winner', 'runner_up', 'finalist', 'volunteer', 'organizer', 'speaker', 'judge'];
 
@@ -88,10 +89,6 @@ export async function eligibility(event, options = {}) {
 
 /* --------------------------------------------------------------- issuing */
 
-function assertCanIssue(event) {
-  if (event.status === 'upcoming') throw conflict('Certificates can be issued once the event has started');
-}
-
 async function insertCertificates(run, event, type, people, issuerId) {
   const issued = [];
   for (const person of people) {
@@ -108,7 +105,6 @@ async function insertCertificates(run, event, type, people, issuerId) {
 
 /** Issue to everyone eligible for `type` who does not have one yet. Returns the new certificates. */
 export async function issueBulk(event, type, issuerId, options = {}) {
-  assertCanIssue(event);
   if (type === 'speaker') throw unprocessable('Speakers are issued by name', { type: 'Use the speaker form' });
   const everyone = await candidates(event, type, options);
   if (everyone.length === 0) {
@@ -126,7 +122,6 @@ export async function issueBulk(event, type, issuerId, options = {}) {
 
 /** Issue to named people (any type). A recipient with an account email is linked to that account. */
 export async function issueManual(event, type, recipients, issuerId) {
-  assertCanIssue(event);
   const people = [];
   for (const r of recipients) {
     let userId = null;
@@ -157,22 +152,30 @@ export async function listForEvent(eventId) {
   return query(`SELECT ${COLUMNS} FROM certificates c WHERE c.event_id = $1 ORDER BY c.id DESC`, [eventId]);
 }
 
+/** True once the event's start time has passed. Until then only the organizer can see its certificates. */
+export const hasStarted = (event) => getEventStatus(event) !== 'upcoming';
+
 export async function listForUser(userId) {
-  return query(
-    `SELECT ${COLUMNS}, e.name AS "eventName", e.type AS "eventType", e.image AS "eventImage", to_char(e.date, 'YYYY-MM-DD') AS "eventDate"
+  const rows = await query(
+    `SELECT ${COLUMNS}, e.name AS "eventName", e.type AS "eventType", e.image AS "eventImage", to_char(e.date, 'YYYY-MM-DD') AS "eventDate",
+            to_char(e.start_time, 'HH24:MI') AS "eventStartTime"
        FROM certificates c JOIN events e ON e.id = c.event_id
       WHERE c.user_id = $1 AND c.revoked_at IS NULL ORDER BY c.issued_at DESC`,
     [userId],
   );
+  return rows
+    .filter((r) => hasStarted({ date: r.eventDate, startTime: r.eventStartTime }))
+    .map(({ eventStartTime, ...rest }) => rest);
 }
 
 /** Everything the PDF needs. */
 export async function findForPdf(code) {
   const rows = await query(
-    `SELECT ${COLUMNS}, e.name AS "eventName", e.type AS "eventType", e.venue,
-            to_char(e.date, 'YYYY-MM-DD') AS "eventDate", to_char(COALESCE(e.end_date, e.date), 'YYYY-MM-DD') AS "eventEndDate",
+    `SELECT ${COLUMNS}, e.name AS "eventName", e.type AS "eventType", e.venue, COALESCE(e.college, o.college) AS college,
+            to_char(e.date, 'YYYY-MM-DD') AS "eventDate", to_char(e.start_time, 'HH24:MI') AS "eventStartTime",
+            to_char(COALESCE(e.end_date, e.date), 'YYYY-MM-DD') AS "eventEndDate",
             e.organizer_id AS "organizerId", e.organizer_name AS "organizerName", e.organizer_contact AS "organizerContact"
-       FROM certificates c JOIN events e ON e.id = c.event_id WHERE c.certificate_code = $1`,
+       FROM certificates c JOIN events e ON e.id = c.event_id JOIN users o ON o.id = e.organizer_id WHERE c.certificate_code = $1`,
     [code],
   );
   return rows[0];

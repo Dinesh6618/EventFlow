@@ -33,7 +33,7 @@ export default function Modal({ open, onClose, title, children, footer, size = '
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className={`anim-pop relative max-h-[90vh] w-full overflow-y-auto rounded-t-3xl bg-white p-6 shadow-2xl focus:outline-none sm:rounded-3xl ${size === 'lg' ? 'sm:max-w-2xl' : 'sm:max-w-md'}`}
+        className={`anim-pop relative max-h-[90vh] w-full overflow-y-auto rounded-t-3xl bg-white p-6 shadow-2xl focus:outline-none sm:rounded-3xl ${size === 'xl' ? 'sm:max-w-5xl' : size === 'lg' ? 'sm:max-w-2xl' : 'sm:max-w-md'}`}
       >
         <div className="mb-3 flex items-start justify-between gap-4">
           <h2 id={titleId} className="text-lg font-bold text-slate-900">

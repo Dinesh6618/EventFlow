@@ -60,7 +60,7 @@ export default function StudentLayout() {
   const { data: assigned } = useApi((signal) => meApi.assignments(signal), []);
 
   const extra = [];
-  if (assigned?.assignments.some((a) => a.staffRole === 'volunteer')) extra.push({ to: '/volunteer', label: 'Volunteering', icon: 'qr', prefix: true });
+  extra.push({ to: '/volunteer', label: 'Volunteer', icon: 'qr', prefix: true });
   if (assigned?.assignments.some((a) => a.staffRole === 'judge')) extra.push({ to: '/judging', label: 'Judging', icon: 'trophy', prefix: true });
   const items = [...STUDENT_NAV.slice(0, 5), ...extra, STUDENT_NAV[5]];
 

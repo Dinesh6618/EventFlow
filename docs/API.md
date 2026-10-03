@@ -110,6 +110,7 @@ Returns `{ "event": Event }`, or 404.
 | registrationDeadline | `YYYY-MM-DDTHH:MM`, not in the past, not after the event start |
 | organizerName | required, 2-100 characters |
 | organizerContact | required; an email address or phone number |
+| college | optional, up to 150 characters; the college that conducts the event. Printed on certificates (falls back to the organizer's profile college) |
 | image | optional file, JPG/PNG/WEBP/GIF, up to 5 MB |
 
 Returns `201 { "event": Event }`. Rejected requests (422) never leave an uploaded file on disk.
@@ -201,13 +202,27 @@ Stored attendance row: `participantId` (`user_id`), `eventId`, `checkInTime`, `c
 | POST | /notifications/:id/read | any | Mark one read (own only) |
 | POST | /notifications/read-all | any | Mark all read |
 
-Session body: `title` (required), `date` (must be an event day), `startTime`, `endTime` (after start), `sessionType` (`session`, `workshop`, `talk`, `break`, `competition`, `evaluation_round`), and optional `description`, `venue`, `speaker`. Each item also returns `status`: `upcoming`, `ongoing` or `past`. `next` ignores breaks.
+Session body: `title` (required), `date` (must be an event day), `startTime`, `endTime` (after start), `sessionType` (`session`, `registration`, `ceremony`, `keynote`, `talk`, `panel`, `workshop`, `presentation`, `competition`, `evaluation_round`, `mentoring`, `networking`, `break`), and optional `description`, `venue`, `speaker`. Each item also returns `status`: `upcoming`, `ongoing` or `past`. `next` ignores breaks.
 
 **Session attendance.** `POST /events/:id/attendance/scan` accepts an optional `sessionId` (check-in only). It records entry to that session on today's date and also checks the person in to the event if they were not yet. A second scan for the same session returns 409.
 
 **Notifications** are created for: registration confirmed / pending, approved / rejected, a new registration that needs the organizer's approval, schedule changes (to everyone with a seat), announcements (to registrants, volunteers and judges), event reminders and session-starting notices. A notification is `{ id, type, title, message, link, eventId, read, readAt, createdAt }`; list responses also return `unreadCount`.
 
 **Reminders** run in the server process every minute (`src/services/reminders.js`): a reminder 24 h before an event starts, another 1 h before, and a notice 15 min before each non-break session (only to approved/confirmed registrants). A `dedupe_key` per user guarantees each is sent once, even across restarts.
+
+## Volunteer platform
+
+Students find events that need help, apply, and the organizer approves or declines. Approval adds the student to the event's staff as a `volunteer` (the same record as adding them by email on the Team tab), so they can scan QR codes and report crowd levels for that event.
+
+| Method | Path | Who | Description |
+| ------ | ---- | --- | ----------- |
+| GET | /volunteer/opportunities | participant | Events that have not ended, each with `applicationStatus` (`null`, `pending`, `approved`, `declined`) and `isVolunteer` |
+| POST | /events/:id/volunteer-applications | participant | Apply: `{ message? }` (up to 500 characters). 409 if already applied (pending or approved), already a volunteer, or the event has ended. A declined student may apply again |
+| DELETE | /events/:id/volunteer-applications/mine | participant | Withdraw a pending application (204; 404 if none) |
+| GET | /events/:id/volunteer-applications | the event's organizer | Applications with the applicant's name, email, department, college and message, pending first |
+| PATCH | /events/:id/volunteer-applications/:appId | the event's organizer | `{ status: "approved" \| "declined" }`. 409 if already decided |
+
+The organizer is notified of each application, and the student of the decision.
 
 ## Teams (Phase 5)
 
@@ -278,6 +293,7 @@ Team projects also carry `repositoryUrl` and `demoUrl` (http/https only) and `su
 | ------ | ---- | --- | ----------- |
 | GET | /events/:id/certificates | organizer | Issued certificates, `eligibility` per type, `canIssue` |
 | POST | /events/:id/certificates | organizer | Issue: `{ type, scope?, finalistUpToRank? }` in bulk, or `{ type, recipients: [{ name, email? }] }` by name |
+| GET | /events/:id/certificates/preview?type= | organizer | A sample PDF of that type's design with this event's details, marked SAMPLE and without a verification QR code |
 | POST | /events/:id/certificates/:certId/revoke | organizer | `{ reason? }` |
 | GET | /certificates/mine | participant | Own, non-revoked certificates |
 | GET | /certificates/:code/pdf | the holder, or the event's organizer | The certificate as a PDF |
@@ -286,14 +302,14 @@ Team projects also carry `repositoryUrl` and `demoUrl` (http/https only) and `su
 | PUT | /events/:id/feedback | participant with a seat | Create or update: `{ sessionId?, overall, organization?, speaker?, venue?, comments?, suggestions? }` |
 | GET | /events/:id/feedback/summary | organizer | Averages, distribution, session-wise ratings, anonymous comments |
 
-**Certificate types:** `participant`, `winner`, `runner_up`, `finalist`, `volunteer`, `organizer`, `speaker`, `judge`. Certificates can be issued once the event has started.
+**Certificate types:** `participant`, `winner`, `runner_up`, `finalist`, `volunteer`, `organizer`, `speaker`, `judge`. The organizer can issue certificates at any time, even before the event starts. Holders (and their notification) only get access from the event's start time; the organizer sees them throughout.
 
 - `participant` goes to people who checked in (`scope: "attended"`, default) or everyone approved/confirmed (`"registered"`).
 - `winner` is the members of the rank-1 team(s), `runner_up` rank 2, `finalist` ranks 3 to `finalistUpToRank` (default 5), all taken from the leaderboard.
 - `volunteer` and `judge` come from the event's Team tab; `organizer` is the event organizer.
 - `speaker`, or anyone else, is issued by name. An email links it to that account; with no email it is name-only (for example an external speaker).
 - Each person gets at most one certificate per type per event; issuing again only adds people who are missing, and returns 409 when there is nobody new.
-- Certificate IDs look like `EVF-2026-001245` (year + a global sequence). The PDF (landscape A4) shows the holder, event, dates, venue, type, ID, issue date, organizer name and contact, and a QR code to `<PUBLIC_APP_URL>/verify/<id>`.
+- Certificate IDs look like `EVF-2026-001245` (year + a global sequence). The PDF (landscape A4) shows the holder, event, dates, venue, type, ID, issue date, organizer name and contact, and a QR code to `<PUBLIC_APP_URL>/verify/<id>`. Each type has its own colours and seal, and a rosette pattern drawn from the certificate ID, so no two certificates look identical.
 
 **Verification** returns `{ status: "VALID" | "REVOKED" | "NOT_FOUND", valid, certificate? }` where `certificate` is only `{ code, participantName, eventName, type, typeLabel, issuedAt, organizer }`: no email and no account ids. Unknown or malformed IDs give 404. Because IDs are sequential, the endpoint is rate limited (30 requests per minute per IP; 429 with `Retry-After`). Revoked certificates verify as `REVOKED` and can no longer be downloaded by the holder.
 
@@ -318,30 +334,6 @@ Definitions: **registrations** = pending + approved + confirmed. **Attendance ra
 
 The web UI draws these as custom SVG/HTML charts (no chart dependency) with a legend for multi-series charts, a hover/keyboard tooltip on every chart, and a Chart/Table switch so each figure can be read without hovering.
 
-## AI Event Planner (Phase 9)
-
-Requires `ANTHROPIC_API_KEY` in `backend/.env`. The key is read only on the server, sent only to the Anthropic API, and never returned by any endpoint or written to a log. Without it the planner returns `503` and says the administrator needs to set the key; the rest of EventFlow is unaffected. Optional settings: `AI_MODEL` (default `claude-opus-5-5`), `AI_EFFORT` (`low` to `max`, default `medium`), `AI_MAX_TOKENS`, `AI_TIMEOUT_MS`.
-
-| Method | Path | Description |
-| ------ | ---- | ----------- |
-| GET | /organizer/ai/status | `{ configured, model }` |
-| GET | /organizer/ai/plans | The organizer's plans (latest 50) |
-| POST | /organizer/ai/plans | **Step 1.** Generate a draft: `{ idea, eventType?, expectedParticipants?, durationHours?, startTime?, sessionCount?, breakMinutes?, breakEveryHours? }` |
-| GET | /organizer/ai/plans/:id | The plan with `warnings` and `publishDefaults` |
-| PUT | /organizer/ai/plans/:id | **Step 3.** Save edits: `{ plan }` (the whole plan) |
-| POST | /organizer/ai/plans/:id/schedule | Suggest a new schedule (**a proposal only; nothing is saved**) |
-| POST | /organizer/ai/plans/:id/confirm | **Step 4.** Confirm the saved plan |
-| POST | /organizer/ai/plans/:id/publish | **Step 5.** Create the event from a confirmed plan |
-| DELETE | /organizer/ai/plans/:id | Discard a plan that was not published |
-| GET | /organizer/ai/events/:eventId/plan | The plan an event was published from, or `null` |
-
-**Workflow, enforced by the server.** AI generated, then review, edit, confirm, publish. A plan is created as `draft`. Only a `confirmed` plan can be published (otherwise 409). Saving an edit to a confirmed plan sets it back to `draft`, so the organizer must confirm what will actually be published. Publishing creates the event with its schedule sessions, judging criteria and team rules, then the plan becomes `published`: a read-only record linked to the event. The AI never creates or changes an event, and a schedule suggestion is returned for review and only saved if the organizer saves it.
-
-**What the plan contains.** `title`, `summary`, `eventType`, `structure` (duration, days, participants, format, phases), `schedule` (day, start/end time, title, description, session type, venue and speaker hints), `registration` (approval, capacity, requirements, deadline in days), `team` (on/off, min and max size), `volunteers` (total and roles), `judging` (criteria with points, judges needed), `resources`, `communicationPlan` and `riskChecklist`. Volunteers, resources, communication and risks are kept as checklists on the event's *AI plan* tab; schedule, judging criteria, capacity, approval and team rules become real event settings.
-
-**Checks on everything.** The model is asked for JSON that matches a schema (structured outputs), and the result is validated again on our side: formats, ranges, end after start, sessions within the plan's days, team sizes, unique criterion names. If the model's answer fails validation it is sent back once with the list of problems; if it still fails, nothing is saved (502). The organizer's own edits are held to the same rules (422 with `errors` keyed by path, for example `schedule.2.endTime`). Overlapping sessions and criteria that do not add up to 100 are warnings, not errors. The event details given at publish time go through the normal event validation.
-
-**Safety and cost.** The organizer's description is passed inside tags and the system prompt tells the model to treat it as data, not instructions. Refusals (422), truncated plans, unreadable output, rate limits (429) and provider failures (502/504) are turned into plain messages that never contain provider details. Each organizer can start 20 generations per hour (schedule suggestions count); requests that fail validation are checked first and do not use the allowance. Token usage of each plan is stored. The original model output is kept unchanged next to the edited copy.
 
 ## Recommendations and the control center (Phase 10)
 
@@ -351,7 +343,7 @@ All of these are for the owning organizer, except the crowd-zone endpoints, whic
 | ------ | ---- | ----------- |
 | GET | /events/:id/recommendations | Re-checks the rules against the event's current data, then returns `{ recommendations, ai: { configured, model } }` |
 | PATCH | /events/:id/recommendations/:rid | `{ status: "new" \| "dismissed" \| "done" }`. 409 if the recommendation no longer applies |
-| POST | /events/:id/recommendations/ai | Ask Claude for extra ideas. Returns `{ added, recommendations }`. 503 if no API key, 502 on provider/validation failure, 429 over the hourly allowance (shared with the AI planner) |
+| POST | /events/:id/recommendations/ai | Ask Claude for extra ideas. Returns `{ added, recommendations }`. 503 if no API key, 502 on provider/validation failure, 429 over the hourly allowance |
 | GET | /events/:id/control-center | The live snapshot ("digital event twin") described below |
 | GET | /events/:id/zones | Crowd areas of the event (organizer or assigned volunteer) |
 | POST | /events/:id/zones | Organizer only. `{ name }` (2-60 characters, unique per event ignoring case, 409 otherwise) |

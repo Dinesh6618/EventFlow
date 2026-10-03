@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { ApiError, attendanceApi } from '../../../api';
 import { AttendanceBadge } from '../../../components/attendance/AttendanceSummary.jsx';
 import AttendanceSummary from '../../../components/attendance/AttendanceSummary.jsx';
-import Button from '../../../components/ui/Button.jsx';
+import Button, { buttonClasses } from '../../../components/ui/Button.jsx';
 import Card from '../../../components/ui/Card.jsx';
 import EmptyState from '../../../components/ui/EmptyState.jsx';
 import Icon from '../../../components/ui/Icon.jsx';
@@ -94,6 +94,10 @@ export default function AttendancePage() {
                 className="block w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-9 pr-3 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 sm:w-64"
               />
             </div>
+            <Link to="../scan" relative="path" className={buttonClasses('primary')}>
+              <Icon name="qr" className="h-4 w-4" />
+              Scan QR
+            </Link>
             <Button variant="secondary" onClick={exportCsv} loading={exporting} disabled={!data?.summary.totalRegistered}>
               Export CSV
             </Button>

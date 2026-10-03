@@ -9,6 +9,13 @@ const TYPE_STYLE = {
   competition: ['bg-amber-100 text-amber-600', 'trophy', 'Competition', 'amber'],
   evaluation_round: ['bg-pink-100 text-pink-600', 'star', 'Evaluation', 'pink'],
   session: ['bg-sky-100 text-sky-600', 'calendar', 'Session', 'blue'],
+  registration: ['bg-sky-100 text-sky-600', 'ticket', 'Registration', 'blue'],
+  ceremony: ['bg-pink-100 text-pink-600', 'award', 'Ceremony', 'pink'],
+  keynote: ['bg-indigo-100 text-indigo-600', 'sparkles', 'Keynote', 'indigo'],
+  panel: ['bg-indigo-100 text-indigo-600', 'users', 'Panel', 'indigo'],
+  presentation: ['bg-emerald-100 text-emerald-600', 'eye', 'Presentation', 'green'],
+  mentoring: ['bg-emerald-100 text-emerald-600', 'user-plus', 'Mentoring', 'green'],
+  networking: ['bg-sky-100 text-sky-600', 'globe', 'Networking', 'blue'],
 };
 
 /**

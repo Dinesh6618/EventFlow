@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ApiError, certificatesApi } from '../../../api';
 import Alert from '../../../components/ui/Alert.jsx';
 import Badge from '../../../components/ui/Badge.jsx';
@@ -7,6 +7,7 @@ import Card from '../../../components/ui/Card.jsx';
 import ConfirmDialog from '../../../components/ui/ConfirmDialog.jsx';
 import { Input, Select } from '../../../components/ui/FormField.jsx';
 import LoadError from '../../../components/ui/LoadError.jsx';
+import Modal from '../../../components/ui/Modal.jsx';
 import { useToast } from '../../../context/ToastContext.jsx';
 import { useApi } from '../../../hooks/useApi.js';
 import { useEvent } from './EventManageLayout.jsx';
@@ -32,6 +33,24 @@ export default function CertificatesPage() {
   const [manualErrors, setManualErrors] = useState({});
   const [revoking, setRevoking] = useState(null);
   const [reason, setReason] = useState('');
+  const [viewing, setViewing] = useState(null); // { title, url, code? }
+  const [opening, setOpening] = useState(null);
+
+  // Free the temporary PDF address when the viewer closes or another one opens.
+  useEffect(() => () => viewing && URL.revokeObjectURL(viewing.url), [viewing]);
+
+  const openViewer = async (key, title, load, code) => {
+    setOpening(key);
+    try {
+      setViewing({ title, url: await load(), code });
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setOpening(null);
+    }
+  };
+  const viewIssued = (c) => openViewer(c.code, `${data.types[c.type]} certificate: ${c.recipientName}`, () => certificatesApi.viewUrl(c.code), c.code);
+  const previewDesign = (type) => openViewer(`preview-${type}`, `${data.types[type]} certificate: sample design`, () => certificatesApi.previewUrl(event.id, type));
 
   const run = async (key, fn, success) => {
     setBusy(key);
@@ -79,7 +98,9 @@ export default function CertificatesPage() {
 
   return (
     <div className="space-y-8">
-      {!data.canIssue && <Alert type="info">Certificates can be issued once the event has started.</Alert>}
+      {!data.visibleToHolders && (
+        <Alert type="info">You can create certificates now. Only you can see them until the event starts; participants get access, and a PDF download, from the start time.</Alert>
+      )}
 
       <section aria-label="Issue certificates">
         <h2 className="mb-3 text-base font-semibold text-slate-900">Issue certificates</h2>
@@ -102,7 +123,8 @@ export default function CertificatesPage() {
                     </select>
                   </div>
                 )}
-                <div className="mt-auto pt-4">
+                <div className="mt-auto space-y-2 pt-4">
+                  <Button className="w-full" variant="ghost" loading={opening === `preview-${type}`} onClick={() => previewDesign(type)}>Preview design</Button>
                   <Button className="w-full" variant="secondary" loading={busy === type} disabled={!data.canIssue || (type !== 'participant' && info.eligible === 0)} onClick={() => issueBulk(type)}>
                     {type === 'participant' ? 'Issue to eligible' : `Issue to ${info.eligible}`}
                   </Button>
@@ -129,7 +151,10 @@ export default function CertificatesPage() {
           <Select label="Type" value={manual.type} onChange={(e) => setManual((m) => ({ ...m, type: e.target.value }))} options={typeOptions} />
           <Input label="Name on certificate" value={manual.name} onChange={(e) => { setManual((m) => ({ ...m, name: e.target.value })); setManualErrors({}); }} error={manualErrors.name} maxLength={100} />
           <Input label="Email (optional)" type="email" value={manual.email} onChange={(e) => { setManual((m) => ({ ...m, email: e.target.value })); setManualErrors({}); }} error={manualErrors.email} />
-          <div className="md:pt-[1.625rem]"><Button type="submit" loading={busy === 'manual'} disabled={!data.canIssue} className="w-full">Issue</Button></div>
+          <div className="flex gap-2 md:pt-[1.625rem]">
+            <Button variant="ghost" loading={opening === `preview-${manual.type}`} onClick={() => previewDesign(manual.type)}>Preview</Button>
+            <Button type="submit" loading={busy === 'manual'} disabled={!data.canIssue} className="flex-1">Issue</Button>
+          </div>
         </form>
       </Card>
 
@@ -158,6 +183,7 @@ export default function CertificatesPage() {
                       <td className="px-4 py-3"><Badge tone="indigo">{data.types[c.type]}</Badge></td>
                       <td className="hidden px-4 py-3 text-slate-600 sm:table-cell">{date(c.issuedAt)}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-right">
+                        <Button size="sm" variant="ghost" loading={opening === c.code} onClick={() => viewIssued(c)}>View</Button>
                         <Button size="sm" variant="ghost" onClick={() => certificatesApi.download(c.code).catch((e) => toast.error(e.message))}>PDF</Button>
                         {!c.revokedAt && <Button size="sm" variant="ghost" className="text-red-600 hover:bg-red-50" onClick={() => setRevoking(c)}>Revoke</Button>}
                       </td>
@@ -169,6 +195,16 @@ export default function CertificatesPage() {
           </Card>
         )}
       </section>
+
+      <Modal
+        open={Boolean(viewing)}
+        onClose={() => setViewing(null)}
+        title={viewing?.title ?? ''}
+        size="xl"
+        footer={viewing?.code && <Button variant="secondary" onClick={() => certificatesApi.download(viewing.code).catch((e) => toast.error(e.message))}>Download PDF</Button>}
+      >
+        {viewing && <iframe src={viewing.url} title={viewing.title} className="h-[70vh] w-full rounded-lg border border-slate-200 bg-slate-100" />}
+      </Modal>
 
       <ConfirmDialog open={Boolean(revoking)} title="Revoke this certificate?" confirmLabel="Revoke" danger loading={busy === 'revoke'} onCancel={() => { setRevoking(null); setReason(''); }} onConfirm={revoke}>
         <p><strong className="text-slate-900">{revoking?.code}</strong> for {revoking?.recipientName} will show as REVOKED when someone verifies it, and the holder will no longer be able to download it.</p>

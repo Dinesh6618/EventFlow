@@ -9,11 +9,10 @@ import LoadError from '../../../components/ui/LoadError.jsx';
 import Modal from '../../../components/ui/Modal.jsx';
 import { useToast } from '../../../context/ToastContext.jsx';
 import { useApi } from '../../../hooks/useApi.js';
-import { SESSION_TYPES } from '../../../utils/constants.js';
+import { SESSION_TYPES, SESSION_TYPE_OPTIONS } from '../../../utils/constants.js';
 import { validateSession } from '../../../utils/validation.js';
 import { useEvent } from './EventManageLayout.jsx';
 
-const TYPE_OPTIONS = Object.keys(SESSION_TYPES);
 const BLANK = (event) => ({ title: '', description: '', date: event.date, startTime: '', endTime: '', venue: event.venue, speaker: '', sessionType: 'session' });
 
 function SessionForm({ event, session, onClose, onSaved }) {
@@ -52,7 +51,7 @@ function SessionForm({ event, session, onClose, onSaved }) {
       <form onSubmit={submit} noValidate className="space-y-4">
         <Input label="Title" required value={values.title} onChange={set('title')} error={errors.title} maxLength={150} />
         <Select label="Session type" required value={values.sessionType} onChange={set('sessionType')} error={errors.sessionType}
-          options={TYPE_OPTIONS} />
+          options={SESSION_TYPE_OPTIONS} hint={SESSION_TYPES[values.sessionType]?.description} />
         <Input label="Date" required type="date" min={event.date} max={event.endDate} value={values.date} onChange={set('date')} error={errors.date}
           hint={multiDay ? 'Pick one of the event days.' : undefined} />
         <div className="grid grid-cols-2 gap-4">

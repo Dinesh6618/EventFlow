@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { ApiError, staffApi } from '../../../api';
+import { ApiError, staffApi, volunteerApi } from '../../../api';
 import Badge from '../../../components/ui/Badge.jsx';
 import Button from '../../../components/ui/Button.jsx';
 import Card from '../../../components/ui/Card.jsx';
@@ -58,8 +58,53 @@ export default function StaffPage() {
     }
   };
 
+  const applications = useApi((signal) => volunteerApi.forEvent(eventId, signal), [eventId]);
+  const [deciding, setDeciding] = useState(null);
+  const decide = async (application, status) => {
+    setDeciding(application.id);
+    try {
+      await volunteerApi.decide(eventId, application.id, status);
+      toast.success(status === 'approved' ? `${application.name} is now a volunteer.` : `${application.name}'s application was declined.`);
+      applications.reload();
+      reload();
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setDeciding(null);
+    }
+  };
+  const pending = applications.data?.applications.filter((a) => a.status === 'pending') ?? [];
+
   return (
     <div className="space-y-6">
+      <Card className="p-5">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-base font-semibold text-slate-900">Volunteer applications</h2>
+          {pending.length > 0 && <Badge tone="amber">{pending.length} waiting</Badge>}
+        </div>
+        {applications.error ? (
+          <LoadError error={applications.error} onRetry={applications.reload} />
+        ) : pending.length === 0 ? (
+          <p className="mt-2 text-sm text-slate-500">Students can apply to volunteer from their Volunteer page. New applications wait here for you to approve or decline.</p>
+        ) : (
+          <ul className="mt-3 divide-y divide-slate-100">
+            {pending.map((a) => (
+              <li key={a.id} className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <p className="font-medium text-slate-900">{a.name}</p>
+                  <p className="truncate text-sm text-slate-500">{[a.email, a.department, a.college].filter(Boolean).join(' - ')}</p>
+                  {a.message && <p className="mt-1 text-sm text-slate-600">"{a.message}"</p>}
+                </div>
+                <div className="flex shrink-0 gap-2">
+                  <Button size="sm" loading={deciding === a.id} onClick={() => decide(a, 'approved')}>Approve</Button>
+                  <Button size="sm" variant="secondary" disabled={deciding === a.id} onClick={() => decide(a, 'declined')}>Decline</Button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+
       <Card className="p-5">
         <h2 className="text-base font-semibold text-slate-900">Add a team member</h2>
         <p className="mt-1 text-sm text-slate-500">
