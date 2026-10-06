@@ -19,7 +19,7 @@ export default function OverviewPage() {
       <div className="grid gap-4 sm:grid-cols-3">
         <StatCard label="Registered" value={event.registeredCount} icon="users" tone="indigo" />
         <StatCard label="Seats left" value={event.availableSeats} icon="check" tone="green" />
-        <StatCard label="Capacity" value={event.maxParticipants} icon="dashboard" tone="indigo" />
+        <StatCard label="Capacity" value={event.maxParticipants} icon="dashboard" tone="sky" />
       </div>
 
       <Card className="overflow-hidden">
@@ -63,7 +63,7 @@ function SchedulePlan({ event }) {
     <Card className="p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-base font-semibold text-slate-900">Schedule plan</h2>
+          <h2 className="text-base font-bold text-slate-900">Schedule plan</h2>
           {data && (
             <p className="text-sm text-slate-500">
               {items.length === 0 ? 'No sessions planned yet.' : `${items.length} session${items.length === 1 ? '' : 's'} across ${days} day${days === 1 ? '' : 's'}`}
@@ -78,12 +78,12 @@ function SchedulePlan({ event }) {
         {error ? (
           <LoadError error={error} onRetry={reload} />
         ) : !data && loading ? (
-          <div className="h-24 animate-pulse rounded-lg bg-slate-100" aria-label="Loading schedule" />
+          <div className="h-24 animate-pulse rounded-xl bg-slate-100" aria-label="Loading schedule" />
         ) : items.length === 0 ? (
           <p className="text-sm text-slate-500">Add talks, workshops, breaks and rounds so participants know what happens and when.</p>
         ) : (
           <>
-            <ScheduleList items={items.slice(0, 6)} nextId={data.next?.id} bare />
+            <ScheduleList items={items.slice(0, 6)} nextId={data.next?.id} />
             {items.length > 6 && <p className="mt-3 text-sm text-slate-500">and {items.length - 6} more in the full schedule.</p>}
           </>
         )}

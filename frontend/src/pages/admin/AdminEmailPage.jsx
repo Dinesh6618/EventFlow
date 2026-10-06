@@ -45,7 +45,7 @@ export default function AdminEmailPage() {
       {info.error ? (
         <LoadError error={info.error} onRetry={info.reload} />
       ) : !s ? (
-        <div className="h-32 animate-pulse rounded-lg bg-slate-200" aria-label="Loading" />
+        <div className="h-32 animate-pulse rounded-2xl bg-slate-200" aria-label="Loading" />
       ) : (
         <div className="space-y-6">
           {s.configured ? (
@@ -62,30 +62,30 @@ export default function AdminEmailPage() {
 
           <div className="grid gap-4 sm:grid-cols-3">
             <StatCard label="Sent, last 7 days" value={s.stats.sent} icon="mail" tone="green" />
-            <StatCard label="Failed" value={s.stats.failed} icon="alert" tone="amber" />
-            <StatCard label="Waiting to send" value={s.stats.queued} icon="clock" tone="indigo" />
+            <StatCard label="Failed" value={s.stats.failed} icon="alert" tone="pink" />
+            <StatCard label="Waiting to send" value={s.stats.queued} icon="clock" tone="amber" />
           </div>
           <p className="text-sm text-slate-500">Links in emails point to <span className="font-mono text-slate-700">{s.appUrl}</span>. Change it with <code className="rounded bg-slate-100 px-1">APP_URL</code>.</p>
 
           <section aria-labelledby="log-heading">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-              <h2 id="log-heading" className="text-lg font-semibold text-slate-900">Email log</h2>
+              <h2 id="log-heading" className="text-lg font-bold text-slate-900">Email log</h2>
               <div role="group" aria-label="Filter by status" className="flex gap-1.5">
-                {FILTERS.map(([value, label]) => <button key={label} type="button" aria-pressed={status === value} onClick={() => setStatus(value)} className={`rounded-full px-3 py-1 text-sm font-medium transition-colors ${status === value ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>{label}</button>)}
+                {FILTERS.map(([value, label]) => <button key={label} type="button" aria-pressed={status === value} onClick={() => setStatus(value)} className={`rounded-full px-3 py-1 text-sm font-medium ${status === value ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>{label}</button>)}
               </div>
             </div>
-            {logs.error ? <LoadError error={logs.error} onRetry={logs.reload} /> : !logs.data ? <div className="h-32 animate-pulse rounded-lg bg-slate-200" /> : logs.data.logs.length === 0 ? (
+            {logs.error ? <LoadError error={logs.error} onRetry={logs.reload} /> : !logs.data ? <div className="h-32 animate-pulse rounded-2xl bg-slate-200" /> : logs.data.logs.length === 0 ? (
               <EmptyState icon="mail" title="No emails yet" description="Emails appear here as EventFlow sends them. Links and tokens are never stored in this log." />
             ) : (
               <Card className="overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-sm">
-                    <thead className="border-b border-slate-200 bg-slate-50 text-xs font-medium text-slate-500">
+                    <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
                       <tr><th scope="col" className="px-4 py-3">Time</th><th scope="col" className="px-4 py-3">Recipient</th><th scope="col" className="px-4 py-3">Email</th><th scope="col" className="px-4 py-3">Status</th><th scope="col" className="hidden px-4 py-3 lg:table-cell">Detail</th></tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {logs.data.logs.map((l) => (
-                        <tr key={l.id} className="hover:bg-slate-50">
+                        <tr key={l.id}>
                           <td className="whitespace-nowrap px-4 py-3 text-slate-500">{when(l.createdAt)}</td>
                           <td className="px-4 py-3 text-slate-800">{l.recipient}</td>
                           <td className="px-4 py-3"><span className="font-medium text-slate-900">{l.subject}</span><span className="block font-mono text-xs text-slate-400">{l.template}</span></td>

@@ -17,7 +17,7 @@ import { useEvent } from '../EventManageLayout.jsx';
 function Fact({ label, children }) {
   return (
     <div>
-      <dt className="text-xs font-medium text-slate-500">{label}</dt>
+      <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">{label}</dt>
       <dd className="mt-0.5 text-sm font-medium text-slate-900">{children || <span className="font-normal text-slate-400">Not provided</span>}</dd>
     </div>
   );
@@ -43,7 +43,7 @@ export default function VolunteerDetailPage() {
 
       <Card className="flex flex-wrap items-center justify-between gap-4 p-5 sm:p-6">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">{v.name}</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">{v.name}</h1>
           <p className="font-mono text-sm text-slate-500">{v.volunteerCode}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -55,7 +55,7 @@ export default function VolunteerDetailPage() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="p-5 sm:p-6">
-          <h2 className="mb-4 text-base font-semibold text-slate-900">Profile</h2>
+          <h2 className="mb-4 text-base font-bold text-slate-900">Profile</h2>
           <dl className="grid gap-4 sm:grid-cols-2">
             <Fact label="Email">{v.email}</Fact>
             <Fact label="Phone">{v.phone}</Fact>
@@ -71,7 +71,7 @@ export default function VolunteerDetailPage() {
         </Card>
 
         <Card className="p-5 sm:p-6">
-          <h2 className="mb-4 text-base font-semibold text-slate-900">Current assignment</h2>
+          <h2 className="mb-4 text-base font-bold text-slate-900">Current assignment</h2>
           {c ? (
             <dl className="grid gap-4 sm:grid-cols-2">
               <Fact label="Event">{c.eventName}</Fact>
@@ -84,7 +84,7 @@ export default function VolunteerDetailPage() {
           ) : (
             <p className="text-sm text-slate-500">No assignment yet.</p>
           )}
-          <h3 className="mb-2 mt-6 text-sm font-semibold text-slate-900">Attendance <span className="font-normal text-slate-500">({data.totalHours} h in total)</span></h3>
+          <h3 className="mb-2 mt-6 text-sm font-bold text-slate-900">Attendance <span className="font-normal text-slate-500">({data.totalHours} h in total)</span></h3>
           {attendance.length === 0 ? <p className="text-sm text-slate-500">Has not checked in yet.</p> : (
             <ul className="divide-y divide-slate-100 text-sm">
               {attendance.map((a) => (
@@ -100,10 +100,10 @@ export default function VolunteerDetailPage() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="p-5 sm:p-6">
-          <h2 className="mb-3 text-base font-semibold text-slate-900">Tasks</h2>
+          <h2 className="mb-3 text-base font-bold text-slate-900">Tasks</h2>
           {[['Pending', tasks.pending], ['Completed', tasks.completed]].map(([label, list]) => (
             <div key={label} className="mb-4 last:mb-0">
-              <h3 className="mb-1.5 text-sm font-medium text-slate-500">{label} ({list.length})</h3>
+              <h3 className="mb-1.5 text-xs font-bold uppercase tracking-wide text-slate-400">{label} ({list.length})</h3>
               {list.length === 0 ? <p className="text-sm text-slate-500">None.</p> : (
                 <ul className="divide-y divide-slate-100 text-sm">
                   {list.map((t) => <li key={t.id} className="flex flex-wrap items-center justify-between gap-2 py-2"><span className="font-medium text-slate-900">{t.title}</span><span className="flex gap-1.5"><PriorityBadge priority={t.priority} /><TaskStatusBadge status={t.status} /></span></li>)}
@@ -111,7 +111,7 @@ export default function VolunteerDetailPage() {
               )}
             </div>
           ))}
-          <h3 className="mb-1.5 mt-5 text-sm font-medium text-slate-500">All assignments ({assignments.length})</h3>
+          <h3 className="mb-1.5 mt-5 text-xs font-bold uppercase tracking-wide text-slate-400">All assignments ({assignments.length})</h3>
           <ul className="divide-y divide-slate-100 text-sm">
             {assignments.map((a) => (
               <li key={a.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
@@ -123,7 +123,7 @@ export default function VolunteerDetailPage() {
         </Card>
 
         <Card className="p-5 sm:p-6">
-          <h2 className="mb-3 text-base font-semibold text-slate-900">Activity timeline</h2>
+          <h2 className="mb-3 text-base font-bold text-slate-900">Activity timeline</h2>
           {timeline.length === 0 ? <p className="text-sm text-slate-500">Nothing has happened yet.</p> : (
             <ol className="space-y-3">
               {timeline.map((t) => (

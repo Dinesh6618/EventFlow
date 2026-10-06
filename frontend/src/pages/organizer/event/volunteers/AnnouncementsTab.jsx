@@ -43,7 +43,7 @@ export default function AnnouncementsTab() {
   return (
     <div className="space-y-6">
       <Card className="p-5 sm:p-6">
-        <h2 className="text-base font-semibold text-slate-900">Send an announcement</h2>
+        <h2 className="text-base font-bold text-slate-900">Send an announcement</h2>
         <form onSubmit={send} noValidate className="mt-4 space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <Select label="Send to" value={v.scope} onChange={set('scope')} error={errors.scope} options={AUDIENCES} />
@@ -58,8 +58,8 @@ export default function AnnouncementsTab() {
       </Card>
 
       <section aria-labelledby="sent-heading">
-        <h2 id="sent-heading" className="mb-3 text-lg font-semibold text-slate-900">Sent</h2>
-        {error ? <LoadError error={error} onRetry={reload} /> : !data && loading ? <div className="h-24 animate-pulse rounded-lg bg-slate-200" /> : data.announcements.length === 0 ? (
+        <h2 id="sent-heading" className="mb-3 text-lg font-bold text-slate-900">Sent</h2>
+        {error ? <LoadError error={error} onRetry={reload} /> : !data && loading ? <div className="h-24 animate-pulse rounded-2xl bg-slate-200" /> : data.announcements.length === 0 ? (
           <EmptyState icon="message" title="Nothing sent yet" description="Announcements you send appear here and reach volunteers as notifications." />
         ) : (
           <ul className="space-y-3">
@@ -67,7 +67,7 @@ export default function AnnouncementsTab() {
               <li key={a.id}>
                 <Card className="p-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <h3 className="font-semibold text-slate-900">{a.title}</h3>
+                    <h3 className="font-bold text-slate-900">{a.title}</h3>
                     <span className="flex items-center gap-2 text-xs text-slate-400"><Badge tone="indigo">{audience(a)}</Badge>{a.recipients} recipient{a.recipients === 1 ? '' : 's'} - {timeAgo(a.createdAt)}</span>
                   </div>
                   <p className="mt-1.5 whitespace-pre-line text-sm text-slate-600">{a.message}</p>

@@ -35,7 +35,7 @@ export default function FeedbackPage() {
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Responses" value={`${data.responses} of ${data.eligible}`} icon="users" tone="indigo" />
         <StatCard label="Average rating" value={avg(data.averages.overall)} icon="star" tone="amber" />
-        <StatCard label="Response rate" value={`${data.responseRate}%`} icon="dashboard" tone="indigo" />
+        <StatCard label="Response rate" value={`${data.responseRate}%`} icon="dashboard" tone="sky" />
         <StatCard label="Organization" value={avg(data.averages.organization)} icon="check" tone="green" />
       </div>
 
@@ -46,8 +46,8 @@ export default function FeedbackPage() {
             {data.distribution.map((d) => (
               <li key={d.rating} className="flex items-center gap-3 text-sm">
                 <span className="w-14 shrink-0 text-slate-600">{d.rating} star{d.rating === 1 ? '' : 's'}</span>
-                <span className="h-2 flex-1 overflow-hidden rounded bg-slate-100">
-                  <span className="block h-full rounded bg-indigo-500" style={{ width: `${(d.count / maxCount) * 100}%` }} />
+                <span className="h-3 flex-1 overflow-hidden rounded-full bg-slate-100">
+                  <span className="block h-full rounded-full bg-amber-400" style={{ width: `${(d.count / maxCount) * 100}%` }} />
                 </span>
                 <span className="w-8 text-right text-slate-600">{d.count}</span>
               </li>
@@ -73,7 +73,7 @@ export default function FeedbackPage() {
           <Card className="overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-slate-200 bg-slate-50 text-xs font-medium text-slate-500">
+                <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
                   <tr>
                     <th scope="col" className="px-4 py-3">Session</th>
                     <th scope="col" className="px-4 py-3">Responses</th>
@@ -83,7 +83,7 @@ export default function FeedbackPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {data.sessions.map((s) => (
-                    <tr key={s.id} className="hover:bg-slate-50">
+                    <tr key={s.id}>
                       <td className="px-4 py-3"><p className="font-medium text-slate-900">{s.title}</p><p className="text-xs text-slate-500">{formatDate(s.date)}{s.speaker ? ` - ${s.speaker}` : ''}</p></td>
                       <td className="px-4 py-3 text-slate-600">{s.responses}</td>
                       <td className="px-4 py-3 text-slate-700">{avg(s.overall)}</td>

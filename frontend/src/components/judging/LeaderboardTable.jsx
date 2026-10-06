@@ -3,13 +3,12 @@ import Badge from '../ui/Badge.jsx';
 import Card from '../ui/Card.jsx';
 
 const STATUS_TONE = { Final: 'green', 'In progress': 'amber', 'Awaiting scores': 'slate', 'Not assigned': 'slate' };
-// Top three share the accent tint; everyone else is neutral.
-const PODIUM = 'bg-indigo-50 text-indigo-700';
+const MEDAL = { 1: 'bg-amber-100 text-amber-800', 2: 'bg-slate-200 text-slate-700', 3: 'bg-orange-100 text-orange-800' };
 
 export function RankBadge({ rank }) {
   if (!rank) return <span className="text-slate-400">-</span>;
   return (
-    <span className={`inline-flex h-7 min-w-7 items-center justify-center rounded-md px-2 text-sm font-semibold ${rank <= 3 ? PODIUM : 'bg-slate-100 text-slate-600'}`}>
+    <span className={`inline-flex h-7 min-w-7 items-center justify-center rounded-full px-2 text-sm font-semibold ${MEDAL[rank] ?? 'bg-slate-100 text-slate-600'}`}>
       {rank}
     </span>
   );
@@ -26,11 +25,11 @@ export default function LeaderboardTable({ rows, maxScore, detailed = false, hig
     <Card className="overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">
-          <thead className="border-b border-slate-200 bg-slate-50 text-xs font-medium text-slate-500">
+          <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
             <tr>
               <th scope="col" className="w-16 px-4 py-3">Rank</th>
               <th scope="col" className="px-4 py-3">Team</th>
-              <th scope="col" className="px-4 py-3">Total score</th>
+              <th scope="col" className="px-4 py-3">Score</th>
               <th scope="col" className="px-4 py-3">Status</th>
               {detailed && <th scope="col" className="px-4 py-3"><span className="sr-only">Details</span></th>}
             </tr>
@@ -70,13 +69,13 @@ export default function LeaderboardTable({ rows, maxScore, detailed = false, hig
                   <td colSpan={5} className="px-4 py-4">
                     <div className="grid gap-4 md:grid-cols-2">
                       <div>
-                        <p className="mb-2 text-sm font-medium text-slate-500">Criteria and average score</p>
+                        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Average per criterion</p>
                         <ul className="space-y-1.5 text-sm">
                           {row.criteria.map((c) => (
                             <li key={c.id} className="flex items-center gap-3">
                               <span className="w-40 shrink-0 truncate text-slate-700">{c.name}</span>
-                              <span className="h-1.5 flex-1 overflow-hidden rounded bg-slate-200">
-                                <span className="block h-full rounded bg-indigo-500" style={{ width: `${(c.average / c.maxScore) * 100}%` }} />
+                              <span className="h-2 flex-1 overflow-hidden rounded-full bg-slate-200">
+                                <span className="block h-full rounded-full bg-indigo-500" style={{ width: `${(c.average / c.maxScore) * 100}%` }} />
                               </span>
                               <span className="w-16 text-right text-slate-600">{c.average} / {c.maxScore}</span>
                             </li>
@@ -84,7 +83,7 @@ export default function LeaderboardTable({ rows, maxScore, detailed = false, hig
                         </ul>
                       </div>
                       <div>
-                        <p className="mb-2 text-sm font-medium text-slate-500">Comments from judges (private)</p>
+                        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Judge comments (private)</p>
                         {row.comments.length ? (
                           <ul className="space-y-2 text-sm">
                             {row.comments.map((c, i) => (

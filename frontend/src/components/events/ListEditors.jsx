@@ -4,18 +4,16 @@ import Icon from '../ui/Icon.jsx';
 
 function Shell({ title, hint, addLabel, onAdd, max, count, children }) {
   return (
-    <div className="border-t border-slate-100 pt-5 first:border-t-0 first:pt-0">
-      <fieldset>
-        <legend className="mb-1 text-base font-semibold text-slate-900">{title}</legend>
-        {hint && <p className="mb-3 text-sm text-slate-500">{hint}</p>}
-        <div className="space-y-4">{children}</div>
-        <Button variant="secondary" size="sm" className="mt-4" onClick={onAdd} disabled={count >= max}>
-          <Icon name="plus" className="h-4 w-4" />
-          {addLabel}
-        </Button>
-        {count >= max && <p className="mt-2 text-xs text-slate-500">That is the maximum ({max}).</p>}
-      </fieldset>
-    </div>
+    <fieldset className="rounded-2xl border border-slate-200 p-4">
+      <legend className="px-2 text-sm font-bold text-slate-800">{title}</legend>
+      {hint && <p className="mb-3 text-xs text-slate-500">{hint}</p>}
+      <div className="space-y-4">{children}</div>
+      <Button variant="secondary" size="sm" className="mt-4" onClick={onAdd} disabled={count >= max}>
+        <Icon name="plus" className="h-4 w-4" />
+        {addLabel}
+      </Button>
+      {count >= max && <p className="mt-2 text-xs text-slate-500">That is the maximum ({max}).</p>}
+    </fieldset>
   );
 }
 

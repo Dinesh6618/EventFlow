@@ -5,6 +5,7 @@ import { formatDate } from '../../utils/format.js';
 import { clockTime } from '../../utils/help.js';
 import { minutesText, shiftText } from '../../utils/volunteer.js';
 import Alert from '../ui/Alert.jsx';
+import Badge from '../ui/Badge.jsx';
 import Button from '../ui/Button.jsx';
 import Card from '../ui/Card.jsx';
 import { Textarea } from '../ui/FormField.jsx';
@@ -17,9 +18,9 @@ const contactLink = (contact) => (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact) ? `
 function Line({ icon, label, children }) {
   return (
     <div className="flex items-start gap-3">
-      <Icon name={icon} className="mt-0.5 h-5 w-5 shrink-0 text-indigo-600" />
+      <Icon name={icon} className="mt-0.5 h-5 w-5 shrink-0 text-indigo-400" />
       <div className="min-w-0">
-        <p className="text-sm font-medium text-slate-500">{label}</p>
+        <p className="text-xs font-medium uppercase tracking-wide text-slate-400">{label}</p>
         <p className="text-base font-semibold text-slate-900">{children}</p>
       </div>
     </div>
@@ -27,7 +28,7 @@ function Line({ icon, label, children }) {
 }
 
 /**
- * One duty. `featured` is the big "Today's duty" card with the check-in button; otherwise a compact row.
+ * One duty. `featured` is the big "TODAY'S DUTY" card with the check-in button; otherwise a compact row.
  * Every action goes to the server, which decides whether it is allowed right now.
  */
 export default function DutyCard({ duty: d, featured = false, onChanged }) {
@@ -62,8 +63,8 @@ export default function DutyCard({ duty: d, featured = false, onChanged }) {
   const actions = (
     <div className="flex flex-wrap gap-2.5">
       {c.canAccept && <Button size={featured ? 'lg' : 'md'} loading={busy === 'accept'} onClick={() => act('accept', () => volunteerOpsApi.accept(d.id), 'Assignment accepted.')}>Accept assignment</Button>}
-      {c.canCheckIn && <Button size={featured ? 'lg' : 'md'} className={featured ? 'min-w-[11rem]' : ''} loading={busy === 'in'} onClick={() => act('in', () => volunteerOpsApi.checkIn(d.id), 'You are checked in.')}>Check in</Button>}
-      {c.canCheckOut && <Button size={featured ? 'lg' : 'md'} className={featured ? 'min-w-[11rem]' : ''} loading={busy === 'out'} onClick={() => act('out', () => volunteerOpsApi.checkOut(d.id), 'You are checked out. Thank you!')}>Check out</Button>}
+      {c.canCheckIn && <Button size={featured ? 'lg' : 'md'} className={featured ? 'min-w-[11rem] uppercase tracking-wide' : ''} loading={busy === 'in'} onClick={() => act('in', () => volunteerOpsApi.checkIn(d.id), 'You are checked in.')}>Check in</Button>}
+      {c.canCheckOut && <Button size={featured ? 'lg' : 'md'} className={featured ? 'min-w-[11rem] uppercase tracking-wide' : ''} loading={busy === 'out'} onClick={() => act('out', () => volunteerOpsApi.checkOut(d.id), 'You are checked out. Thank you!')}>Check out</Button>}
       {c.canBreak && <Button size={featured ? 'lg' : 'md'} variant="secondary" loading={busy === 'break'} onClick={() => act('break', () => volunteerOpsApi.setBreak(d.id, !d.onBreak), d.onBreak ? 'Welcome back.' : 'Enjoy your break.')}>{d.onBreak ? 'Back from break' : 'Take a break'}</Button>}
       {c.canRequestReassignment && <Button size={featured ? 'lg' : 'md'} variant="ghost" onClick={() => setAsking(true)}>Request reassignment</Button>}
     </div>
@@ -87,7 +88,7 @@ export default function DutyCard({ duty: d, featured = false, onChanged }) {
       <Card className="p-4 sm:p-5" data-testid="duty">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="font-semibold text-slate-900">{d.department.name}</p>
+            <p className="font-bold text-slate-900">{d.department.name}</p>
             <p className="text-sm text-slate-600">{d.eventName}</p>
             <p className="mt-1 text-sm text-slate-500">{formatDate(d.date)}, {shiftText(d.startTime, d.endTime)}{d.location ? ` - ${d.location}` : ''}</p>
           </div>
@@ -103,11 +104,13 @@ export default function DutyCard({ duty: d, featured = false, onChanged }) {
 
   return (
     <Card className="overflow-hidden" data-testid="todays-duty">
-      <div className="space-y-6 p-5 sm:p-6">
+      <div className="bg-slate-900 px-5 py-3 text-white sm:px-7">
+        <p className="text-xs font-bold uppercase tracking-widest text-indigo-200">Today&apos;s duty</p>
+      </div>
+      <div className="space-y-6 p-5 sm:p-7">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="text-sm font-medium text-indigo-600">Today&apos;s duty</p>
-            <h2 className="mt-0.5 text-2xl font-semibold text-slate-900">{d.eventName}</h2>
+            <h2 className="text-2xl font-extrabold tracking-tight text-slate-900">{d.eventName}</h2>
             <p className="text-base text-slate-500">{d.department.name} team</p>
           </div>
           <div className="flex items-center gap-1.5"><DutyStatusBadge status={checkedIn || d.status !== 'assigned' ? d.liveStatus : 'assigned'}>{d.status === 'assigned' ? 'Not accepted yet' : d.attendance === 'not_checked_in' ? 'Not checked in' : undefined}</DutyStatusBadge><LateBadge late={d.late} /></div>
@@ -125,9 +128,9 @@ export default function DutyCard({ duty: d, featured = false, onChanged }) {
         {d.hasOpenRequest && <p className="text-sm font-medium text-amber-700">You asked to be reassigned. Waiting for the organizer.</p>}
 
         {(d.task || d.instructions) && (
-          <div className="space-y-3 rounded-lg bg-slate-50 p-4">
-            {d.task && <div><p className="text-sm font-medium text-slate-500">Your task</p><p className="mt-0.5 text-sm font-medium text-slate-900">{d.task}</p></div>}
-            {d.instructions && <div><p className="text-sm font-medium text-slate-500">Instructions</p><p className="mt-0.5 whitespace-pre-line text-sm text-slate-700">{d.instructions}</p></div>}
+          <div className="space-y-3 rounded-2xl bg-slate-50 p-4">
+            {d.task && <div><p className="text-xs font-bold uppercase tracking-wide text-slate-400">Your task</p><p className="mt-0.5 text-sm font-medium text-slate-900">{d.task}</p></div>}
+            {d.instructions && <div><p className="text-xs font-bold uppercase tracking-wide text-slate-400">Instructions</p><p className="mt-0.5 whitespace-pre-line text-sm text-slate-700">{d.instructions}</p></div>}
           </div>
         )}
       </div>

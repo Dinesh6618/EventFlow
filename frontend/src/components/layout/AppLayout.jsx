@@ -22,14 +22,14 @@ export default function AppLayout() {
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white">
+      <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/85 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <Link to={homePathFor(user.role)} aria-label="EventFlow dashboard">
             <Logo />
           </Link>
           <div className="flex items-center gap-2 sm:gap-3">
             <NotificationBell />
-            <Link to={homePathFor(user.role)} className="text-sm font-medium text-indigo-600 hover:text-indigo-700">
+            <Link to={homePathFor(user.role)} className="text-sm font-semibold text-indigo-600 hover:text-indigo-700">
               Dashboard
             </Link>
             <Button variant="secondary" size="sm" onClick={handleLogout}>

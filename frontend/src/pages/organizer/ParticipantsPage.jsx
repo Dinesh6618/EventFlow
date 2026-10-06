@@ -18,12 +18,12 @@ import { useApi, useDebounced } from '../../hooks/useApi.js';
 const NO_FILTERS = { eventId: '', q: '', department: '', college: '', status: '' };
 const STATUS_OPTIONS = ['pending', 'approved', 'confirmed', 'rejected', 'cancelled'];
 const CONTROL =
-  'block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20';
+  'block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30';
 
 function Filter({ label, id, children }) {
   return (
     <div>
-      <label htmlFor={id} className="mb-1.5 block text-sm font-medium text-slate-700">{label}</label>
+      <label htmlFor={id} className="mb-1.5 block text-xs font-medium text-slate-600">{label}</label>
       {children}
     </div>
   );
@@ -33,7 +33,6 @@ export default function ParticipantsPage() {
   const toast = useToast();
   const [searchParams] = useSearchParams();
   const [filters, setFilters] = useState({ ...NO_FILTERS, eventId: searchParams.get('eventId') || '' });
-  const [showFilters, setShowFilters] = useState(Boolean(searchParams.get('eventId')));
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState({ key: '', dir: 'asc' });
   const [viewing, setViewing] = useState(null);
@@ -54,7 +53,6 @@ export default function ParticipantsPage() {
     setPage(1);
   };
   const filtered = Object.values(filters).some(Boolean);
-  const activeFilters = ['eventId', 'department', 'college', 'status'].filter((key) => filters[key]).length;
   const change = (patch) => {
     setFilters((f) => ({ ...f, ...patch }));
     setPage(1);
@@ -91,58 +89,53 @@ export default function ParticipantsPage() {
 
   return (
     <>
-      <PageHeader title="Participants" description="Everyone registered for your events." />
+      <PageHeader
+        eyebrow="Participants"
+        title="Registered participants"
+        description="Everyone registered for your events."
+        action={
+          <Button variant="secondary" onClick={exportCsv} loading={exporting} disabled={!data?.total}>
+            Export CSV
+          </Button>
+        }
+      />
 
-      <Card className="mb-4 p-4">
-        <form role="search" onSubmit={(e) => e.preventDefault()}>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <div className="relative flex-1">
-              <label htmlFor="p-q" className="sr-only">Search participants</label>
-              <Icon name="search" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <input id="p-q" type="search" value={filters.q} onChange={(e) => change({ q: e.target.value })} placeholder="Search by name, email or participant ID" className={`${CONTROL} pl-9`} />
-            </div>
-            <div className="flex gap-2">
-              <Button variant="secondary" aria-expanded={showFilters} aria-controls="p-filters" onClick={() => setShowFilters((v) => !v)}>
-                <Icon name="filter" className="h-4 w-4" />
-                Filter{activeFilters > 0 && ` (${activeFilters})`}
-              </Button>
-              <Button variant="secondary" onClick={exportCsv} loading={exporting} disabled={!data?.total}>
-                <Icon name="download" className="h-4 w-4" />
-                Export
-              </Button>
-            </div>
+      <Card className="mb-6 p-4">
+        <form role="search" onSubmit={(e) => e.preventDefault()} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6 lg:items-end">
+          <div className="lg:col-span-2">
+            <Filter label="Search" id="p-q">
+              <div className="relative">
+                <Icon name="search" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input id="p-q" type="search" value={filters.q} onChange={(e) => change({ q: e.target.value })} placeholder="Name, email or participant ID" className={`${CONTROL} pl-9`} />
+              </div>
+            </Filter>
           </div>
-
-          {showFilters && (
-            <div id="p-filters" className="mt-4 grid gap-3 border-t border-slate-100 pt-4 sm:grid-cols-2 lg:grid-cols-4">
-              <Filter label="Event" id="p-event">
-                <select id="p-event" value={filters.eventId} onChange={(e) => change({ eventId: e.target.value })} className={CONTROL}>
-                  <option value="">All events</option>
-                  {myEvents.data?.events.map((event) => (
-                    <option key={event.id} value={event.id}>{event.name}</option>
-                  ))}
-                </select>
-              </Filter>
-              <Filter label="Department" id="p-dept">
-                <select id="p-dept" value={filters.department} onChange={(e) => change({ department: e.target.value })} className={CONTROL}>
-                  <option value="">All departments</option>
-                  {data?.departments.map((d) => <option key={d} value={d}>{d}</option>)}
-                </select>
-              </Filter>
-              <Filter label="College" id="p-college">
-                <select id="p-college" value={filters.college} onChange={(e) => change({ college: e.target.value })} className={CONTROL}>
-                  <option value="">All colleges</option>
-                  {data?.colleges.map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
-              </Filter>
-              <Filter label="Status" id="p-status">
-                <select id="p-status" value={filters.status} onChange={(e) => change({ status: e.target.value })} className={`${CONTROL} capitalize`}>
-                  <option value="">All statuses</option>
-                  {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s[0].toUpperCase() + s.slice(1)}</option>)}
-                </select>
-              </Filter>
-            </div>
-          )}
+          <Filter label="Event" id="p-event">
+            <select id="p-event" value={filters.eventId} onChange={(e) => change({ eventId: e.target.value })} className={CONTROL}>
+              <option value="">All events</option>
+              {myEvents.data?.events.map((event) => (
+                <option key={event.id} value={event.id}>{event.name}</option>
+              ))}
+            </select>
+          </Filter>
+          <Filter label="Department" id="p-dept">
+            <select id="p-dept" value={filters.department} onChange={(e) => change({ department: e.target.value })} className={CONTROL}>
+              <option value="">All departments</option>
+              {data?.departments.map((d) => <option key={d} value={d}>{d}</option>)}
+            </select>
+          </Filter>
+          <Filter label="College" id="p-college">
+            <select id="p-college" value={filters.college} onChange={(e) => change({ college: e.target.value })} className={CONTROL}>
+              <option value="">All colleges</option>
+              {data?.colleges.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </Filter>
+          <Filter label="Status" id="p-status">
+            <select id="p-status" value={filters.status} onChange={(e) => change({ status: e.target.value })} className={`${CONTROL} capitalize`}>
+              <option value="">All statuses</option>
+              {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s[0].toUpperCase() + s.slice(1)}</option>)}
+            </select>
+          </Filter>
         </form>
         {filtered && (
           <div className="mt-3">

@@ -45,16 +45,16 @@ function validateParticipation(v, event) {
 function Choice({ checked, disabled, onChange, icon, title, text }) {
   return (
     <label
-      className={`flex cursor-pointer items-start gap-4 rounded-lg border p-4 transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-indigo-600 ${
-        disabled ? 'cursor-not-allowed border-slate-200 bg-slate-50 opacity-60' : checked ? 'border-indigo-600 bg-indigo-50' : 'border-slate-200 bg-white hover:border-slate-300'
+      className={`flex cursor-pointer items-start gap-4 rounded-2xl border-2 p-4 transition-all has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-indigo-600 ${
+        disabled ? 'cursor-not-allowed border-slate-200 bg-slate-50 opacity-60' : checked ? 'border-indigo-600 bg-indigo-50/70 shadow-md shadow-indigo-600/10' : 'border-slate-200 bg-white hover:border-indigo-300'
       }`}
     >
       <input type="radio" name="participation" checked={checked} disabled={disabled} onChange={onChange} className="sr-only" />
-      <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${checked ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500'}`}>
+      <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${checked ? 'grad-brand text-white' : 'bg-slate-100 text-slate-500'}`}>
         <Icon name={icon} className="h-5 w-5" />
       </span>
       <span>
-        <span className="block font-semibold text-slate-900">{title}</span>
+        <span className="block font-bold text-slate-900">{title}</span>
         <span className="block text-sm text-slate-500">{text}</span>
       </span>
     </label>
@@ -65,7 +65,7 @@ function Row({ label, children }) {
   return (
     <div className="flex flex-col gap-0.5 py-3 sm:flex-row sm:gap-4">
       <dt className="w-40 shrink-0 text-sm text-slate-500">{label}</dt>
-      <dd className="min-w-0 break-words text-sm font-medium text-slate-900">{children || <span className="font-normal text-slate-400">Not provided</span>}</dd>
+      <dd className="min-w-0 break-words text-sm font-semibold text-slate-900">{children || <span className="font-normal text-slate-400">Not provided</span>}</dd>
     </div>
   );
 }
@@ -92,7 +92,7 @@ export default function RegisterForEventPage() {
   const [done, setDone] = useState(null);
 
   if (!data && loading) return <PageLoader label="Loading registration..." />;
-  if (error?.status === 404) return <EmptyState icon="calendar" title="Event not found" action={<Link to="/events" className="font-medium text-indigo-600">Browse events</Link>} />;
+  if (error?.status === 404) return <EmptyState icon="calendar" title="Event not found" action={<Link to="/events" className="font-semibold text-indigo-600">Browse events</Link>} />;
   if (error) return <LoadError error={error} onRetry={reload} />;
 
   const { event, registration } = data;
@@ -103,7 +103,7 @@ export default function RegisterForEventPage() {
   const closed = !event.registrationOpen || event.availableSeats === 0 || registration?.status === 'rejected';
   if (closed) {
     const reason = event.status === 'ended' ? 'This event has ended.' : !event.registrationOpen ? 'Registration has closed.' : registration?.status === 'rejected' ? 'The organizer declined your earlier registration.' : 'This event is full.';
-    return <EmptyState icon="alert" title="You can't register right now" description={reason} action={<Link to={`/events/${event.id}`} className="font-medium text-indigo-600">Back to the event</Link>} />;
+    return <EmptyState icon="alert" title="You can't register right now" description={reason} action={<Link to={`/events/${event.id}`} className="font-semibold text-indigo-600">Back to the event</Link>} />;
   }
 
   const set = (key) => (e) => {
@@ -150,23 +150,23 @@ export default function RegisterForEventPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <Link to={`/events/${event.id}`} className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-900">
+      <Link to={`/events/${event.id}`} className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 hover:text-slate-900">
         <Icon name="arrow-left" className="h-4 w-4" />
         Back to event
       </Link>
-      <h1 className="text-2xl font-semibold text-slate-900">Register</h1>
-      <p className="mt-1 text-sm text-slate-500 sm:text-base">
+      <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Register</h1>
+      <p className="mt-1 text-slate-500">
         {event.name} <span aria-hidden="true">·</span> {formatEventDates(event)}
       </p>
 
-      <div className="my-6"><Stepper steps={STEPS} current={step} label="Registration steps" /></div>
+      <div className="my-7"><Stepper steps={STEPS} current={step} label="Registration steps" /></div>
 
       <Card className="p-6 sm:p-8">
         {formError && <Alert type="error" className="mb-5">{formError}</Alert>}
 
         {step === 0 && (
           <form onSubmit={(e) => { e.preventDefault(); next(); }} noValidate className="page-enter space-y-5" aria-label="Personal information">
-            <h2 className="text-lg font-semibold text-slate-900">Personal information</h2>
+            <h2 className="text-xl font-bold text-slate-900">Personal information</h2>
             <Input label="Full Name" required autoComplete="name" value={values.name} onChange={set('name')} error={errors.name} />
             <Input label="College" required autoComplete="organization" value={values.college} onChange={set('college')} error={errors.college} />
             <div className="grid gap-5 sm:grid-cols-2">
@@ -183,7 +183,7 @@ export default function RegisterForEventPage() {
 
         {step === 1 && (
           <form onSubmit={(e) => { e.preventDefault(); next(); }} noValidate className="page-enter space-y-5" aria-label="Participation">
-            <h2 className="text-lg font-semibold text-slate-900">How will you take part?</h2>
+            <h2 className="text-xl font-bold text-slate-900">How will you take part?</h2>
             <fieldset className="grid gap-3 sm:grid-cols-2">
               <legend className="sr-only">Participation type</legend>
               <Choice checked={values.mode === 'individual'} onChange={() => setValues((v) => ({ ...v, mode: 'individual' }))} icon="user" title="Individual" text="Join on your own" />
@@ -219,7 +219,7 @@ export default function RegisterForEventPage() {
 
         {step === 2 && (
           <div className="page-enter" aria-label="Review">
-            <h2 className="text-lg font-semibold text-slate-900">Review your details</h2>
+            <h2 className="text-xl font-bold text-slate-900">Review your details</h2>
             <p className="mt-1 text-sm text-slate-500">Check everything before you confirm.</p>
             <dl className="mt-4 divide-y divide-slate-100">
               <Row label="Event">{event.name}</Row>
@@ -233,7 +233,7 @@ export default function RegisterForEventPage() {
             </dl>
             <div className="mt-6 flex justify-between">
               <Button variant="secondary" size="lg" onClick={() => setStep(1)} disabled={submitting}><Icon name="arrow-left" className="h-4 w-4" />Back</Button>
-              <Button size="lg" onClick={confirm} loading={submitting}>Confirm registration</Button>
+              <Button size="lg" onClick={confirm} loading={submitting} className="uppercase tracking-wide">Confirm registration</Button>
             </div>
           </div>
         )}

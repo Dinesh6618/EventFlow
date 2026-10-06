@@ -34,22 +34,22 @@ export default function EventSectionPicker() {
 
   return (
     <>
-      <PageHeader title={`${info.title}: choose an event`} description={info.text} />
+      <PageHeader eyebrow={info.title} title={`${info.title}: choose an event`} description={info.text} />
       {loading ? (
         <PageLoader label="Loading your events..." />
       ) : error ? (
         <LoadError error={error} onRetry={reload} />
       ) : data.events.length === 0 ? (
-        <EmptyState icon={info.icon} title="Create an event first" description={`${info.title} belongs to an event.`} action={<Link to="/organizer/create-event" className={buttonClasses('primary')}>Create Event</Link>} />
+        <EmptyState icon={info.icon} title="Create an event first" description={`${info.title} belongs to an event.`} action={<Link to="/organizer/create-event" className={buttonClasses('primary')}>Create event</Link>} />
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2" aria-label="Your events">
           {data.events.map((event) => (
             <li key={event.id}>
-              <Link to={`/organizer/events/${event.id}/${info.tab}`} className="block rounded-lg">
-                <Card hover className="flex h-full items-center gap-4 p-4">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600"><Icon name={info.icon} className="h-5 w-5" /></span>
+              <Link to={`/organizer/events/${event.id}/${info.tab}`} className="block rounded-2xl focus-visible:outline-offset-4">
+                <Card hover className="flex h-full items-center gap-4 p-5">
+                  <span className="grad-brand flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-white"><Icon name={info.icon} className="h-6 w-6" /></span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold text-slate-900">{event.name}</p>
+                    <p className="truncate font-bold text-slate-900">{event.name}</p>
                     <p className="text-sm text-slate-500">{formatEventDates(event)}</p>
                     <div className="mt-1.5 flex gap-2"><Badge tone="indigo">{event.type}</Badge><EventStatusBadge event={event} /></div>
                   </div>

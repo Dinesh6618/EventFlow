@@ -12,32 +12,32 @@ export default function EventsTable({ events, manage = false }) {
       <Card className="hidden overflow-hidden md:block">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-slate-200 bg-slate-50 text-xs font-medium text-slate-500">
+            <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
               <tr>
-                <th scope="col" className="px-4 py-3">Event</th>
-                <th scope="col" className="px-4 py-3">Date &amp; time</th>
-                <th scope="col" className="px-4 py-3">Venue</th>
-                <th scope="col" className="px-4 py-3">Registered</th>
-                <th scope="col" className="px-4 py-3">Status</th>
-                <th scope="col" className="px-4 py-3"><span className="sr-only">Actions</span></th>
+                <th scope="col" className="px-5 py-3">Event</th>
+                <th scope="col" className="px-5 py-3">Date &amp; time</th>
+                <th scope="col" className="px-5 py-3">Venue</th>
+                <th scope="col" className="px-5 py-3">Registered</th>
+                <th scope="col" className="px-5 py-3">Status</th>
+                <th scope="col" className="px-5 py-3"><span className="sr-only">Actions</span></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {events.map((event) => (
                 <tr key={event.id} className="hover:bg-slate-50">
-                  <td className="px-4 py-3">
+                  <td className="px-5 py-4">
                     <p className="font-medium text-slate-900">{event.name}</p>
                     <div className="mt-1"><Badge tone="indigo">{event.type}</Badge></div>
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-slate-600">
+                  <td className="whitespace-nowrap px-5 py-4 text-slate-600">
                     {formatEventDates(event)}
                     <br />
                     <span className="text-xs text-slate-500">{formatTimeRange(event.startTime, event.endTime)}</span>
                   </td>
-                  <td className="px-4 py-3 text-slate-600">{event.venue}</td>
-                  <td className="whitespace-nowrap px-4 py-3 text-slate-600">{seats(event)}</td>
-                  <td className="px-4 py-3"><EventStatusBadge event={event} /></td>
-                  <td className="space-x-4 whitespace-nowrap px-4 py-3 text-right">
+                  <td className="px-5 py-4 text-slate-600">{event.venue}</td>
+                  <td className="whitespace-nowrap px-5 py-4 text-slate-600">{seats(event)}</td>
+                  <td className="px-5 py-4"><EventStatusBadge event={event} /></td>
+                  <td className="space-x-4 whitespace-nowrap px-5 py-4 text-right">
                     {manage && (
                       <Link to={`/organizer/events/${event.id}`} className="font-medium text-indigo-600 hover:text-indigo-700">
                         Manage

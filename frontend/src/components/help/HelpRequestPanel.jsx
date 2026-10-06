@@ -23,7 +23,7 @@ const QUICK_REPLIES = ['Someone is on the way.', 'Please stay where you are.', '
 function Fact({ label, children }) {
   return (
     <div>
-      <dt className="text-sm font-medium text-slate-500">{label}</dt>
+      <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">{label}</dt>
       <dd className="mt-0.5 text-sm font-medium text-slate-900">{children}</dd>
     </div>
   );
@@ -43,8 +43,8 @@ function Photo({ requestId, attachment }) {
     return () => { cancelled = true; if (url) URL.revokeObjectURL(url); };
   }, [requestId, attachment.id]);
   if (failed) return <p className="text-sm text-slate-500">The photo could not be loaded.</p>;
-  if (!src) return <div className="h-40 w-full max-w-xs animate-pulse rounded-lg bg-slate-200" aria-label="Loading photo" />;
-  return <a href={src} target="_blank" rel="noreferrer"><img src={src} alt="Attached by the participant" className="max-h-64 rounded-lg border border-slate-200 object-contain" /></a>;
+  if (!src) return <div className="h-40 w-full max-w-xs animate-pulse rounded-xl bg-slate-200" aria-label="Loading photo" />;
+  return <a href={src} target="_blank" rel="noreferrer"><img src={src} alt="Attached by the participant" className="max-h-64 rounded-xl border border-slate-200 object-contain" /></a>;
 }
 
 /**
@@ -112,7 +112,7 @@ export default function HelpRequestPanel({ id, backTo, backLabel = 'Back' }) {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="font-mono text-sm font-semibold text-slate-500">{r.requestCode}</p>
-            <h1 className="mt-1 flex items-center gap-2 text-2xl font-semibold text-slate-900">
+            <h1 className="mt-1 flex items-center gap-2 text-2xl font-extrabold tracking-tight text-slate-900">
               <span aria-hidden="true">{r.category.icon}</span>
               {r.category.name}
             </h1>
@@ -139,7 +139,7 @@ export default function HelpRequestPanel({ id, backTo, backLabel = 'Back' }) {
         </dl>
 
         {lastUpdate && r.viewer === 'participant' && !finished && (
-          <div className="mt-5 rounded-lg bg-indigo-50 p-3.5 text-sm text-indigo-900">
+          <div className="mt-5 rounded-xl bg-indigo-50 p-3.5 text-sm text-indigo-900">
             <span className="font-semibold">Last update:</span> &ldquo;{lastUpdate.message}&rdquo; <span className="text-indigo-600/70">({timeAgo(lastUpdate.at)})</span>
           </div>
         )}
@@ -150,7 +150,7 @@ export default function HelpRequestPanel({ id, backTo, backLabel = 'Back' }) {
         <div className="space-y-6">
           {r.viewer !== 'admin' && (
             <Card className="space-y-4 p-5 sm:p-6">
-              <h2 className="text-base font-semibold text-slate-900">Details</h2>
+              <h2 className="text-base font-bold text-slate-900">Details</h2>
               {r.details?.itemName && (
                 <p className="text-sm text-slate-700">
                   <span className="font-semibold">{r.details.kind === 'found' ? 'Found' : 'Lost'}:</span> {r.details.itemName}
@@ -165,7 +165,7 @@ export default function HelpRequestPanel({ id, backTo, backLabel = 'Back' }) {
 
           {staff && (
             <Card className="space-y-5 p-5 sm:p-6">
-              <h2 className="text-base font-semibold text-slate-900">Respond</h2>
+              <h2 className="text-base font-bold text-slate-900">Respond</h2>
               <div className="flex flex-wrap gap-2.5">
                 {c.canAcknowledge && <Button loading={busy === 'acknowledged'} onClick={() => move('acknowledged', 'Request acknowledged.')}>Acknowledge</Button>}
                 {c.canAccept && <Button loading={busy === 'accept'} onClick={() => run('accept', () => helpApi.accept(r.id), 'You accepted this request.')}>Accept</Button>}
@@ -217,7 +217,7 @@ export default function HelpRequestPanel({ id, backTo, backLabel = 'Back' }) {
                 <form onSubmit={(e) => { e.preventDefault(); if (message.trim()) postUpdate(message.trim()); }} className="space-y-3">
                   <Textarea label="Send an update" rows={2} maxLength={500} value={message} onChange={(e) => setMessage(e.target.value)} hint={internal ? 'Only the event team will see this note.' : 'The participant receives this as a notification.'} />
                   <div className="flex flex-wrap gap-2">
-                    {QUICK_REPLIES.map((q) => <button key={q} type="button" onClick={() => setMessage(q)} className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700 transition-colors hover:bg-indigo-100">{q}</button>)}
+                    {QUICK_REPLIES.map((q) => <button key={q} type="button" onClick={() => setMessage(q)} className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100">{q}</button>)}
                   </div>
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <Checkbox label="Internal note (hide from the participant)" checked={internal} onChange={(e) => setInternal(e.target.checked)} />
@@ -239,12 +239,12 @@ export default function HelpRequestPanel({ id, backTo, backLabel = 'Back' }) {
 
         <div className="space-y-6">
           <Card className="p-5 sm:p-6">
-            <h2 className="mb-4 text-base font-semibold text-slate-900">Status</h2>
+            <h2 className="mb-4 text-base font-bold text-slate-900">Status</h2>
             <StatusProgress request={r} />
           </Card>
 
           <Card className="p-5 sm:p-6">
-            <h2 className="mb-3 text-base font-semibold text-slate-900">Activity</h2>
+            <h2 className="mb-3 text-base font-bold text-slate-900">Activity</h2>
             <ol className="space-y-3" aria-label="Activity">
               {timeline.map((u) => (
                 <li key={u.id} className="flex gap-3 text-sm">

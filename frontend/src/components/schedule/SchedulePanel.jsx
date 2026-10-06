@@ -76,7 +76,7 @@ export default function SchedulePanel({ eventId }) {
             const heading = day ?? (multiDay && active.startsWith('day:') ? active.slice(4) : null);
             return (
               <section key={day ?? 'all'} aria-label={heading ? formatDate(heading) : 'Sessions'}>
-                {heading && <h3 className="mb-3 text-sm font-medium text-slate-500">{formatDate(heading)}</h3>}
+                {heading && <h3 className="mb-3 text-sm font-bold uppercase tracking-wider text-indigo-600">{formatDate(heading)}</h3>}
                 <Timeline items={group} onSelect={setSelected} />
               </section>
             );

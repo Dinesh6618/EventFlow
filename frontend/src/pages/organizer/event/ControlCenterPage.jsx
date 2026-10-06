@@ -113,19 +113,19 @@ export default function ControlCenterPage() {
           tone="indigo"
         />
         <StatCard label="Attendance" value={showAttendance && p.expected > 0 ? `${p.attendanceRate}%` : '-'} icon="chart" tone="green" />
-        <StatCard label={teams.enabled ? 'Active teams' : 'Teams'} value={teams.enabled ? teams.active : 'Off'} icon="user" tone="indigo" />
+        <StatCard label={teams.enabled ? 'Active teams' : 'Teams'} value={teams.enabled ? teams.active : 'Off'} icon="user" tone="sky" />
         <StatCard label="Sessions today" value={sessions.today} icon="calendar" tone="amber" />
       </div>
 
       <Section title="Volunteers" hint="Live from Volunteer Management.">
         <div className="grid grid-cols-3 gap-3 text-center sm:grid-cols-6">
           {[['Volunteers', c.volunteers.total], ['Checked in', c.volunteers.checkedIn], ['Active', c.volunteers.active], ['Unassigned', c.volunteers.unassigned], ['Urgent tasks', c.volunteers.urgentTasks], ['Pending tasks', c.volunteers.pendingTasks]].map(([label, value]) => (
-            <div key={label} className="rounded-lg bg-slate-50 p-3"><p className="text-2xl font-semibold text-slate-900">{value}</p><p className="text-xs text-slate-500">{label}</p></div>
+            <div key={label} className="rounded-xl bg-slate-50 p-3"><p className="text-2xl font-extrabold text-slate-900">{value}</p><p className="text-xs text-slate-500">{label}</p></div>
           ))}
         </div>
         {c.volunteers.alerts.length > 0 && (
           <ul className="mt-4 space-y-2" aria-label="Volunteer alerts">
-            {c.volunteers.alerts.map((a) => <li key={a.key} className={`rounded-lg px-4 py-2.5 text-sm ${a.severity === 'important' ? 'border border-red-200 bg-red-50 text-red-800' : 'border border-amber-200 bg-amber-50 text-amber-900'}`}>{a.message}</li>)}
+            {c.volunteers.alerts.map((a) => <li key={a.key} className={`rounded-xl px-4 py-2.5 text-sm ${a.severity === 'important' ? 'border border-red-200 bg-red-50 text-red-800' : 'border border-amber-200 bg-amber-50 text-amber-900'}`}>{a.message}</li>)}
           </ul>
         )}
         <Link to={`/organizer/events/${event.id}/volunteers`} className="mt-3 inline-block text-sm font-medium text-indigo-600 hover:text-indigo-700">Open Volunteer Management</Link>
@@ -133,9 +133,9 @@ export default function ControlCenterPage() {
 
       <Section title="Help requests" hint="Live from the Help Center. Open the tab to respond.">
         <div className="grid grid-cols-3 gap-3 text-center">
-          <div className="rounded-lg bg-emerald-50 p-3"><p className="text-2xl font-semibold text-emerald-700" data-testid="help-open">{c.help.open}</p><p className="text-xs text-emerald-800">Open</p></div>
-          <div className="rounded-lg bg-amber-50 p-3"><p className="text-2xl font-semibold text-amber-700">{c.help.inProgress}</p><p className="text-xs text-amber-800">In progress</p></div>
-          <div className="rounded-lg bg-red-50 p-3"><p className="text-2xl font-semibold text-red-700">{c.help.urgent}</p><p className="text-xs text-red-800">Urgent</p></div>
+          <div className="rounded-xl bg-emerald-50 p-3"><p className="text-2xl font-extrabold text-emerald-700" data-testid="help-open">{c.help.open}</p><p className="text-xs text-emerald-800">Open</p></div>
+          <div className="rounded-xl bg-amber-50 p-3"><p className="text-2xl font-extrabold text-amber-700">{c.help.inProgress}</p><p className="text-xs text-amber-800">In progress</p></div>
+          <div className="rounded-xl bg-red-50 p-3"><p className="text-2xl font-extrabold text-red-700">{c.help.urgent}</p><p className="text-xs text-red-800">Urgent</p></div>
         </div>
         {c.help.recentAlert && (
           <Alert type="error" className="mt-4" action={<Link to={`/organizer/help/${c.help.recentAlert.id}?event=${event.id}`} className="shrink-0 font-medium underline">View request</Link>}>
@@ -155,7 +155,7 @@ export default function ControlCenterPage() {
           ) : (
             <div className="space-y-3">
               <div>
-                <p className="text-xs font-medium text-slate-500">On now</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">On now</p>
                 {sessions.current.length === 0 ? (
                   <p className="mt-1 text-sm text-slate-500">Nothing is running at the moment.</p>
                 ) : (
@@ -172,7 +172,7 @@ export default function ControlCenterPage() {
                 )}
               </div>
               <div>
-                <p className="text-xs font-medium text-slate-500">Up next</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Up next</p>
                 {sessions.next ? (
                   <div className="mt-1 rounded-lg bg-slate-50 px-3 py-2 text-sm" data-testid="next-session">
                     <p className="font-medium text-slate-900">{sessions.next.title}</p>

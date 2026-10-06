@@ -26,7 +26,7 @@ export default function VolunteerSchedulePage() {
         <div className="space-y-8">
           {[...days.entries()].map(([date, duties]) => (
             <section key={date} aria-label={formatDate(date)}>
-              <h2 className="mb-3 text-sm font-medium text-slate-500">{formatDate(date)}</h2>
+              <h2 className="mb-3 text-sm font-bold uppercase tracking-widest text-slate-500">{formatDate(date)}</h2>
               <ul className="space-y-3">{duties.map((d) => <li key={d.id}><DutyCard duty={d} onChanged={reload} /></li>)}</ul>
             </section>
           ))}

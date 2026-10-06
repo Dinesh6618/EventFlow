@@ -43,16 +43,16 @@ export default function ProgressView({ eventId }) {
         <StatCard label="Complete" value={`${data.percentage}%`} icon="dashboard" tone="indigo" />
         <StatCard label="Teams with no judge" value={data.unassignedTeams.length} icon="users" tone="amber" />
       </div>
-      <div className="h-1.5 overflow-hidden rounded bg-slate-200" role="progressbar" aria-valuenow={data.percentage} aria-valuemin={0} aria-valuemax={100}>
-        <div className="h-full rounded bg-emerald-500 transition-all" style={{ width: `${data.percentage}%` }} />
+      <div className="h-2.5 overflow-hidden rounded-full bg-slate-200" role="progressbar" aria-valuenow={data.percentage} aria-valuemin={0} aria-valuemax={100}>
+        <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${data.percentage}%` }} />
       </div>
 
       <section aria-label="By judge">
-        <h3 className="mb-2 text-base font-semibold text-slate-900">By judge</h3>
+        <h3 className="mb-2 text-sm font-semibold text-slate-700">By judge</h3>
         <Card>
           <ul className="divide-y divide-slate-100">
             {data.byJudge.map((j) => (
-              <li key={j.judgeId} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
+              <li key={j.judgeId} className="flex items-center justify-between gap-3 px-5 py-3 text-sm">
                 <span className="font-medium text-slate-900">{j.name}</span>
                 <span className="text-slate-600">{j.submitted} of {j.assigned} submitted{j.drafts > 0 && <span className="text-xs text-slate-400"> ({j.drafts} draft)</span>}</span>
               </li>
@@ -62,11 +62,11 @@ export default function ProgressView({ eventId }) {
       </section>
 
       <section aria-label="Evaluations">
-        <h3 className="mb-2 text-base font-semibold text-slate-900">Every evaluation</h3>
+        <h3 className="mb-2 text-sm font-semibold text-slate-700">Every evaluation</h3>
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs font-medium text-slate-500">
+              <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
                 <tr>
                   <th scope="col" className="px-4 py-3">Team</th>
                   <th scope="col" className="px-4 py-3">Judge</th>
@@ -79,7 +79,7 @@ export default function ProgressView({ eventId }) {
                 {data.evaluations.map((e) => {
                   const [tone, label] = STATUS[e.status];
                   return (
-                    <tr key={`${e.teamId}-${e.judgeId}`} className="hover:bg-slate-50">
+                    <tr key={`${e.teamId}-${e.judgeId}`}>
                       <td className="px-4 py-3 font-medium text-slate-900">{e.teamName}</td>
                       <td className="px-4 py-3 text-slate-600">{e.judgeName}</td>
                       <td className="px-4 py-3">

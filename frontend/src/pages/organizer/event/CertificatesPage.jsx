@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { ApiError, certificatesApi } from '../../../api';
 import Alert from '../../../components/ui/Alert.jsx';
 import Badge from '../../../components/ui/Badge.jsx';
-import Button, { buttonClasses } from '../../../components/ui/Button.jsx';
+import Button from '../../../components/ui/Button.jsx';
 import Card from '../../../components/ui/Card.jsx';
 import ConfirmDialog from '../../../components/ui/ConfirmDialog.jsx';
 import { Input, Select } from '../../../components/ui/FormField.jsx';
@@ -118,7 +117,7 @@ export default function CertificatesPage() {
                 {type === 'participant' && (
                   <div className="mt-3">
                     <label htmlFor="cert-scope" className="sr-only">Who counts as a participant</label>
-                    <select id="cert-scope" value={scope} onChange={(e) => setScope(e.target.value)} className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
+                    <select id="cert-scope" value={scope} onChange={(e) => setScope(e.target.value)} className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30">
                       <option value="attended">Only people who checked in</option>
                       <option value="registered">Everyone registered</option>
                     </select>
@@ -167,29 +166,25 @@ export default function CertificatesPage() {
           <Card className="overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-slate-200 bg-slate-50 text-xs font-medium text-slate-500">
+                <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
                   <tr>
+                    <th scope="col" className="px-4 py-3">Certificate ID</th>
                     <th scope="col" className="px-4 py-3">Recipient</th>
-                    <th scope="col" className="hidden px-4 py-3 md:table-cell">Event</th>
                     <th scope="col" className="px-4 py-3">Type</th>
-                    <th scope="col" className="hidden px-4 py-3 sm:table-cell">Date</th>
+                    <th scope="col" className="hidden px-4 py-3 sm:table-cell">Issued</th>
                     <th scope="col" className="px-4 py-3"><span className="sr-only">Actions</span></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {data.certificates.map((c) => (
-                    <tr key={c.id} className="hover:bg-slate-50">
-                      <td className="px-4 py-3">
-                        <p className="font-medium text-slate-900">{c.recipientName} {c.revokedAt && <Badge tone="red">Revoked</Badge>}</p>
-                        <p className="font-mono text-xs text-slate-400">{c.code}</p>
-                      </td>
-                      <td className="hidden max-w-56 truncate px-4 py-3 text-slate-600 md:table-cell" title={event.name}>{event.name}</td>
+                    <tr key={c.id}>
+                      <td className="px-4 py-3 font-mono text-xs text-slate-700">{c.code}</td>
+                      <td className="px-4 py-3 font-medium text-slate-900">{c.recipientName}{c.revokedAt && <Badge tone="red">Revoked</Badge>}</td>
                       <td className="px-4 py-3"><Badge tone="indigo">{data.types[c.type]}</Badge></td>
                       <td className="hidden px-4 py-3 text-slate-600 sm:table-cell">{date(c.issuedAt)}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-right">
                         <Button size="sm" variant="ghost" loading={opening === c.code} onClick={() => viewIssued(c)}>View</Button>
-                        <Button size="sm" variant="ghost" onClick={() => certificatesApi.download(c.code).catch((e) => toast.error(e.message))}>Download</Button>
-                        <Link to={`/verify/${c.code}`} target="_blank" rel="noopener noreferrer" className={buttonClasses('ghost', 'sm')}>Verify</Link>
+                        <Button size="sm" variant="ghost" onClick={() => certificatesApi.download(c.code).catch((e) => toast.error(e.message))}>PDF</Button>
                         {!c.revokedAt && <Button size="sm" variant="ghost" className="text-red-600 hover:bg-red-50" onClick={() => setRevoking(c)}>Revoke</Button>}
                       </td>
                     </tr>
@@ -215,7 +210,7 @@ export default function CertificatesPage() {
         <p><strong className="text-slate-900">{revoking?.code}</strong> for {revoking?.recipientName} will show as REVOKED when someone verifies it, and the holder will no longer be able to download it.</p>
         <div className="mt-3">
           <label htmlFor="revoke-reason" className="mb-1 block text-xs font-medium text-slate-600">Reason (optional)</label>
-          <input id="revoke-reason" value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300} className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20" />
+          <input id="revoke-reason" value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300} className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30" />
         </div>
       </ConfirmDialog>
     </div>

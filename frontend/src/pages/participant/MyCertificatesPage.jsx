@@ -42,7 +42,7 @@ export default function MyCertificatesPage() {
 
   return (
     <>
-      <PageHeader title="Certificates" description="Certificates you have earned. Anyone can check one with its ID on the verification page." />
+      <PageHeader eyebrow="Achievements" title="My Certificates" description="Certificates you have earned. Anyone can check one with its ID on the verification page." />
 
       <Tabs label="Certificate types" value={tab} onChange={setTab} tabs={FILTERS.map(([key, label, types]) => ({ key, label, count: data ? matches(types).length : undefined }))} />
 
@@ -59,7 +59,7 @@ export default function MyCertificatesPage() {
             action={tab === 'all' && <Link to="/events" className={buttonClasses('primary')}>Explore Events</Link>}
           />
         ) : (
-          <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {shown.map((c) => (
               <li key={c.id}><CertificateCard certificate={c} typeLabel={data.types[c.type]} onDownload={download} downloading={busy === c.code} /></li>
             ))}

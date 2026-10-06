@@ -98,7 +98,7 @@ export default function AssignmentsManager({ eventId }) {
       <Card className="flex flex-wrap items-end gap-4 p-5">
         <div>
           <label htmlFor="per-team" className="mb-1.5 block text-sm font-medium text-slate-700">Judges per team</label>
-          <select id="per-team" value={perTeam} onChange={(e) => setPerTeam(e.target.value)} className="rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
+          <select id="per-team" value={perTeam} onChange={(e) => setPerTeam(e.target.value)} className="rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30">
             {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}</option>)}
           </select>
         </div>

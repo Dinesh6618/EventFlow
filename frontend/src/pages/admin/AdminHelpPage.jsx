@@ -46,15 +46,15 @@ function useSaver() {
 function Overview() {
   const { data, error, reload } = useApi((signal) => adminHelpApi.analytics(signal));
   if (error) return <LoadError error={error} onRetry={reload} />;
-  if (!data) return <div className="h-40 animate-pulse rounded-lg bg-slate-200" aria-label="Loading" />;
+  if (!data) return <div className="h-40 animate-pulse rounded-2xl bg-slate-200" aria-label="Loading" />;
   const s = data.summary;
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <StatCard label="Total requests" value={s.total} icon="inbox" tone="indigo" />
         <StatCard label="Urgent requests" value={s.urgent} icon="alert" tone="amber" hint="still open" />
-        <StatCard label="Open requests" value={s.open + s.inProgress} icon="clock" tone="indigo" />
-        <StatCard label="Avg response" value={durationText(data.averageResponseMinutes)} icon="mail" tone="indigo" />
+        <StatCard label="Open requests" value={s.open + s.inProgress} icon="clock" tone="sky" />
+        <StatCard label="Avg response" value={durationText(data.averageResponseMinutes)} icon="mail" tone="pink" />
         <StatCard label="Avg resolution" value={durationText(data.averageResolutionMinutes)} icon="check" tone="green" />
       </div>
       <HelpAnalytics data={data} showEvents stats={false} />
@@ -77,20 +77,20 @@ function Requests() {
     <div className="space-y-4">
       <p className="text-sm text-slate-500">For monitoring only: descriptions, participants and photos are visible to the event team, not here.</p>
       <div role="group" aria-label="Filter requests" className="flex flex-wrap gap-1.5">
-        {REQUEST_FILTERS.map((f) => <button key={f.key} type="button" aria-pressed={filter === f.key} onClick={() => setFilter(f.key)} className={`rounded-full px-3 py-1 text-sm font-medium transition-colors ${filter === f.key ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>{f.label}</button>)}
+        {REQUEST_FILTERS.map((f) => <button key={f.key} type="button" aria-pressed={filter === f.key} onClick={() => setFilter(f.key)} className={`rounded-full px-3 py-1 text-sm font-medium ${filter === f.key ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>{f.label}</button>)}
       </div>
-      {error ? <LoadError error={error} onRetry={reload} /> : !data && loading ? <div className="h-40 animate-pulse rounded-lg bg-slate-200" /> : data.requests.length === 0 ? (
+      {error ? <LoadError error={error} onRetry={reload} /> : !data && loading ? <div className="h-40 animate-pulse rounded-2xl bg-slate-200" /> : data.requests.length === 0 ? (
         <EmptyState icon="shield" title="No requests" description="Nothing matches this filter." />
       ) : (
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs font-medium text-slate-500">
+              <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
                 <tr><th scope="col" className="px-4 py-3">Request</th><th scope="col" className="px-4 py-3">Event</th><th scope="col" className="px-4 py-3">Category</th><th scope="col" className="px-4 py-3">Location</th><th scope="col" className="px-4 py-3">Priority</th><th scope="col" className="px-4 py-3">Status</th><th scope="col" className="px-4 py-3">Age</th><th scope="col" className="px-4 py-3"><span className="sr-only">View</span></th></tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {data.requests.map((r) => (
-                  <tr key={r.id} className="hover:bg-slate-50">
+                  <tr key={r.id}>
                     <td className="whitespace-nowrap px-4 py-3 font-mono text-xs font-semibold">{r.requestCode}</td>
                     <td className="px-4 py-3">{r.eventName}</td>
                     <td className="whitespace-nowrap px-4 py-3"><span aria-hidden="true">{r.category.icon}</span> {r.category.name}</td>
@@ -158,7 +158,7 @@ function Categories() {
         </form>
         <div className="mt-2"><Checkbox label="Urgent: shown under the emergency heading and needs confirmation" checked={v.isUrgent} onChange={set('isUrgent')} /></div>
       </Card>
-      {!data ? <div className="h-32 animate-pulse rounded-lg bg-slate-200" /> : data.categories.map((c) => <CategoryEditor key={`${c.id}-${c.name}-${c.priorityLevel}-${c.isActive}-${c.isUrgent}`} category={c} onSaved={reload} />)}
+      {!data ? <div className="h-32 animate-pulse rounded-2xl bg-slate-200" /> : data.categories.map((c) => <CategoryEditor key={`${c.id}-${c.name}-${c.priorityLevel}-${c.isActive}-${c.isUrgent}`} category={c} onSaved={reload} />)}
     </div>
   );
 }
@@ -199,7 +199,7 @@ function Contacts() {
         <p className="mb-3 mt-1 text-sm text-slate-500">Participants see these numbers on the Help Center once the event day begins. EventFlow shows them; it never calls them.</p>
         <ContactForm events={events} submitLabel="Add contact" busy={busy === 'add'} errors={errors} onSubmit={async (body, reset) => { if (await save('add', () => adminHelpApi.createContact(body), 'Contact added.')) { reset(); reload(); } }} />
       </Card>
-      {!data ? <div className="h-32 animate-pulse rounded-lg bg-slate-200" /> : data.contacts.length === 0 ? (
+      {!data ? <div className="h-32 animate-pulse rounded-2xl bg-slate-200" /> : data.contacts.length === 0 ? (
         <EmptyState icon="shield" title="No contacts yet" description="Add the official security, medical and coordinator numbers for your college or event." />
       ) : data.contacts.map((c) => (
         <Card key={c.id} className={`p-4 ${c.isActive ? '' : 'opacity-70'}`}>
@@ -208,7 +208,7 @@ function Contacts() {
           ) : (
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="font-semibold text-slate-900">{c.name} {!c.isActive && <Badge tone="slate">Hidden</Badge>}</p>
+                <p className="font-bold text-slate-900">{c.name} {!c.isActive && <Badge tone="slate">Hidden</Badge>}</p>
                 <p className="text-sm text-slate-600">{[c.department, c.availability].filter(Boolean).join(' - ')}</p>
                 <p className="mt-0.5 font-mono text-sm font-semibold text-slate-900">{c.phone}</p>
                 <p className="text-xs text-slate-500">{c.eventName ? `Only for ${c.eventName}` : 'Every event'}{c.description && ` - ${c.description}`}</p>
@@ -234,7 +234,7 @@ function TeamCard({ team, onChanged }) {
     <Card className={`p-5 ${team.isActive ? '' : 'opacity-70'}`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="font-semibold text-slate-900">{team.name} {!team.isActive && <Badge tone="slate">Inactive</Badge>}</h3>
+          <h3 className="font-bold text-slate-900">{team.name} {!team.isActive && <Badge tone="slate">Inactive</Badge>}</h3>
           {team.description && <p className="text-sm text-slate-500">{team.description}</p>}
         </div>
         <Button size="sm" variant="secondary" loading={busy === 'toggle'} onClick={async () => { if (await save('toggle', () => adminHelpApi.updateTeam(team.id, { isActive: !team.isActive }), team.isActive ? 'Team switched off.' : 'Team switched on.')) onChanged(); }}>{team.isActive ? 'Switch off' : 'Switch on'}</Button>
@@ -272,7 +272,7 @@ function Teams() {
           <div className="md:pt-[1.625rem]"><Button type="submit" loading={busy === 'team'}>Add team</Button></div>
         </form>
       </Card>
-      {!data ? <div className="h-32 animate-pulse rounded-lg bg-slate-200" /> : data.teams.map((t) => <TeamCard key={t.id} team={t} onChanged={reload} />)}
+      {!data ? <div className="h-32 animate-pulse rounded-2xl bg-slate-200" /> : data.teams.map((t) => <TeamCard key={t.id} team={t} onChanged={reload} />)}
     </div>
   );
 }
@@ -293,7 +293,7 @@ function Escalation() {
   const { busy, errors, save } = useSaver();
   const [draft, setDraft] = useState(null);
   if (error) return <LoadError error={error} onRetry={reload} />;
-  if (!data) return <div className="h-40 animate-pulse rounded-lg bg-slate-200" />;
+  if (!data) return <div className="h-40 animate-pulse rounded-2xl bg-slate-200" />;
   const value = draft ?? data.escalation;
   const set = (group, key) => (e) => setDraft({ ...value, [group]: { ...value[group], [key]: e.target.value } });
   return (

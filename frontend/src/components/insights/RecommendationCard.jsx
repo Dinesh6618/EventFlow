@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import Badge from '../ui/Badge.jsx';
-import Button, { buttonClasses } from '../ui/Button.jsx';
+import Button from '../ui/Button.jsx';
 import Card from '../ui/Card.jsx';
 import Icon from '../ui/Icon.jsx';
 
@@ -42,7 +42,7 @@ export default function RecommendationCard({ item, busy, onStatus }) {
   const isAi = item.source === 'ai';
 
   return (
-    <Card className={`p-5 ${item.status === 'new' ? '' : 'bg-slate-50'}`} data-testid="recommendation">
+    <Card className={`p-5 ${item.status === 'new' ? '' : 'bg-slate-50/60'}`} data-testid="recommendation">
       <div className="flex flex-wrap items-center gap-2">
         <Badge tone={tone}>{severityLabel}</Badge>
         <Badge tone="slate">{CATEGORY[item.category] || item.category}</Badge>
@@ -63,7 +63,7 @@ export default function RecommendationCard({ item, busy, onStatus }) {
       <p className="mt-1 text-sm text-slate-600">{item.message}</p>
 
       {!resolved && (
-        <div className="mt-3 rounded-lg bg-indigo-50 px-3 py-2.5 text-sm text-slate-800">
+        <div className="mt-3 rounded-lg bg-indigo-50/70 px-3 py-2.5 text-sm text-slate-800">
           <span className="font-medium text-indigo-800">{isAi ? 'Idea: ' : 'Suggested action: '}</span>
           {item.suggestion}
         </div>
@@ -86,7 +86,7 @@ export default function RecommendationCard({ item, busy, onStatus }) {
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
         {item.link && !resolved && (
-          <Link to={item.link} className={buttonClasses('secondary', 'sm')}>
+          <Link to={item.link} className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
             {destinationLabel(item.link)}
           </Link>
         )}

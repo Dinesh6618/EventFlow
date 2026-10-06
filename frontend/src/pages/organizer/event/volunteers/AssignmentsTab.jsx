@@ -64,7 +64,7 @@ function AssignmentForm({ event, assignment, volunteers, departments, shifts, as
         <Input label="End" type="time" value={v.endTime} onChange={set('endTime')} error={errors.endTime} />
       </div>
       {v.userId && (
-        <p className={`rounded-lg px-3.5 py-2.5 text-sm ${booked.length ? 'bg-amber-50 text-amber-900' : 'bg-emerald-50 text-emerald-800'}`} aria-live="polite">
+        <p className={`rounded-xl px-3.5 py-2.5 text-sm ${booked.length ? 'bg-amber-50 text-amber-900' : 'bg-emerald-50 text-emerald-800'}`} aria-live="polite">
           {booked.length ? <>Already booked on {formatDate(v.date)}: {booked.map((a) => `${a.department.name} ${shiftText(a.startTime, a.endTime)}`).join(', ')}. Shifts cannot overlap.</> : <>Free on {formatDate(v.date)}: no other duties that day.</>}
         </p>
       )}
@@ -104,7 +104,7 @@ function ReassignmentRequests({ requests, onChanged }) {
 
   return (
     <Card className="border-amber-200 bg-amber-50/40 p-5">
-      <h2 className="text-base font-semibold text-slate-900">Reassignment requests <Badge tone="amber">{pending.length}</Badge></h2>
+      <h2 className="text-base font-bold text-slate-900">Reassignment requests <Badge tone="amber">{pending.length}</Badge></h2>
       <ul className="mt-3 divide-y divide-amber-100">
         {pending.map((r) => (
           <li key={r.id} className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between">
@@ -183,9 +183,9 @@ export default function AssignmentsTab() {
       <ReassignmentRequests requests={requests.data?.requests ?? []} onChanged={refresh} />
 
       <Card className="p-5 sm:p-6">
-        <h2 className="text-base font-semibold text-slate-900">Assign a volunteer</h2>
+        <h2 className="text-base font-bold text-slate-900">Assign a volunteer</h2>
         <p className="mb-4 mt-1 text-sm text-slate-500">Pick a volunteer, a department and a time. You will see what they already have that day, and overlapping shifts are refused.</p>
-        {!ready ? <div className="h-32 animate-pulse rounded-lg bg-slate-100" /> : people.length === 0 ? (
+        {!ready ? <div className="h-32 animate-pulse rounded-xl bg-slate-100" /> : people.length === 0 ? (
           <p className="text-sm text-slate-500">You need approved volunteers first. Approve applications on the Volunteers tab.</p>
         ) : depts.length === 0 ? (
           <p className="text-sm text-slate-500">Create a department first on the Departments tab.</p>
@@ -195,14 +195,14 @@ export default function AssignmentsTab() {
       </Card>
 
       <section aria-labelledby="assignments-heading">
-        <h2 id="assignments-heading" className="mb-3 text-lg font-semibold text-slate-900">Assignments ({rows.length})</h2>
-        {!assignments.data && assignments.loading ? <div className="h-32 animate-pulse rounded-lg bg-slate-200" /> : rows.length === 0 ? (
+        <h2 id="assignments-heading" className="mb-3 text-lg font-bold text-slate-900">Assignments ({rows.length})</h2>
+        {!assignments.data && assignments.loading ? <div className="h-32 animate-pulse rounded-2xl bg-slate-200" /> : rows.length === 0 ? (
           <EmptyState icon="users" title="Nobody is assigned yet" description="Assignments you create appear here, with their status and attendance." />
         ) : (
           <Card className="overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-slate-200 bg-slate-50 text-xs font-medium text-slate-500">
+                <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
                   <tr><th scope="col" className="px-4 py-3">Volunteer</th><th scope="col" className="px-4 py-3">Department</th><th scope="col" className="px-4 py-3">When</th><th scope="col" className="hidden px-4 py-3 lg:table-cell">Location</th><th scope="col" className="hidden px-4 py-3 xl:table-cell">Task</th><th scope="col" className="px-4 py-3">Status</th><th scope="col" className="px-4 py-3"><span className="sr-only">Actions</span></th></tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -212,7 +212,7 @@ export default function AssignmentsTab() {
                       <td className="px-4 py-3">{a.department.name}{a.shift && <span className="block text-xs text-slate-400">{a.shift.name}</span>}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-slate-600">{formatDate(a.date)}<span className="block text-xs">{shiftText(a.startTime, a.endTime)}</span></td>
                       <td className="hidden px-4 py-3 text-slate-600 lg:table-cell">{a.location || '-'}</td>
-                      <td className="hidden max-w-56 truncate px-4 py-3 text-slate-600 xl:table-cell" title={a.task}>{a.task || '-'}</td>
+                      <td className="hidden max-w-[14rem] truncate px-4 py-3 text-slate-600 xl:table-cell" title={a.task}>{a.task || '-'}</td>
                       <td className="whitespace-nowrap px-4 py-3">
                         <DutyStatusBadge status={a.liveStatus ?? 'assigned'}>{a.status === 'assigned' ? 'Awaiting acceptance' : undefined}</DutyStatusBadge>
                         {a.reassignmentRequested && <Badge tone="amber" className="ml-1">Reassign requested</Badge>}

@@ -14,10 +14,10 @@ export default function VolunteerAnalytics({ data, showEvents = false }) {
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Total volunteers" value={t.totalVolunteers} icon="users" tone="indigo" />
         <StatCard label="Active volunteers" value={t.activeVolunteers} icon="zap" tone="green" hint="on duty now" />
-        <StatCard label="Average attendance" value={t.averageAttendance === null ? '-' : `${t.averageAttendance}%`} icon="check" tone="indigo" hint="of duties that have started" />
-        <StatCard label="Average volunteer hours" value={hoursText(t.averageHours)} icon="clock" tone="indigo" hint={`${t.totalHours} h in total`} />
+        <StatCard label="Average attendance" value={t.averageAttendance === null ? '-' : `${t.averageAttendance}%`} icon="check" tone="sky" hint="of duties that have started" />
+        <StatCard label="Average volunteer hours" value={hoursText(t.averageHours)} icon="clock" tone="amber" hint={`${t.totalHours} h in total`} />
         <StatCard label="Tasks completed" value={t.tasksCompleted} icon="award" tone="green" />
-        <StatCard label="Tasks pending" value={t.tasksPending} icon="inbox" tone="amber" />
+        <StatCard label="Tasks pending" value={t.tasksPending} icon="inbox" tone="pink" />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">

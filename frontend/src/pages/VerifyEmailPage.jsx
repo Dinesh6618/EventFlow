@@ -62,9 +62,9 @@ export default function VerifyEmailPage() {
     return (
       <AuthShell title="Email verified" subtitle="Your account is ready.">
         <div className="space-y-5">
-          <div className="flex items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+          <div className="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
             <Icon name="check" className="mt-0.5 h-5 w-5 shrink-0" />
-            <p><span className="font-semibold">Email verified successfully.</span> You can now log in.</p>
+            <p><span className="font-semibold">&#10003; Email verified successfully.</span> You can now log in.</p>
           </div>
           <Link to="/login" className={buttonClasses('primary', 'lg', 'w-full')}>Log in</Link>
         </div>

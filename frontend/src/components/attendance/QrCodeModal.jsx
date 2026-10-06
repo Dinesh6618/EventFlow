@@ -35,7 +35,7 @@ export default function QrCodeModal({ registration, onClose }) {
     >
       <div className="flex flex-col items-center text-center">
         <p className="font-medium text-slate-900">{registration?.eventName}</p>
-        <div className="mt-4 flex h-64 w-64 items-center justify-center rounded-lg border border-slate-200 bg-white p-2">
+        <div className="mt-4 flex h-64 w-64 items-center justify-center rounded-xl border border-slate-200 bg-white p-2">
           {src ? (
             <img src={src} alt="QR code for event check-in" className="h-full w-full" />
           ) : failed ? (

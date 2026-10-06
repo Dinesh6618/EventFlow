@@ -10,22 +10,21 @@ export default function ChartCard({ title, subtitle, table, empty = false, empty
   const showTable = view === 'table' && table && !empty;
 
   return (
-    // min-w-0: charts size themselves from their container, so the card must be allowed to shrink inside a grid.
-    <Card className={`viz min-w-0 p-5 ${className}`}>
+    <Card className={`viz p-5 ${className}`}>
       <div className="mb-4 flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="text-base font-semibold text-slate-900">{title}</h3>
-          {subtitle && <p className="mt-0.5 text-sm text-slate-500">{subtitle}</p>}
+          <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+          {subtitle && <p className="mt-0.5 text-xs text-slate-500">{subtitle}</p>}
         </div>
         {table && !empty && (
-          <div role="group" aria-label={`${title} view`} className="inline-flex shrink-0 rounded-lg border border-slate-200 p-0.5 text-xs">
+          <div role="group" aria-label={`${title} view`} className="inline-flex shrink-0 rounded-md border border-slate-200 p-0.5 text-xs">
             {['chart', 'table'].map((v) => (
               <button
                 key={v}
                 type="button"
                 aria-pressed={view === v}
                 onClick={() => setView(v)}
-                className={`rounded-md px-2 py-1 font-medium capitalize transition-colors ${view === v ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-100'}`}
+                className={`rounded px-2 py-1 font-medium capitalize ${view === v ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'}`}
               >
                 {v}
               </button>
@@ -39,8 +38,8 @@ export default function ChartCard({ title, subtitle, table, empty = false, empty
       ) : showTable ? (
         <div className="max-h-72 overflow-auto">
           <table className="w-full text-left text-sm">
-            <thead className="sticky top-0 bg-white text-xs font-medium text-slate-500">
-              <tr>{table.columns.map((c) => <th key={c} scope="col" className="py-1.5 pr-4 font-medium">{c}</th>)}</tr>
+            <thead className="sticky top-0 bg-white text-xs uppercase tracking-wide text-slate-500">
+              <tr>{table.columns.map((c) => <th key={c} scope="col" className="py-1.5 pr-4 font-semibold">{c}</th>)}</tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {table.rows.map((row, i) => (

@@ -85,7 +85,7 @@ export default function VerificationPending({ email: initialEmail, password: ini
   };
 
   const changeForm = changing && (
-    <form onSubmit={change} noValidate className="page-enter space-y-4 rounded-lg border border-slate-200 bg-white p-4">
+    <form onSubmit={change} noValidate className="page-enter space-y-4 rounded-2xl border border-slate-200 bg-white p-4">
       <p className="text-sm text-slate-600">Typed the wrong address? Enter the right one and we will send the link there instead.</p>
       <Input label="New email address" type="email" autoComplete="email" value={form.newEmail} onChange={(e) => { setForm((f) => ({ ...f, newEmail: e.target.value })); setErrors((p) => ({ ...p, newEmail: undefined })); }} error={errors.newEmail} placeholder="you@college.edu" />
       <Input label="Your password" type="password" autoComplete="current-password" value={form.password} onChange={(e) => { setForm((f) => ({ ...f, password: e.target.value })); setErrors((p) => ({ ...p, password: undefined })); }} error={errors.password} hint="We ask so nobody else can change your address." />
@@ -111,7 +111,7 @@ export default function VerificationPending({ email: initialEmail, password: ini
 
   return (
     <div className="space-y-5">
-      <div className="flex items-start gap-3 rounded-lg border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-950">
+      <div className="flex items-start gap-3 rounded-2xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-950">
         <Icon name="mail" className="mt-0.5 h-5 w-5 shrink-0 text-indigo-600" />
         <div>
           {title && <p className="font-semibold">{title}</p>}

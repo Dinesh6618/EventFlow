@@ -16,7 +16,7 @@ export default function HelpAnalytics({ data, showEvents = false, stats = true }
     <div className="space-y-6">
       {stats && <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Total requests" value={s.total} icon="inbox" tone="indigo" />
-        <StatCard label="Average response time" value={durationText(data.averageResponseMinutes)} icon="clock" tone="indigo" hint="until acknowledged" />
+        <StatCard label="Average response time" value={durationText(data.averageResponseMinutes)} icon="clock" tone="sky" hint="until acknowledged" />
         <StatCard label="Average resolution time" value={durationText(data.averageResolutionMinutes)} icon="check" tone="green" hint="until resolved" />
         <StatCard label="Escalated now" value={s.escalated} icon="alert" tone="amber" />
       </div>}
@@ -40,20 +40,20 @@ export default function HelpAnalytics({ data, showEvents = false, stats = true }
 
       <Card className="overflow-hidden">
         <div className="border-b border-slate-100 p-5">
-          <h3 className="text-base font-semibold text-slate-900">Volunteer workload</h3>
-          <p className="text-sm text-slate-500">Requests each volunteer has been handed.</p>
+          <h3 className="text-sm font-semibold text-slate-900">Volunteer workload</h3>
+          <p className="text-xs text-slate-500">Requests each volunteer has been handed.</p>
         </div>
         {data.volunteerWorkload.length === 0 ? (
           <p className="p-5 text-sm text-slate-500">No requests have been assigned yet.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs font-medium text-slate-500">
+              <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
                 <tr><th scope="col" className="px-5 py-3">Volunteer</th><th scope="col" className="px-5 py-3">Assigned</th><th scope="col" className="px-5 py-3">Open</th><th scope="col" className="px-5 py-3">Resolved</th></tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {data.volunteerWorkload.map((v) => (
-                  <tr key={v.userId} className="hover:bg-slate-50"><td className="px-5 py-3 font-medium text-slate-900">{v.name}</td><td className="px-5 py-3">{v.assigned}</td><td className="px-5 py-3">{v.open}</td><td className="px-5 py-3">{v.resolved}</td></tr>
+                  <tr key={v.userId}><td className="px-5 py-3 font-medium text-slate-900">{v.name}</td><td className="px-5 py-3">{v.assigned}</td><td className="px-5 py-3">{v.open}</td><td className="px-5 py-3">{v.resolved}</td></tr>
                 ))}
               </tbody>
             </table>

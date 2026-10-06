@@ -32,19 +32,19 @@ export default function HelpEntryPage() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <PageHeader title="Need assistance?" description="Report a problem to the event team and follow what happens next." action={<Link to="/my/help" className={buttonClasses('secondary')}>My help requests</Link>} />
+      <PageHeader eyebrow="Help Center" title="Need assistance?" description="Report a problem to the event team and follow what happens next." action={<Link to="/my/help" className={buttonClasses('secondary')}>My help requests</Link>} />
 
       {live.length > 0 ? (
         <section aria-labelledby="live-heading">
-          <h2 id="live-heading" className="mb-3 text-lg font-semibold text-slate-900">Which event do you need help at?</h2>
+          <h2 id="live-heading" className="mb-3 text-sm font-extrabold uppercase tracking-widest text-slate-900">Which event do you need help at?</h2>
           <ul className="space-y-3">
             {live.map((r) => (
               <li key={r.id}>
-                <Link to={`/events/${r.eventId}/help`} className="block rounded-lg focus-visible:outline-offset-4">
-                  <Card hover className="flex items-center gap-4 p-4">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600"><Icon name="shield" className="h-5 w-5" /></span>
+                <Link to={`/events/${r.eventId}/help`} className="block rounded-2xl focus-visible:outline-offset-4">
+                  <Card hover className="flex items-center gap-4 p-5">
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-white"><Icon name="shield" className="h-6 w-6" /></span>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate font-semibold text-slate-900">{r.eventName}</p>
+                      <p className="truncate font-bold text-slate-900">{r.eventName}</p>
                       <p className="text-sm text-slate-500">{formatEventDates({ date: r.eventDate, endDate: r.eventEndDate })} &middot; {r.eventVenue}</p>
                     </div>
                     <Badge tone="green">Happening today</Badge>

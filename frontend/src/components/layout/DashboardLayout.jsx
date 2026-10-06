@@ -8,7 +8,7 @@ import Logo from './Logo.jsx';
 import Sidebar from './Sidebar.jsx';
 
 /**
- * Organizer / admin shell: light sidebar on desktop, slide-in drawer on tablets and phones,
+ * Organizer / admin shell: dark sidebar on desktop, slide-in drawer on tablets and phones,
  * and a bottom bar on phones for the most-used pages.
  */
 export default function DashboardLayout({ items, bottomItems }) {
@@ -26,7 +26,6 @@ export default function DashboardLayout({ items, bottomItems }) {
   };
 
   const bottom = [...(bottomItems ?? []), { label: 'More', icon: 'menu', onClick: () => setOpen(true), expanded: open }];
-  const firstLink = items.find((i) => i.to);
 
   return (
     <div className="min-h-screen lg:flex">
@@ -34,8 +33,8 @@ export default function DashboardLayout({ items, bottomItems }) {
         Skip to content
       </a>
 
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 lg:hidden">
-        <Link to={firstLink.to} aria-label="Dashboard home">
+      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-slate-200/70 bg-white/85 px-4 py-3 backdrop-blur-xl lg:hidden">
+        <Link to={items[0].to} aria-label="Dashboard home">
           <Logo />
         </Link>
         <div className="-mr-2 flex items-center gap-1">
@@ -52,10 +51,10 @@ export default function DashboardLayout({ items, bottomItems }) {
         </div>
       </header>
 
-      {open && <div className="animate-toast-in fixed inset-0 z-40 bg-slate-900/50 lg:hidden" onClick={() => setOpen(false)} aria-hidden="true" />}
+      {open && <div className="animate-toast-in fixed inset-0 z-40 bg-slate-950/55 backdrop-blur-[2px] lg:hidden" onClick={() => setOpen(false)} aria-hidden="true" />}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 transition-transform duration-200 lg:sticky lg:top-0 lg:h-screen lg:w-60 lg:shrink-0 lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-72 transition-transform duration-200 lg:sticky lg:top-0 lg:h-screen lg:w-64 lg:shrink-0 lg:translate-x-0 ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -63,15 +62,16 @@ export default function DashboardLayout({ items, bottomItems }) {
           items={items}
           user={user}
           onLogout={handleLogout}
+          variant="dark"
           onNavigate={() => setOpen(false)}
           header={
             <span className="flex items-center gap-1">
-              <span className="hidden lg:block"><NotificationBell align="left" /></span>
+              <span className="hidden lg:block"><NotificationBell dark align="left" /></span>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label="Close navigation"
-                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 lg:hidden"
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-white/10 hover:text-white lg:hidden"
               >
                 <Icon name="x" />
               </button>
@@ -80,7 +80,7 @@ export default function DashboardLayout({ items, bottomItems }) {
         />
       </aside>
 
-      <main id="main" className="min-w-0 flex-1 px-4 pb-28 pt-6 sm:px-6 lg:px-8 lg:pb-10 lg:pt-8">
+      <main id="main" className="min-w-0 flex-1 px-4 pb-28 pt-6 sm:px-6 lg:px-10 lg:pb-10 lg:pt-8">
         <div className="mx-auto max-w-6xl">
           <div key={location.pathname.split('/').slice(0, 4).join('/')} className="page-enter">
             <Outlet />
@@ -93,23 +93,21 @@ export default function DashboardLayout({ items, bottomItems }) {
   );
 }
 
-// The first block matches the organizer menu in the product brief ("Create Event" is the primary
-// button on the Events page). Tools that sit outside it stay reachable under "More".
 export const ORGANIZER_NAV = [
   { to: '/organizer/dashboard', label: 'Overview', icon: 'dashboard' },
-  { to: '/organizer/events', label: 'Events', icon: 'calendar', prefix: true },
+  { to: '/organizer/events', label: 'My Events', icon: 'calendar', prefix: true },
+  { to: '/organizer/create-event', label: 'Create Event', icon: 'plus' },
   { to: '/organizer/participants', label: 'Participants', icon: 'users' },
+  { to: '/organizer/section/scan', label: 'QR Scan', icon: 'qr' },
   { to: '/organizer/section/attendance', label: 'Attendance', icon: 'check' },
   { to: '/organizer/section/schedule', label: 'Schedule', icon: 'clock' },
+  { to: '/organizer/section/volunteers', label: 'Volunteer Management', icon: 'heart' },
+  { to: '/organizer/section/help', label: 'Help Center', icon: 'shield' },
   { to: '/organizer/section/teams', label: 'Teams', icon: 'user-plus' },
   { to: '/organizer/section/judging', label: 'Judging', icon: 'trophy' },
   { to: '/organizer/section/certificates', label: 'Certificates', icon: 'award' },
   { to: '/organizer/section/feedback', label: 'Feedback', icon: 'message' },
   { to: '/organizer/analytics', label: 'Analytics', icon: 'chart' },
-  { heading: 'More' },
-  { to: '/organizer/section/scan', label: 'QR Scan', icon: 'qr' },
-  { to: '/organizer/section/volunteers', label: 'Volunteer Management', icon: 'heart' },
-  { to: '/organizer/section/help', label: 'Help Center', icon: 'shield' },
   { to: '/organizer/profile', label: 'Settings', icon: 'settings' },
 ];
 

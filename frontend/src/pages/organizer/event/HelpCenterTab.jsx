@@ -59,13 +59,13 @@ export default function HelpCenterTab() {
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Open requests" value={s?.open} icon="inbox" tone="indigo" loading={!s} hint="waiting for a response" />
         <StatCard label="Urgent" value={s?.urgent} icon="alert" tone="amber" loading={!s} />
-        <StatCard label="In progress" value={s?.inProgress} icon="clock" tone="indigo" loading={!s} />
+        <StatCard label="In progress" value={s?.inProgress} icon="clock" tone="sky" loading={!s} />
         <StatCard label="Resolved" value={s?.resolved} icon="check" tone="green" loading={!s} />
       </div>
 
       {alarms.map((r) => (
         <Alert key={r.id} type="error" action={<Link to={`/organizer/help/${r.id}?event=${event.id}`} className={buttonClasses('secondary', 'sm')}>View request</Link>}>
-          <p className="font-semibold">Escalation: {r.requestCode}</p>
+          <p className="font-bold">Escalation: {r.requestCode}</p>
           <p>{r.priority === 'urgent' ? 'Urgent' : 'This'} request needs attention: {r.category.name} at {r.location}.</p>
         </Alert>
       ))}
@@ -76,26 +76,26 @@ export default function HelpCenterTab() {
       </div>
 
       {section === 'reports' ? (
-        analytics.error ? <LoadError error={analytics.error} onRetry={analytics.reload} /> : analytics.data ? <HelpAnalytics data={analytics.data} /> : <div className="h-40 animate-pulse rounded-lg bg-slate-200" aria-label="Loading reports" />
+        analytics.error ? <LoadError error={analytics.error} onRetry={analytics.reload} /> : analytics.data ? <HelpAnalytics data={analytics.data} /> : <div className="h-40 animate-pulse rounded-2xl bg-slate-200" aria-label="Loading reports" />
       ) : (
         <>
           <div role="group" aria-label="Filter requests" className="flex flex-wrap gap-1.5">
             {FILTERS.map((f) => (
-              <button key={f.key} type="button" aria-pressed={filter === f.key} onClick={() => setFilter(f.key)} className={`rounded-full px-3 py-1 text-sm font-medium transition-colors ${filter === f.key ? 'bg-indigo-50 text-indigo-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>{f.label}</button>
+              <button key={f.key} type="button" aria-pressed={filter === f.key} onClick={() => setFilter(f.key)} className={`rounded-full px-3 py-1 text-sm font-medium transition-colors ${filter === f.key ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>{f.label}</button>
             ))}
           </div>
 
           {error ? (
             <LoadError error={error} onRetry={reload} />
           ) : !data && loading ? (
-            <div className="h-40 animate-pulse rounded-lg bg-slate-200" aria-label="Loading requests" />
+            <div className="h-40 animate-pulse rounded-2xl bg-slate-200" aria-label="Loading requests" />
           ) : requests.length === 0 ? (
             <EmptyState icon="shield" title="No requests here" description={filter === 'active' ? 'When a participant asks for help during the event, it appears here straight away.' : 'Try another filter.'} />
           ) : (
             <Card className="overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
-                  <thead className="border-b border-slate-200 bg-slate-50 text-xs font-medium text-slate-500">
+                  <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
                     <tr>
                       <th scope="col" className="px-4 py-3">Request</th>
                       <th scope="col" className="px-4 py-3">Category</th>

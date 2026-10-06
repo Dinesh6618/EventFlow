@@ -8,8 +8,8 @@ export default function AnnouncementsFeed({ eventId }) {
   if (!data?.announcements.length) return null;
 
   return (
-    <section aria-label="Announcements" className="mb-6">
-      <h2 className="mb-3 text-lg font-semibold text-slate-900">Announcements</h2>
+    <section aria-label="Announcements">
+      <h2 className="mb-3 mt-8 text-lg font-semibold text-slate-900">Announcements</h2>
       <ul className="space-y-3">
         {data.announcements.map((a) => (
           <li key={a.id}>

@@ -4,16 +4,15 @@ const TONES = {
   amber: 'bg-amber-50 text-amber-800 ring-amber-600/20',
   red: 'bg-red-50 text-red-700 ring-red-600/20',
   slate: 'bg-slate-100 text-slate-600 ring-slate-500/20',
-  // Legacy tone names: kept so existing callers keep working, mapped onto the single accent.
-  blue: 'bg-indigo-50 text-indigo-700 ring-indigo-600/20',
-  pink: 'bg-indigo-50 text-indigo-700 ring-indigo-600/20',
-  dark: 'bg-slate-900 text-white ring-slate-900',
+  blue: 'bg-sky-50 text-sky-700 ring-sky-600/20',
+  pink: 'bg-pink-50 text-pink-700 ring-pink-600/20',
+  dark: 'bg-slate-900/80 text-white ring-white/20 backdrop-blur',
 };
 
 export default function Badge({ tone = 'slate', children, className = '' }) {
   return (
     <span
-      className={`inline-flex items-center whitespace-nowrap rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${TONES[tone]} ${className}`}
+      className={`inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset ${TONES[tone]} ${className}`}
     >
       {children}
     </span>

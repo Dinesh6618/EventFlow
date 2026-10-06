@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ApiError, judgingApi } from '../../api';
 import { useToast } from '../../context/ToastContext.jsx';
 import { useApi } from '../../hooks/useApi.js';
-import Badge from '../ui/Badge.jsx';
+import Alert from '../ui/Alert.jsx';
 import Button from '../ui/Button.jsx';
 import Card from '../ui/Card.jsx';
 import ConfirmDialog from '../ui/ConfirmDialog.jsx';
@@ -99,30 +99,31 @@ export default function CriteriaManager({ eventId }) {
       {error ? (
         <LoadError error={error} onRetry={reload} />
       ) : !data && loading ? null : data.criteria.length === 0 ? (
-        <EmptyState icon="check" title="No criteria yet" description="Add the categories judges will score, for example Innovation 10, Technical 10, Impact 10, Presentation 10." />
+        <EmptyState icon="check" title="No criteria yet" description="Add the categories judges will score, for example Innovation 30, Technical 30, Impact 20, Presentation 20." />
       ) : (
         <div className="space-y-3">
           <Card>
             <ul className="divide-y divide-slate-100">
               {data.criteria.map((c) => (
-                <li key={c.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+                <li key={c.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
                   <div className="min-w-0">
                     <p className="font-medium text-slate-900">{c.name}</p>
                     {c.description && <p className="text-sm text-slate-500">{c.description}</p>}
                   </div>
                   <div className="flex items-center gap-3">
-                    <Badge tone="indigo">Out of {c.maxScore}</Badge>
+                    <span className="rounded-full bg-indigo-50 px-3 py-1 text-sm font-semibold text-indigo-700">{c.maxScore}</span>
                     <Button size="sm" variant="secondary" onClick={() => startEdit(c)}>Edit</Button>
                     <Button size="sm" variant="ghost" className="text-red-600 hover:bg-red-50" onClick={() => setRemoving(c)}>Remove</Button>
                   </div>
                 </li>
               ))}
-              <li className="flex items-center justify-between bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-900">
-                <span>Total score</span>
+              <li className="flex items-center justify-between bg-slate-50 px-5 py-3 text-sm font-semibold text-slate-900">
+                <span>Total</span>
                 <span>{total}</span>
               </li>
             </ul>
           </Card>
+          {total !== 100 && <Alert type="info">The criteria add up to {total}. That works, but many events use a total of 100 so scores read as percentages.</Alert>}
         </div>
       )}
 

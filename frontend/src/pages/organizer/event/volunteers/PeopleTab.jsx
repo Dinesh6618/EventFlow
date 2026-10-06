@@ -52,7 +52,7 @@ function Applications({ eventId, onDecided }) {
   return (
     <Card className="p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-base font-semibold text-slate-900">Applications {pending.length > 0 && <Badge tone="amber">{pending.length} pending</Badge>}</h2>
+        <h2 className="text-base font-bold text-slate-900">Applications {pending.length > 0 && <Badge tone="amber">{pending.length} pending</Badge>}</h2>
         {decided.length > 0 && <button type="button" className="text-sm font-semibold text-indigo-600 hover:text-indigo-700" onClick={() => setShowDecided((v) => !v)}>{showDecided ? 'Hide' : 'Show'} decided ({decided.length})</button>}
       </div>
       {pending.length === 0 ? (
@@ -62,11 +62,11 @@ function Applications({ eventId, onDecided }) {
           {pending.map((a) => (
             <li key={a.id} className="flex flex-col gap-3 py-4 lg:flex-row lg:items-start lg:justify-between">
               <div className="min-w-0 space-y-1.5 text-sm">
-                <p className="font-semibold text-slate-900">{a.name} <span className="font-normal text-slate-500">{[a.department, a.applicationYear && `Year ${a.applicationYear}`].filter(Boolean).join(' - ')}</span></p>
+                <p className="font-bold text-slate-900">{a.name} <span className="font-normal text-slate-500">{[a.department, a.applicationYear && `Year ${a.applicationYear}`].filter(Boolean).join(' - ')}</span></p>
                 <p className="text-slate-500">{[a.email, a.phone].filter(Boolean).join(' - ')}</p>
                 <div className="flex flex-wrap gap-1.5">
                   {a.preferredDepartment && <Badge tone="indigo">Prefers {a.preferredDepartment}</Badge>}
-                  {a.availability && <Badge tone="indigo">{a.availability}</Badge>}
+                  {a.availability && <Badge tone="blue">{a.availability}</Badge>}
                   {(a.skills ?? []).map((s) => <Badge key={s} tone="slate">{s}</Badge>)}
                 </div>
                 {a.experience && <p className="text-slate-600"><span className="font-medium">Experience:</span> {a.experience}</p>}
@@ -152,7 +152,7 @@ export default function PeopleTab() {
           <div className="relative lg:col-span-2">
             <label htmlFor="v-search" className="sr-only">Search volunteers</label>
             <Icon name="search" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input id="v-search" type="search" value={filters.search} onChange={set('search')} placeholder="Search name, email or volunteer ID" className="block w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-9 pr-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20" />
+            <input id="v-search" type="search" value={filters.search} onChange={set('search')} placeholder="Search name, email or volunteer ID" className="block w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-9 pr-3 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30" />
           </div>
           <Select label="" aria-label="Department" value={filters.departmentId} onChange={set('departmentId')} placeholder="All departments" options={(departments.data?.departments ?? []).map((d) => ({ value: d.id, label: d.name }))} />
           <Select label="" aria-label="Status" value={filters.status} onChange={set('status')} placeholder="Any status" options={STATUS_OPTIONS} />
@@ -164,14 +164,14 @@ export default function PeopleTab() {
       {error ? (
         <LoadError error={error} onRetry={reload} />
       ) : !data && loading ? (
-        <div className="h-40 animate-pulse rounded-lg bg-slate-200" aria-label="Loading volunteers" />
+        <div className="h-40 animate-pulse rounded-2xl bg-slate-200" aria-label="Loading volunteers" />
       ) : rows.length === 0 ? (
         <EmptyState icon="users" title={filtered ? 'No volunteers match' : 'No volunteers yet'} description={filtered ? 'Try different filters.' : 'Approve an application above, or add people by email on the Team tab.'} action={!filtered && <Link to="../../staff" relative="path" className={buttonClasses('secondary')}>Open the Team tab</Link>} />
       ) : (
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs font-medium text-slate-500">
+              <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
                 <tr>
                   <th scope="col" className="px-4 py-3">Volunteer</th>
                   <th scope="col" className="px-4 py-3">Department</th>
@@ -193,7 +193,7 @@ export default function PeopleTab() {
                     <td className="px-4 py-3">{v.department ?? <span className="text-slate-400">-</span>}</td>
                     <td className="hidden whitespace-nowrap px-4 py-3 text-slate-600 xl:table-cell">{v.current ? `${shiftText(v.current.startTime, v.current.endTime)}` : '-'}</td>
                     <td className="hidden px-4 py-3 text-slate-600 lg:table-cell">{v.current?.location || '-'}</td>
-                    <td className="hidden max-w-56 truncate px-4 py-3 text-slate-600 xl:table-cell" title={v.current?.task}>{v.current?.task || '-'}</td>
+                    <td className="hidden max-w-[14rem] truncate px-4 py-3 text-slate-600 xl:table-cell" title={v.current?.task}>{v.current?.task || '-'}</td>
                     <td className="whitespace-nowrap px-4 py-3"><DutyStatusBadge status={v.status} /></td>
                     <td className="hidden whitespace-nowrap px-4 py-3 md:table-cell">{v.attendance ? <AttendanceStateBadge status={v.attendance} /> : <span className="text-slate-400">-</span>} <LateBadge late={v.late} /></td>
                     <td className="whitespace-nowrap px-4 py-3 text-right">

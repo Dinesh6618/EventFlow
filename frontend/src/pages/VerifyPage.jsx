@@ -2,15 +2,14 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { certificatesApi } from '../api';
 import Logo from '../components/layout/Logo.jsx';
-import Badge from '../components/ui/Badge.jsx';
 import Button from '../components/ui/Button.jsx';
 import Icon from '../components/ui/Icon.jsx';
 import Spinner from '../components/ui/Spinner.jsx';
 
 const STYLE = {
-  VALID: { ring: 'border-emerald-200 bg-emerald-50', tone: 'green', title: 'text-emerald-900', icon: 'check' },
-  REVOKED: { ring: 'border-red-200 bg-red-50', tone: 'red', title: 'text-red-900', icon: 'alert' },
-  NOT_FOUND: { ring: 'border-slate-200 bg-white', tone: 'slate', title: 'text-slate-900', icon: 'alert' },
+  VALID: { ring: 'border-emerald-200 bg-emerald-50', badge: 'bg-emerald-600 text-white', title: 'text-emerald-900', icon: 'check' },
+  REVOKED: { ring: 'border-red-200 bg-red-50', badge: 'bg-red-600 text-white', title: 'text-red-900', icon: 'alert' },
+  NOT_FOUND: { ring: 'border-slate-200 bg-white', badge: 'bg-slate-600 text-white', title: 'text-slate-900', icon: 'alert' },
 };
 const date = (iso) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 
@@ -75,13 +74,13 @@ export default function VerifyPage() {
         </div>
       </header>
       <main className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
-        <h1 className="text-2xl font-semibold text-slate-900">Verify a certificate</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Verify a certificate</h1>
         <p className="mt-1 text-sm text-slate-500">Enter the certificate ID printed on it, or scan its QR code.</p>
 
         <form onSubmit={submit} className="mt-6 flex flex-col gap-3 sm:flex-row" role="search">
           <label htmlFor="cert-code" className="sr-only">Certificate ID</label>
           <input id="cert-code" value={input} onChange={(e) => setInput(e.target.value)} placeholder="EVF-2026-001245" autoComplete="off" spellCheck={false}
-            className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono text-sm uppercase placeholder:normal-case focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20" />
+            className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 font-mono text-sm uppercase shadow-sm placeholder:normal-case focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30" />
           <Button type="submit" disabled={!input.trim()}>Verify</Button>
         </form>
 
@@ -89,11 +88,13 @@ export default function VerifyPage() {
           {state === 'loading' && <div className="flex items-center gap-3 text-slate-500"><Spinner className="h-5 w-5 text-indigo-600" />Checking...</div>}
           {state === 'error' && <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">{result.message}</p>}
           {state === 'done' && (
-            <section className={`rounded-lg border p-5 sm:p-6 ${style.ring}`} aria-label="Verification result">
-              <Badge tone={style.tone} className="gap-1.5">
-                <Icon name={style.icon} className="h-3.5 w-3.5" />
-                {result.status === 'NOT_FOUND' ? 'NOT FOUND' : result.status}
-              </Badge>
+            <section className={`rounded-xl border p-6 ${style.ring}`} aria-label="Verification result">
+              <div className="flex items-center gap-3">
+                <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold tracking-wide ${style.badge}`}>
+                  <Icon name={style.icon} className="h-4 w-4" />
+                  {result.status === 'NOT_FOUND' ? 'NOT FOUND' : result.status}
+                </span>
+              </div>
               {result.status === 'NOT_FOUND' ? (
                 <p className="mt-4 text-sm text-slate-700">No certificate matches that ID. Check for typos; the format is EVF-YYYY-NNNNNN.</p>
               ) : (
@@ -101,7 +102,7 @@ export default function VerifyPage() {
                   <p className={`mt-4 text-sm ${style.title}`}>
                     {result.valid ? 'This certificate is genuine.' : 'This certificate was revoked by the organizer and is no longer valid.'}
                   </p>
-                  <dl className="mt-4 divide-y divide-slate-200">
+                  <dl className="mt-4 divide-y divide-black/5">
                     <Row label="Certificate ID"><span className="font-mono">{result.certificate.code}</span></Row>
                     <Row label="Status">{result.status}</Row>
                     <Row label="Participant">{result.certificate.participantName}</Row>

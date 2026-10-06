@@ -53,19 +53,19 @@ export default function VolunteerProfilePage() {
       <PageHeader eyebrow="Volunteer" title="My volunteer profile" description="Organizers see this when they choose who to assign." action={<Badge tone={p.status === 'suspended' ? 'red' : 'indigo'}>{p.volunteerCode}</Badge>} />
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <Card className="p-5 sm:p-6">
-          <h2 className="text-base font-semibold text-slate-900">{p.name}</h2>
+          <h2 className="text-base font-bold text-slate-900">{p.name}</h2>
           <p className="mb-4 text-sm text-slate-500">{p.email}{p.department ? ` - ${p.department}` : ''}</p>
           <ProfileForm profile={p} onSaved={profile.reload} />
         </Card>
         <div className="space-y-6">
           <Card className="grid grid-cols-3 gap-3 p-5 text-center">
-            <div><p className="text-2xl font-semibold text-slate-900">{s.hours}</p><p className="text-xs text-slate-500">hours</p></div>
-            <div><p className="text-2xl font-semibold text-slate-900">{s.completedDuties}</p><p className="text-xs text-slate-500">duties</p></div>
-            <div><p className="text-2xl font-semibold text-slate-900">{s.tasksCompleted}</p><p className="text-xs text-slate-500">tasks</p></div>
+            <div><p className="text-2xl font-extrabold text-slate-900">{s.hours}</p><p className="text-xs text-slate-500">hours</p></div>
+            <div><p className="text-2xl font-extrabold text-slate-900">{s.completedDuties}</p><p className="text-xs text-slate-500">duties</p></div>
+            <div><p className="text-2xl font-extrabold text-slate-900">{s.tasksCompleted}</p><p className="text-xs text-slate-500">tasks</p></div>
           </Card>
           <section aria-labelledby="done-heading">
-            <h2 id="done-heading" className="mb-3 text-base font-semibold text-slate-900">Completed activities</h2>
-            {!history.data ? <div className="h-20 animate-pulse rounded-lg bg-slate-200" /> : history.data.duties.length + history.data.tasks.length === 0 ? (
+            <h2 id="done-heading" className="mb-3 text-base font-bold text-slate-900">Completed activities</h2>
+            {!history.data ? <div className="h-20 animate-pulse rounded-2xl bg-slate-200" /> : history.data.duties.length + history.data.tasks.length === 0 ? (
               <p className="text-sm text-slate-500">Nothing completed yet. Finished duties and tasks appear here.</p>
             ) : (
               <ul className="space-y-3">

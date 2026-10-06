@@ -105,19 +105,19 @@ export default function ShiftsTab() {
         <Button onClick={() => setEditing('new')}>Create shift</Button>
       </div>
       {!data && loading ? (
-        <div className="h-40 animate-pulse rounded-lg bg-slate-200" aria-label="Loading shifts" />
+        <div className="h-40 animate-pulse rounded-2xl bg-slate-200" aria-label="Loading shifts" />
       ) : shifts.length === 0 ? (
         <EmptyState icon="clock" title="No shifts yet" description="Morning, afternoon and evening shifts keep volunteers from overlapping and show where you still need people." action={<Button onClick={() => setEditing('new')}>Create a shift</Button>} />
       ) : (
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs font-medium text-slate-500">
+              <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
                 <tr><th scope="col" className="px-4 py-3">Shift</th><th scope="col" className="px-4 py-3">Department</th><th scope="col" className="px-4 py-3">Date</th><th scope="col" className="px-4 py-3">Time</th><th scope="col" className="px-4 py-3">Required</th><th scope="col" className="px-4 py-3">Assigned</th><th scope="col" className="px-4 py-3">Available</th><th scope="col" className="px-4 py-3"><span className="sr-only">Actions</span></th></tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {shifts.map((s) => (
-                  <tr key={s.id} className="hover:bg-slate-50">
+                  <tr key={s.id}>
                     <td className="px-4 py-3 font-semibold text-slate-900">{s.name}</td>
                     <td className="px-4 py-3">{s.departmentName}</td>
                     <td className="whitespace-nowrap px-4 py-3 text-slate-600">{formatDate(s.date)}</td>

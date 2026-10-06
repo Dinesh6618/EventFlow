@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ApiError, registrationsApi } from '../../api';
 import { AttendanceBadge } from '../../components/attendance/AttendanceSummary.jsx';
+import EventBanner from '../../components/events/EventBanner.jsx';
 import GetHelpButton from '../../components/help/GetHelpButton.jsx';
 import Badge, { RegistrationStatusBadge } from '../../components/ui/Badge.jsx';
 import Button, { buttonClasses } from '../../components/ui/Button.jsx';
@@ -22,46 +23,46 @@ const ACTIVE = ['pending', 'approved', 'confirmed'];
 
 function EventRow({ registration: r, onCancel }) {
   const active = ACTIVE.includes(r.status);
-  const live = active && r.eventStatus !== 'ended';
   const canCancel = active && r.eventStatus === 'upcoming';
+  const banner = { name: r.eventName, type: r.eventType, image: r.eventImage };
 
   return (
-    <Card className="p-4" data-testid="my-event">
-      <div className="flex flex-wrap items-center gap-2">
-        <RegistrationStatusBadge status={r.status} />
-        {r.eventStatus === 'ongoing' && <Badge tone="green">Happening now</Badge>}
-        {r.attendanceStatus && <AttendanceBadge state={r.attendanceStatus} />}
-      </div>
-      <Link to={`/events/${r.eventId}`} className="mt-2 block text-base font-semibold text-slate-900 hover:text-indigo-700">{r.eventName}</Link>
-      <ul className="mt-2 space-y-1.5 text-sm text-slate-600">
-        <li className="flex items-center gap-2"><Icon name="calendar" className="h-4 w-4 text-slate-400" />{formatEventDates({ date: r.eventDate, endDate: r.eventEndDate })}, {formatTimeRange(r.eventStartTime, r.eventEndTime)}</li>
-        <li className="flex items-center gap-2"><Icon name="pin" className="h-4 w-4 text-slate-400" />{r.eventVenue}</li>
-      </ul>
-      <div className="mt-4 flex flex-wrap items-center gap-2">
-        {live && (
-          <>
-            <Link to={`/my/registrations/${r.id}/pass`} className={buttonClasses('secondary', 'sm')}>
+    <Card hover className="overflow-hidden sm:grid sm:grid-cols-[13rem_minmax(0,1fr)]" data-testid="my-event">
+      <EventBanner event={banner} className="h-40 sm:h-full" />
+      <div className="flex flex-col p-5">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge tone="indigo">{r.eventType}</Badge>
+          <RegistrationStatusBadge status={r.status} />
+          {r.eventStatus === 'ongoing' && <Badge tone="green">Happening now</Badge>}
+          {r.attendanceStatus && <AttendanceBadge state={r.attendanceStatus} />}
+        </div>
+        <Link to={`/events/${r.eventId}`} className="mt-2.5 text-lg font-bold text-slate-900 hover:text-indigo-700">{r.eventName}</Link>
+        <ul className="mt-2 grid gap-1.5 text-sm text-slate-600 sm:grid-cols-2">
+          <li className="flex items-center gap-2"><Icon name="calendar" className="h-4 w-4 text-indigo-400" />{formatEventDates({ date: r.eventDate, endDate: r.eventEndDate })}</li>
+          <li className="flex items-center gap-2"><Icon name="clock" className="h-4 w-4 text-indigo-400" />{formatTimeRange(r.eventStartTime, r.eventEndTime)}</li>
+          <li className="flex items-center gap-2 sm:col-span-2"><Icon name="pin" className="h-4 w-4 text-indigo-400" />{r.eventVenue}</li>
+        </ul>
+        <div className="mt-4 flex flex-wrap items-center gap-2.5">
+          {active && r.eventStatus !== 'ended' && (
+            <Link to={`/my/registrations/${r.id}/pass`} className={buttonClasses('primary', 'sm')}>
               <Icon name="qr" className="h-4 w-4" />
-              QR Pass
+              Event Pass
             </Link>
-            <Link to="/my/schedule" className={buttonClasses('secondary', 'sm')}>
-              <Icon name="clock" className="h-4 w-4" />
-              Schedule
+          )}
+          <Link to={`/events/${r.eventId}`} className={buttonClasses('secondary', 'sm')}>View Event</Link>
+          {active && isHelpWindow({ status: r.eventStatus, date: r.eventDate, endDate: r.eventEndDate }) && <GetHelpButton inline eventId={r.eventId} />}
+          {active && r.eventStatus === 'ended' && (
+            <Link to={`/events/${r.eventId}/feedback`} className={buttonClasses('secondary', 'sm')}>
+              <Icon name="message" className="h-4 w-4" />
+              Give feedback
             </Link>
-          </>
-        )}
-        {active && isHelpWindow({ status: r.eventStatus, date: r.eventDate, endDate: r.eventEndDate }) && <GetHelpButton inline eventId={r.eventId} />}
-        {active && r.eventStatus === 'ended' && (
-          <Link to={`/events/${r.eventId}/feedback`} className={buttonClasses('secondary', 'sm')}>
-            <Icon name="message" className="h-4 w-4" />
-            Give feedback
-          </Link>
-        )}
-        {canCancel && (
-          <Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50" onClick={() => onCancel(r)}>
-            Cancel
-          </Button>
-        )}
+          )}
+          {canCancel && (
+            <Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50" onClick={() => onCancel(r)}>
+              Cancel
+            </Button>
+          )}
+        </div>
       </div>
     </Card>
   );
@@ -104,7 +105,7 @@ export default function MyEventsPage() {
 
   return (
     <>
-      <PageHeader title="My Events" description="Passes, status and history for every event you registered for." />
+      <PageHeader eyebrow="My Events" title="Your events" description="Passes, status and history for every event you registered for." />
 
       <Tabs
         label="My events"
@@ -130,7 +131,7 @@ export default function MyEventsPage() {
             action={tab === 'upcoming' && <Link to="/events" className={buttonClasses('primary')}>Explore Events</Link>}
           />
         ) : (
-          <ul className="space-y-4">
+          <ul className="space-y-5">
             {shown.map((r) => (
               <li key={r.id}><EventRow registration={r} onCancel={setTarget} /></li>
             ))}

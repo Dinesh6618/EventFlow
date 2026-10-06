@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ApiError, teamsApi } from '../../../api';
+import { SkillChips } from '../../../components/teams/TeamCard.jsx';
 import Badge from '../../../components/ui/Badge.jsx';
 import Button from '../../../components/ui/Button.jsx';
 import Card from '../../../components/ui/Card.jsx';
@@ -107,36 +108,31 @@ export default function TeamsPage() {
               <Card className="overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-sm">
-                    <thead className="border-b border-slate-200 bg-slate-50 text-xs font-medium text-slate-500">
+                    <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
                       <tr>
-                        <th scope="col" className="px-4 py-3">Team name</th>
-                        <th scope="col" className="hidden px-4 py-3 sm:table-cell">Leader</th>
-                        <th scope="col" className="px-4 py-3">Members</th>
-                        <th scope="col" className="hidden px-4 py-3 md:table-cell">Project</th>
-                        <th scope="col" className="px-4 py-3">Team status</th>
-                        <th scope="col" className="px-4 py-3"><span className="sr-only">Actions</span></th>
+                        <th scope="col" className="px-5 py-3">Team</th>
+                        <th scope="col" className="px-5 py-3">Members</th>
+                        <th scope="col" className="hidden px-5 py-3 md:table-cell">Looking for</th>
+                        <th scope="col" className="px-5 py-3">Status</th>
+                        <th scope="col" className="px-5 py-3"><span className="sr-only">Actions</span></th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {data.teams.map((team) => (
-                        <tr key={team.id} className="hover:bg-slate-50">
-                          <td className="px-4 py-3">
+                        <tr key={team.id}>
+                          <td className="px-5 py-3">
                             <p className="font-medium text-slate-900">{team.name}</p>
-                            <p className="text-xs text-slate-500 sm:hidden">{team.leaderName ? `Led by ${team.leaderName}` : ''}</p>
+                            <p className="text-xs text-slate-500">{team.projectTitle || 'No project title'}</p>
                           </td>
-                          <td className="hidden px-4 py-3 text-slate-600 sm:table-cell">{team.leaderName || '-'}</td>
-                          <td className="px-4 py-3 text-slate-600">
+                          <td className="px-5 py-3 text-slate-600">
                             {team.memberCount}/{team.maxSize}
                             <span className="block text-xs text-slate-500">{team.members.map((m) => m.name).join(', ')}</span>
                           </td>
-                          <td className="hidden max-w-56 px-4 py-3 text-slate-600 md:table-cell">
-                            {team.projectTitle ? <span className="block truncate" title={team.projectTitle}>{team.projectTitle}</span> : <span className="text-slate-400">No project title</span>}
-                            {team.projectTitle && <span className="text-xs text-slate-500">{team.submittedAt ? 'Submitted to judges' : 'Not submitted yet'}</span>}
-                          </td>
-                          <td className="px-4 py-3">
+                          <td className="hidden px-5 py-3 md:table-cell"><SkillChips skills={team.skills} empty="-" /></td>
+                          <td className="px-5 py-3">
                             <Badge tone={team.isFull ? 'red' : team.isComplete ? 'green' : 'amber'}>{team.isFull ? 'Full' : team.isComplete ? 'Ready' : `Needs ${team.minSize}`}</Badge>
                           </td>
-                          <td className="px-4 py-3 text-right">
+                          <td className="px-5 py-3 text-right">
                             <Button size="sm" variant="ghost" className="text-red-600 hover:bg-red-50" onClick={() => setDisbanding(team)}>Disband</Button>
                           </td>
                         </tr>
@@ -156,7 +152,7 @@ export default function TeamsPage() {
               <Card>
                 <ul className="divide-y divide-slate-100">
                   {data.unassigned.map((p) => (
-                    <li key={p.userId} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-sm">
+                    <li key={p.userId} className="flex flex-wrap items-center justify-between gap-2 px-5 py-3 text-sm">
                       <span className="font-medium text-slate-900">{p.name}</span>
                       <span className="text-xs text-slate-500">{[p.department, p.college].filter(Boolean).join(' - ')}</span>
                     </li>

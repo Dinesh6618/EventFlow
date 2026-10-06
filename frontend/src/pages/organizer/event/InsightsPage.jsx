@@ -7,7 +7,6 @@ import EmptyState from '../../../components/ui/EmptyState.jsx';
 import Icon from '../../../components/ui/Icon.jsx';
 import LoadError from '../../../components/ui/LoadError.jsx';
 import { PageLoader } from '../../../components/ui/Spinner.jsx';
-import Tabs from '../../../components/ui/Tabs.jsx';
 import { useToast } from '../../../context/ToastContext.jsx';
 import { useApi } from '../../../hooks/useApi.js';
 import { useEvent } from './EventManageLayout.jsx';
@@ -93,12 +92,20 @@ export default function InsightsPage() {
         </Alert>
       )}
 
-      <Tabs
-        tabs={VIEWS.map((v) => ({ key: v.key, label: v.label, count: counts[v.key] }))}
-        value={view}
-        onChange={setView}
-        label="Recommendation status"
-      />
+      <div role="tablist" aria-label="Recommendation status" className="inline-flex max-w-full overflow-x-auto rounded-lg bg-slate-100 p-1">
+        {VIEWS.map((v) => (
+          <button
+            key={v.key}
+            type="button"
+            role="tab"
+            aria-selected={view === v.key}
+            onClick={() => setView(v.key)}
+            className={`whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${view === v.key ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
+          >
+            {v.label} <span className="text-slate-400">({counts[v.key]})</span>
+          </button>
+        ))}
+      </div>
 
       {shown.length === 0 ? (
         <EmptyState icon="sparkles" title={EMPTY[view][0]} description={EMPTY[view][1]} />
