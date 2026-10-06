@@ -61,10 +61,10 @@ function Form({ event, existing, onSaved }) {
   };
 
   return (
-    <form onSubmit={submit} noValidate className="space-y-7">
-      <div className="rounded-2xl bg-indigo-50/70 p-5 text-center">
+    <form onSubmit={submit} noValidate className="space-y-6">
+      <div className="rounded-lg bg-indigo-50 p-5 text-center">
         <StarRating label="Overall Experience" required value={values.overall} onChange={set('overall')} error={errors.overall} />
-        <p className="mt-2 h-5 text-sm font-semibold text-indigo-700" aria-live="polite">{MOODS[values.overall]}</p>
+        <p className="mt-2 h-5 text-sm font-medium text-indigo-700" aria-live="polite">{MOODS[values.overall]}</p>
       </div>
       <div className="grid gap-6 sm:grid-cols-3">
         <StarRating label="Event Organization" value={values.organization} onChange={set('organization')} error={errors.organization} />
@@ -86,11 +86,11 @@ export default function FeedbackPage() {
   const [thanks, setThanks] = useState(false);
 
   if ((!eventQuery.data && eventQuery.loading) || (!mine.data && mine.loading)) return <PageLoader label="Loading..." />;
-  if (eventQuery.error?.status === 404) return <EmptyState icon="calendar" title="Event not found" action={<Link to="/events" className="font-semibold text-indigo-600">Browse events</Link>} />;
+  if (eventQuery.error?.status === 404) return <EmptyState icon="calendar" title="Event not found" action={<Link to="/events" className="font-medium text-indigo-600">Browse events</Link>} />;
   if (eventQuery.error || mine.error) {
     const err = eventQuery.error ?? mine.error;
     // The feedback endpoint refuses people who never held a seat.
-    if (err.status === 403) return <EmptyState icon="alert" title="Feedback is for people who registered" description="Only registered participants can rate an event." action={<Link to={`/events/${id}`} className="font-semibold text-indigo-600">Back to the event</Link>} />;
+    if (err.status === 403) return <EmptyState icon="alert" title="Feedback is for people who registered" description="Only registered participants can rate an event." action={<Link to={`/events/${id}`} className="font-medium text-indigo-600">Back to the event</Link>} />;
     return <LoadError error={err} onRetry={() => { eventQuery.reload(); mine.reload(); }} />;
   }
 
@@ -99,12 +99,12 @@ export default function FeedbackPage() {
   if (thanks) {
     return (
       <div className="mx-auto max-w-md text-center" data-testid="feedback-thanks">
-        <div className="mx-auto flex h-20 w-20 animate-check items-center justify-center rounded-full bg-emerald-500 text-white shadow-xl shadow-emerald-500/30">
-          <Icon name="heart" className="h-9 w-9 fill-current" />
+        <div className="mx-auto flex h-14 w-14 animate-check items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+          <Icon name="check" className="h-7 w-7" />
         </div>
-        <h1 className="mt-6 text-3xl font-extrabold text-slate-900">Thank you!</h1>
-        <p className="mt-2 text-slate-500">Your feedback helps organizers make the next event better.</p>
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+        <h1 className="mt-4 text-2xl font-semibold text-slate-900">Thank you!</h1>
+        <p className="mt-1 text-sm text-slate-500 sm:text-base">Your feedback helps organizers make the next event better.</p>
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Link to="/my/registrations" className={buttonClasses('primary', 'lg')}>Back to My Events</Link>
           <Link to="/events" className={buttonClasses('secondary', 'lg')}>Explore Events</Link>
         </div>
@@ -114,14 +114,14 @@ export default function FeedbackPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <Link to="/my/registrations" className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 hover:text-slate-900">
+      <Link to="/my/registrations" className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-900">
         <Icon name="arrow-left" className="h-4 w-4" />
         My Events
       </Link>
-      <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">How was your experience?</h1>
-      <p className="mt-1.5 text-lg font-semibold text-indigo-600">{event.name}</p>
+      <h1 className="text-2xl font-semibold text-slate-900">How was your experience?</h1>
+      <p className="mt-1 text-base font-medium text-indigo-600">{event.name}</p>
 
-      <Card className="mt-7 p-6 sm:p-8">
+      <Card className="mt-5 p-5 sm:p-6">
         {!mine.data.event.open ? (
           <Alert type="info">You can rate the whole event once it has finished. Come back after it ends.</Alert>
         ) : (
@@ -130,7 +130,7 @@ export default function FeedbackPage() {
       </Card>
       {mine.data.sessions.length > 0 && (
         <p className="mt-4 text-center text-sm text-slate-500">
-          Want to rate individual sessions? Open the <Link to={`/events/${event.id}`} className="font-semibold text-indigo-600">event page</Link> and choose the Feedback tab.
+          Want to rate individual sessions? Open the <Link to={`/events/${event.id}`} className="font-medium text-indigo-600">event page</Link> and choose the Feedback tab.
         </p>
       )}
     </div>

@@ -39,42 +39,13 @@ function durationText(event) {
 
 function Fact({ icon, label, children }) {
   return (
-    <div className="flex items-center gap-3">
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 text-white backdrop-blur">
-        <Icon name={icon} className="h-5 w-5" />
-      </span>
+    <div className="flex items-start gap-3">
+      <Icon name={icon} className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
       <div className="min-w-0">
-        <p className="text-xs text-white/70">{label}</p>
-        <p className="truncate text-sm font-semibold text-white">{children}</p>
+        <dt className="text-sm text-slate-500">{label}</dt>
+        <dd className="break-words text-sm font-medium text-slate-900">{children}</dd>
       </div>
     </div>
-  );
-}
-
-function Benefits({ event }) {
-  const items = [
-    ['award', 'Participation Certificate', 'A numbered certificate anyone can verify online'],
-    ['qr', 'Digital event pass', 'A personal QR code for quick check-in'],
-    ...(event.teamEnabled ? [['users', 'Team matching', 'Form a team or find teammates by skill']] : []),
-    ...(event.prizes?.length ? [['trophy', 'Exciting Prizes', `${event.prizes.length} prize${event.prizes.length === 1 ? '' : 's'} to compete for`]] : []),
-  ];
-  return (
-    <Card className="p-5">
-      <h3 className="font-bold text-slate-900">What You&apos;ll Get</h3>
-      <ul className="mt-4 space-y-3">
-        {items.map(([icon, title, text]) => (
-          <li key={title} className="flex items-start gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
-              <Icon name={icon} className="h-[1.15rem] w-[1.15rem]" />
-            </span>
-            <div>
-              <p className="text-sm font-semibold text-slate-900">{title}</p>
-              <p className="text-xs text-slate-500">{text}</p>
-            </div>
-          </li>
-        ))}
-      </ul>
-    </Card>
   );
 }
 
@@ -95,7 +66,7 @@ export default function EventDetailsPage() {
         icon="calendar"
         title="Event not found"
         description="It may have been removed, or the link is incorrect."
-        action={<Link to="/events" className="font-semibold text-indigo-600">Browse events</Link>}
+        action={<Link to="/events" className="font-medium text-indigo-600">Browse events</Link>}
       />
     );
   }
@@ -104,13 +75,12 @@ export default function EventDetailsPage() {
   const { event, registration } = data;
   const isParticipant = user.role === ROLES.PARTICIPANT;
   const hasSeat = isParticipant && registration && HOLDS_SEAT.includes(registration.status);
-  const registered = event.maxParticipants - event.availableSeats;
 
   const tabs = [
     { key: 'about', label: 'About' },
+    { key: 'rules', label: 'Rules' },
     { key: 'schedule', label: 'Schedule' },
     { key: 'prizes', label: 'Prizes' },
-    { key: 'rules', label: 'Rules' },
     { key: 'faqs', label: 'FAQs' },
     ...(event.teamEnabled ? [{ key: 'teams', label: 'Team' }] : []),
     ...(hasSeat ? [{ key: 'updates', label: 'Updates' }] : []),
@@ -121,66 +91,74 @@ export default function EventDetailsPage() {
 
   return (
     <>
-      <button type="button" onClick={back} className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 hover:text-slate-900">
+      <button type="button" onClick={back} className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-900">
         <Icon name="arrow-left" className="h-4 w-4" />
         Back
       </button>
 
-      <section className="surface overflow-hidden" aria-label="Event overview">
-        <EventBanner event={event} className="h-[30rem] sm:h-80" iconRight>
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/35 to-transparent" aria-hidden="true" />
-          {isParticipant && <FavoriteButton eventId={event.id} initial={event.favorite} className="absolute right-4 top-4" />}
-          <div className="absolute inset-x-0 bottom-0 p-5 sm:p-8">
-            <div className="mb-3 flex flex-wrap items-center gap-2">
-              <Badge tone="dark">{event.type}</Badge>
+      {/* On phones the register card comes right after the facts; on desktop it sits in the right column. */}
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <Card className="overflow-hidden lg:col-start-1" aria-label="Event overview">
+          <EventBanner event={event} className="h-52 sm:h-72">
+            {isParticipant && <FavoriteButton eventId={event.id} initial={event.favorite} className="absolute right-3 top-3" />}
+          </EventBanner>
+          <div className="p-5">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge tone="indigo">{event.type}</Badge>
               <EventStatusBadge event={event} />
-              {event.mode !== 'offline' && <Badge tone="dark">{modeLabel(event.mode)}</Badge>}
+              {event.mode !== 'offline' && <Badge tone="slate">{modeLabel(event.mode)}</Badge>}
               {event.requiresApproval && <Badge tone="amber">Approval required</Badge>}
             </div>
-            <h1 className="text-3xl font-extrabold uppercase leading-tight tracking-tight text-white sm:text-4xl">{event.name}</h1>
-            <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <h1 className="mt-3 text-2xl font-semibold text-slate-900">{event.name}</h1>
+            <dl className="mt-4 grid gap-4 border-t border-slate-100 pt-4 sm:grid-cols-2">
               <Fact icon="calendar" label="Date">{formatEventDates(event)}</Fact>
-              <Fact icon="pin" label="Location">{event.venue}</Fact>
-              <Fact icon="users" label="Participants">{registered} registered</Fact>
-              <Fact icon="clock" label="Duration">{durationText(event)} <span className="font-normal text-white/70">({formatTimeRange(event.startTime, event.endTime)})</span></Fact>
-            </div>
+              <Fact icon="clock" label="Time">
+                {formatTimeRange(event.startTime, event.endTime)} <span className="font-normal text-slate-500">({durationText(event)})</span>
+              </Fact>
+              <Fact icon="pin" label="Venue">{event.venue}</Fact>
+              <Fact icon="user" label="Organizer">
+                {event.organizerName}
+                {event.organizerContact && <span className="block font-normal text-slate-500">{event.organizerContact}</span>}
+              </Fact>
+              {event.department && <Fact icon="book" label="Made for">{event.department}</Fact>}
+            </dl>
           </div>
-        </EventBanner>
-      </section>
+        </Card>
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
-        <div className="min-w-0">
-          <Tabs tabs={tabs} value={active} onChange={setTab} label="Event sections" />
+        <aside className="lg:col-start-2 lg:row-span-2 lg:row-start-1">
+          <Card className="p-5 lg:sticky lg:top-20">
+            {isParticipant ? (
+              <RegistrationPanel event={event} registration={registration} onChange={reload} />
+            ) : (
+              <>
+                <h2 className="text-lg font-semibold text-slate-900">Registration</h2>
+                <p className="mt-3 rounded-lg bg-slate-50 p-3 text-sm text-slate-500">
+                  Only students can register. You are viewing this event as {user.role === ROLES.ADMIN ? 'an admin' : 'an organizer'}.
+                </p>
+              </>
+            )}
+          </Card>
+        </aside>
 
-          <div className="mt-6" role="tabpanel" aria-label={tabs.find((t) => t.key === active)?.label}>
+        <div className="min-w-0 lg:col-start-1">
+          <Tabs variant="underline" tabs={tabs} value={active} onChange={setTab} label="Event sections" />
+
+          <div className="mt-5" role="tabpanel" aria-label={tabs.find((t) => t.key === active)?.label}>
             {active === 'about' && (
-              <div className="space-y-6">
-                <section>
-                  <h2 className="mb-2 text-xl font-bold text-slate-900">About this event</h2>
-                  <p className="whitespace-pre-line leading-relaxed text-slate-600">{event.description}</p>
-                  {event.department && (
-                    <p className="mt-4 inline-flex items-center gap-2 rounded-xl bg-indigo-50 px-3.5 py-2 text-sm font-medium text-indigo-800">
-                      <Icon name="book" className="h-4 w-4" />
-                      Made for {event.department}
-                    </p>
-                  )}
-                </section>
-                <section>
-                  <h2 className="mb-3 text-xl font-bold text-slate-900">Organizer</h2>
-                  <Card className="grid gap-4 p-5 sm:grid-cols-2">
-                    <div className="flex items-center gap-3"><Icon name="user" className="h-5 w-5 text-indigo-400" /><div><p className="text-xs text-slate-500">Name</p><p className="font-semibold text-slate-900">{event.organizerName}</p></div></div>
-                    <div className="flex items-center gap-3"><Icon name="mail" className="h-5 w-5 text-indigo-400" /><div className="min-w-0"><p className="text-xs text-slate-500">Contact</p><p className="break-words font-semibold text-slate-900">{event.organizerContact}</p></div></div>
-                  </Card>
-                </section>
-              </div>
+              <section>
+                <h2 className="mb-2 text-lg font-semibold text-slate-900">About this event</h2>
+                <Card className="p-5">
+                  <p className="whitespace-pre-line text-sm leading-relaxed text-slate-600 sm:text-base">{event.description}</p>
+                </Card>
+              </section>
             )}
             {active === 'schedule' && (
               <>
                 {hasSeat && isHelpWindow(event) && (
-                  <div className="mb-5 flex items-center justify-between gap-3 rounded-2xl bg-slate-900 p-4 text-white">
-                    <p className="text-sm font-semibold">Something wrong at the event?</p>
-                    <GetHelpButton inline eventId={event.id} className="bg-white !text-slate-900 hover:!bg-indigo-50" />
-                  </div>
+                  <Card className="mb-4 flex items-center justify-between gap-3 p-4">
+                    <p className="text-sm font-medium text-slate-900">Something wrong at the event?</p>
+                    <GetHelpButton inline eventId={event.id} />
+                  </Card>
                 )}
                 <SchedulePanel eventId={event.id} />
               </>
@@ -192,7 +170,7 @@ export default function EventDetailsPage() {
               (hasSeat ? (
                 <TeamsPanel event={event} />
               ) : (
-                <p className="rounded-2xl bg-slate-100 p-5 text-sm text-slate-600">
+                <p className="surface p-4 text-sm text-slate-600">
                   {isParticipant ? 'Register for this event to create or join a team.' : 'Participants who register can create and join teams here.'}
                 </p>
               ))}
@@ -206,20 +184,6 @@ export default function EventDetailsPage() {
             {active === 'leaderboard' && <LeaderboardPanel eventId={event.id} />}
           </div>
         </div>
-
-        <aside className="space-y-5">
-          <Card className="space-y-5 p-5 lg:sticky lg:top-24">
-            <h2 className="text-lg font-bold text-slate-900">Registration</h2>
-            {isParticipant ? (
-              <RegistrationPanel event={event} registration={registration} onChange={reload} />
-            ) : (
-              <p className="rounded-xl bg-slate-50 p-3 text-center text-sm text-slate-500">
-                Only students can register. You are viewing this event as {user.role === ROLES.ADMIN ? 'an admin' : 'an organizer'}.
-              </p>
-            )}
-          </Card>
-          <Benefits event={event} />
-        </aside>
       </div>
     </>
   );

@@ -56,7 +56,7 @@ export default function VolunteerHelpPage() {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="font-mono text-xs font-semibold text-slate-500">{r.requestCode}</p>
-                    <h2 className="mt-0.5 flex items-center gap-2 text-lg font-bold text-slate-900"><span aria-hidden="true">{r.category.icon}</span>{r.category.name}</h2>
+                    <h2 className="mt-0.5 flex items-center gap-2 text-lg font-semibold text-slate-900"><span aria-hidden="true">{r.category.icon}</span>{r.category.name}</h2>
                     <p className="text-sm text-slate-500">{r.location} &middot; {r.eventName}</p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">

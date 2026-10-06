@@ -8,7 +8,7 @@ export function SkillChips({ skills, empty = 'No skills listed' }) {
   return (
     <ul className="flex flex-wrap gap-1.5">
       {skills.map((s) => (
-        <li key={s} className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700">{s}</li>
+        <li key={s} className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">{s}</li>
       ))}
     </ul>
   );
@@ -20,9 +20,9 @@ export default function TeamCard({ team, highlight = false, children }) {
     <Card className={`p-5 ${highlight ? 'ring-2 ring-indigo-500/40' : ''}`}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="flex min-w-0 items-center gap-3">
-          <ProfileAvatar name={team.name} size="lg" className="!rounded-2xl" />
+          <ProfileAvatar name={team.name} size="lg" className="!rounded-lg" />
           <div className="min-w-0">
-            <h3 className="text-lg font-bold text-slate-900">{team.name}</h3>
+            <h3 className="text-lg font-semibold text-slate-900">{team.name}</h3>
             {team.leaderName && <p className="text-xs text-slate-500">Led by {team.leaderName}</p>}
             {team.projectTitle && <p className="text-sm text-slate-500">{team.projectTitle}</p>}
           </div>

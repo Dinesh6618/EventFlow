@@ -17,7 +17,7 @@ import { useApi } from '../../hooks/useApi.js';
 import { EVENT_TYPES } from '../../utils/constants.js';
 import { formatDate, todayISO } from '../../utils/format.js';
 
-const CONTROL = 'block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30';
+const CONTROL = 'block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20';
 const PRESETS = [['all', 'All time'], ['30', 'Last 30 days'], ['90', 'Last 90 days'], ['custom', 'Custom range']];
 
 const daysAgo = (n) => {
@@ -118,7 +118,7 @@ export default function AnalyticsPage() {
       {error ? (
         <LoadError error={error} onRetry={reload} />
       ) : !data ? (
-        <div className="h-64 animate-pulse rounded-xl bg-slate-200" aria-label="Loading analytics" />
+        <div className="h-64 animate-pulse rounded-lg bg-slate-200" aria-label="Loading analytics" />
       ) : data.summary.events === 0 ? (
         <EmptyState
           icon="dashboard"
@@ -133,42 +133,63 @@ export default function AnalyticsPage() {
   );
 }
 
+/** Plain secondary table for the breakdowns that do not need a chart. */
+function BreakdownTable({ title, columns, rows, empty }) {
+  return (
+    <section aria-label={title}>
+      <h3 className="mb-2 text-sm font-medium text-slate-700">{title}</h3>
+      {rows.length === 0 ? (
+        <p className="text-sm text-slate-500">{empty}</p>
+      ) : (
+        <div className="surface overflow-hidden">
+          <div className="max-h-72 overflow-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="sticky top-0 border-b border-slate-200 bg-slate-50 text-xs font-medium text-slate-500">
+                <tr>{columns.map((c) => <th key={c} scope="col" className="px-4 py-2.5">{c}</th>)}</tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {rows.map((row, i) => (
+                  <tr key={i} className="hover:bg-slate-50">
+                    {row.map((cell, j) => <td key={j} className={`px-4 py-2.5 ${j === 0 ? 'text-slate-700' : 'tabular-nums text-slate-900'}`}>{cell}</td>)}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function Dashboard({ data, dimmed }) {
   const { summary: s, performance, charts: c } = data;
-  const multi = performance.length > 1;
   const compared = performance.slice(-6);
 
   return (
     <div className={`space-y-6 transition-opacity ${dimmed ? 'opacity-60' : ''}`}>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Total registrations" value={formatNumber(s.totalRegistrations)} icon="users" tone="indigo" />
-        <StatCard label="Total attendance" value={formatNumber(s.totalAttendance)} icon="check" tone="green" />
-        <StatCard label="Attendance rate" value={formatPercent(s.attendanceRate)} icon="dashboard" tone="sky" />
-        <StatCard label="Registration conversion" value={formatPercent(s.registrationConversion)} icon="clock" tone="amber" />
-        <StatCard label="Teams formed" value={formatNumber(s.teamCount)} icon="users" tone="indigo" />
-        <StatCard label="Average feedback" value={s.averageFeedback === null ? '-' : `${s.averageFeedback} / 5`} icon="star" tone="amber" />
-        <StatCard label="Certificates issued" value={formatNumber(s.certificateCount)} icon="check" tone="green" />
-        <StatCard label="Events in view" value={formatNumber(s.events)} icon="calendar" tone="sky" />
+        <StatCard label="Registrations" value={formatNumber(s.totalRegistrations)} icon="users" hint={`across ${s.events} event${s.events === 1 ? '' : 's'}`} />
+        <StatCard label="Attendance" value={formatNumber(s.totalAttendance)} icon="check" hint={`${formatPercent(s.attendanceRate)} of approved registrations`} />
+        <StatCard
+          label="Feedback"
+          value={s.averageFeedback === null ? '-' : `${s.averageFeedback} / 5`}
+          icon="star"
+          hint={`${s.feedbackResponses} response${s.feedbackResponses === 1 ? '' : 's'}`}
+        />
+        <StatCard label="Certificates" value={formatNumber(s.certificateCount)} icon="award" hint="issued" />
       </div>
-
-      <details className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm">
-        <summary className="cursor-pointer font-medium text-slate-700">How these numbers are calculated</summary>
-        <dl className="mt-3 grid gap-x-8 gap-y-2 sm:grid-cols-2">
-          {DEFINITIONS.map(([term, text]) => (
-            <div key={term}><dt className="font-medium text-slate-900">{term}</dt><dd className="text-slate-600">{text}</dd></div>
-          ))}
-        </dl>
-      </details>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <ChartCard
-          title="Registration trend"
-          subtitle="Running total of registrations by sign-up date"
+          title="Registrations"
+          subtitle="Running total by sign-up date"
           empty={c.registrationTrend.length === 0}
           emptyText="No registrations yet."
           table={{ columns: ['Date', 'New that day', 'Running total'], rows: c.registrationTrend.map((p) => [formatDate(p.label), p.value, p.total]) }}
         >
           <TrendChart
+            height={190}
             points={c.registrationTrend.map((p) => ({ label: p.label, value: p.total, extra: p.value }))}
             valueName="Registrations so far"
             extraName="New that day"
@@ -180,13 +201,14 @@ function Dashboard({ data, dimmed }) {
         </ChartCard>
 
         <ChartCard
-          title="Attendance trend"
+          title="Attendance"
           subtitle={c.attendanceTrend.granularity === 'hour' ? `Check-ins by hour${c.attendanceTrend.day ? ` on ${formatDate(c.attendanceTrend.day)}` : ''}` : 'Check-ins by day'}
           empty={c.attendanceTrend.points.length === 0}
           emptyText="No one has checked in yet."
           table={{ columns: [c.attendanceTrend.granularity === 'hour' ? 'Hour' : 'Day', 'Check-ins'], rows: c.attendanceTrend.points.map((p) => [p.label, p.value]) }}
         >
           <ColumnChart
+            height={190}
             data={c.attendanceTrend.points.map((p) => ({ ...p, axisLabel: c.attendanceTrend.granularity === 'day' ? formatDate(p.label).replace(/^\w+, /, '').replace(/ \d{4}$/, '') : p.label }))}
             unit="check-ins"
             ariaLabel={`Check-ins by ${c.attendanceTrend.granularity}`}
@@ -194,7 +216,22 @@ function Dashboard({ data, dimmed }) {
         </ChartCard>
 
         <ChartCard
-          title="Department distribution"
+          title="Feedback"
+          subtitle={`Overall rating of the whole event${s.feedbackResponses ? ` (${s.feedbackResponses} responses)` : ''}`}
+          empty={s.feedbackResponses === 0}
+          emptyText="No feedback yet."
+          table={{ columns: ['Rating', 'Responses'], rows: [...c.feedbackRatings].reverse().map((d) => [`${d.rating} star${d.rating === 1 ? '' : 's'}`, d.value]) }}
+        >
+          <ColumnChart
+            height={190}
+            data={[...c.feedbackRatings].reverse().map((d) => ({ label: `${d.rating} star${d.rating === 1 ? '' : 's'}`, axisLabel: `${d.rating} star`, value: d.value }))}
+            unit="responses"
+            ariaLabel="Number of responses at each overall rating from one to five stars"
+          />
+        </ChartCard>
+
+        <ChartCard
+          title="Departments"
           subtitle="Registrations by participant department"
           empty={c.departments.length === 0}
           table={{ columns: ['Department', 'Registrations'], rows: c.departments.map((d) => [d.name, d.value]) }}
@@ -203,56 +240,26 @@ function Dashboard({ data, dimmed }) {
         </ChartCard>
 
         <ChartCard
-          title="College distribution"
-          subtitle="Registrations by participant college"
-          empty={c.colleges.length === 0}
-          table={{ columns: ['College', 'Registrations'], rows: c.colleges.map((d) => [d.name, d.value]) }}
-        >
-          <BarList series={['Registrations']} rows={c.colleges.map((d) => ({ name: d.name, values: [d.value] }))} />
-        </ChartCard>
-
-        <ChartCard
-          title="Event type distribution"
-          subtitle="Registrations and check-ins by type of event"
-          empty={c.eventTypes.length === 0}
-          table={{ columns: ['Type', 'Events', 'Registrations', 'Checked in'], rows: c.eventTypes.map((d) => [d.name, d.events, d.value, d.attendance]) }}
-        >
-          <BarList series={['Registrations', 'Checked in']} rows={c.eventTypes.map((d) => ({ name: `${d.name} (${d.events})`, values: [d.value, d.attendance] }))} />
-        </ChartCard>
-
-        <ChartCard
-          title="Session attendance"
-          subtitle="People scanned into each session"
-          empty={c.sessionAttendance.every((d) => d.value === 0)}
-          emptyText={c.sessionAttendance.length === 0 ? 'No sessions scheduled yet.' : 'Nobody has been scanned into a session yet. Pick a session in the check-in scanner to record it.'}
-          table={{ columns: ['Session', 'Checked in', 'Of registered'], rows: c.sessionAttendance.map((d) => [d.label, d.value, formatPercent(d.percentage)]) }}
-        >
-          <BarList series={['Checked in']} rows={c.sessionAttendance.map((d) => ({ name: d.label, values: [d.value] }))} />
-        </ChartCard>
-
-        <ChartCard
-          title="Feedback ratings"
-          subtitle={`Overall rating of the whole event${s.feedbackResponses ? ` (${s.feedbackResponses} responses)` : ''}`}
-          empty={s.feedbackResponses === 0}
-          emptyText="No feedback yet."
-          table={{ columns: ['Rating', 'Responses'], rows: [...c.feedbackRatings].reverse().map((d) => [`${d.rating} star${d.rating === 1 ? '' : 's'}`, d.value]) }}
-        >
-          <ColumnChart
-            data={[...c.feedbackRatings].reverse().map((d) => ({ label: `${d.rating} star${d.rating === 1 ? '' : 's'}`, axisLabel: `${d.rating}★`, value: d.value }))}
-            unit="responses"
-            ariaLabel="Number of responses at each overall rating from one to five stars"
-          />
-        </ChartCard>
-
-        <ChartCard
-          title="Event comparison"
-          subtitle={compared.length < performance.length ? `The ${compared.length} most recent events, as a share of registrations` : 'As a share of registrations'}
+          className="lg:col-span-2"
+          title="Event performance"
+          subtitle={compared.length < performance.length ? `Attendance rate of the ${compared.length} most recent events` : 'Attendance rate by event'}
           empty={performance.length === 0}
-          table={{ columns: ['Event', 'Attendance rate', 'Engagement', 'Completion'], rows: performance.map((p) => [p.name, formatPercent(p.attendanceRate), formatPercent(p.engagement), formatPercent(p.completion)]) }}
+          table={{
+            columns: ['Event', 'Registrations', 'Attendance', 'Attendance rate', 'Engagement', 'Feedback', 'Completion'],
+            rows: performance.map((p) => [
+              <Link key={p.eventId} to={`/organizer/events/${p.eventId}`} className="font-medium text-slate-900 hover:text-indigo-700">{p.name}</Link>,
+              `${p.registrations} / ${p.capacity}`,
+              p.attendance,
+              formatPercent(p.attendanceRate),
+              formatPercent(p.engagement),
+              p.feedbackAverage === null ? '-' : `${p.feedbackAverage} / 5`,
+              formatPercent(p.completion),
+            ]),
+          }}
         >
           <BarList
-            series={['Attendance rate', 'Engagement', 'Completion']}
-            rows={compared.map((p) => ({ name: p.name, values: [p.attendanceRate, p.engagement, p.completion] }))}
+            series={['Attendance rate']}
+            rows={compared.map((p) => ({ name: p.name, values: [p.attendanceRate] }))}
             format={formatNumber}
             unit="%"
             max={100}
@@ -260,37 +267,27 @@ function Dashboard({ data, dimmed }) {
         </ChartCard>
       </div>
 
-      <section aria-label="Event performance">
-        <h2 className="mb-3 text-base font-semibold text-slate-900">Event performance{multi ? ' (compare events)' : ''}</h2>
-        <Card className="overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th scope="col" className="px-4 py-3">Event</th>
-                  <th scope="col" className="px-4 py-3">Registrations</th>
-                  <th scope="col" className="px-4 py-3">Attendance</th>
-                  <th scope="col" className="px-4 py-3">Engagement</th>
-                  <th scope="col" className="px-4 py-3">Feedback</th>
-                  <th scope="col" className="px-4 py-3">Completion</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {performance.map((p) => (
-                  <tr key={p.eventId}>
-                    <td className="px-4 py-3"><Link to={`/organizer/events/${p.eventId}`} className="font-medium text-slate-900 hover:text-indigo-700">{p.name}</Link><p className="text-xs text-slate-500">{p.type} - {formatDate(p.date)}</p></td>
-                    <td className="px-4 py-3 tabular-nums">{p.registrations} <span className="text-xs text-slate-400">/ {p.capacity} ({formatPercent(p.fillRate)})</span></td>
-                    <td className="px-4 py-3 tabular-nums">{p.attendance} <span className="text-xs text-slate-400">({formatPercent(p.attendanceRate)})</span></td>
-                    <td className="px-4 py-3 tabular-nums">{formatPercent(p.engagement)}</td>
-                    <td className="px-4 py-3 tabular-nums">{p.feedbackAverage === null ? '-' : `${p.feedbackAverage} / 5`} <span className="text-xs text-slate-400">({p.feedbackResponses})</span></td>
-                    <td className="px-4 py-3 tabular-nums">{formatPercent(p.completion)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-      </section>
+      <details className="surface px-4 py-3 text-sm">
+        <summary className="cursor-pointer font-medium text-slate-700">More breakdowns</summary>
+        <div className="mt-4 grid gap-6 lg:grid-cols-2">
+          <BreakdownTable title="Colleges" columns={['College', 'Registrations']} rows={c.colleges.map((d) => [d.name, d.value])} empty="No registrations yet." />
+          <BreakdownTable title="Event types" columns={['Type', 'Events', 'Registrations', 'Checked in']} rows={c.eventTypes.map((d) => [d.name, d.events, d.value, d.attendance])} empty="No events yet." />
+          <BreakdownTable
+            title="Session attendance"
+            columns={['Session', 'Checked in', 'Of registered']}
+            rows={c.sessionAttendance.map((d) => [d.label, d.value, formatPercent(d.percentage)])}
+            empty="No sessions scheduled yet."
+          />
+          <section aria-label="How these numbers are calculated">
+            <h3 className="mb-2 text-sm font-medium text-slate-700">How these numbers are calculated</h3>
+            <dl className="space-y-2">
+              {DEFINITIONS.map(([term, text]) => (
+                <div key={term}><dt className="font-medium text-slate-900">{term}</dt><dd className="text-slate-600">{text}</dd></div>
+              ))}
+            </dl>
+          </section>
+        </div>
+      </details>
     </div>
   );
 }

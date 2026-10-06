@@ -24,7 +24,7 @@ export default function Tabs({ tabs, value, onChange, label, variant = 'pill', c
   const wrap =
     variant === 'underline'
       ? 'flex gap-1 overflow-x-auto border-b border-slate-200'
-      : 'inline-flex max-w-full gap-1 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-1 shadow-sm';
+      : 'inline-flex max-w-full gap-1 overflow-x-auto rounded-lg border border-slate-200 bg-white p-1';
 
   return (
     <div role="tablist" aria-label={label} onKeyDown={onKeyDown} className={`${wrap} ${className}`}>
@@ -33,7 +33,7 @@ export default function Tabs({ tabs, value, onChange, label, variant = 'pill', c
         const styles =
           variant === 'underline'
             ? `-mb-px border-b-2 px-3 py-2.5 ${selected ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-slate-500 hover:text-slate-800'}`
-            : `rounded-xl px-3.5 py-1.5 ${selected ? 'grad-brand text-white shadow-sm' : 'text-slate-600 hover:bg-indigo-50 hover:text-indigo-700'}`;
+            : `rounded-md px-3 py-1.5 ${selected ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`;
         return (
           <button
             key={tab.key}
@@ -46,7 +46,7 @@ export default function Tabs({ tabs, value, onChange, label, variant = 'pill', c
             aria-selected={selected}
             tabIndex={selected ? 0 : -1}
             onClick={() => onChange(tab.key)}
-            className={`whitespace-nowrap text-sm font-semibold transition-colors ${styles}`}
+            className={`whitespace-nowrap text-sm font-medium transition-colors ${styles}`}
           >
             {tab.label}
             {tab.count !== undefined && <span className={`ml-1.5 text-xs ${selected ? 'opacity-80' : 'text-slate-400'}`}>{tab.count}</span>}

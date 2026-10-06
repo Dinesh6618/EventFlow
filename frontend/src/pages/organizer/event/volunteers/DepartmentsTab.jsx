@@ -95,7 +95,7 @@ export default function DepartmentsTab() {
       </div>
 
       {!data && loading ? (
-        <div className="h-40 animate-pulse rounded-2xl bg-slate-200" aria-label="Loading departments" />
+        <div className="h-40 animate-pulse rounded-lg bg-slate-200" aria-label="Loading departments" />
       ) : departments.length === 0 ? (
         <EmptyState icon="users" title="No departments yet" description="Registration, Technical Support, Food Management, Stage Management, Help Desk: create the teams you need, or add your own." action={<Button onClick={() => setEditing('new')}>Create the first department</Button>} />
       ) : (

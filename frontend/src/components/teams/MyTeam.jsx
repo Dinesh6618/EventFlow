@@ -41,7 +41,7 @@ function Suggestions({ team, onInvited }) {
 
   return (
     <Card className="p-5">
-      <h4 className="text-base font-bold text-slate-900">Find Teammates</h4>
+      <h4 className="text-base font-semibold text-slate-900">Find Teammates</h4>
       <p className="mt-0.5 text-xs text-slate-500">
         Registered participants without a team, ranked by how well their skills fit what you are looking for. This is a rule-based match, not a guarantee.
       </p>

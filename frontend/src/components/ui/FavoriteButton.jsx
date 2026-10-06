@@ -33,7 +33,7 @@ export default function FavoriteButton({ eventId, initial = false, onChange, cla
       onClick={toggle}
       aria-pressed={on}
       aria-label={on ? 'Remove from saved events' : 'Save this event'}
-      className={`flex h-9 w-9 items-center justify-center rounded-full bg-white/90 shadow-sm backdrop-blur transition-transform hover:scale-110 active:scale-95 ${on ? 'text-pink-500' : 'text-slate-500 hover:text-pink-500'} ${className}`}
+      className={`flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-50 ${on ? 'text-red-500' : 'text-slate-500 hover:text-red-500'} ${className}`}
     >
       <Icon name="heart" className={`h-[1.15rem] w-[1.15rem] ${on ? 'fill-current' : ''}`} />
     </button>

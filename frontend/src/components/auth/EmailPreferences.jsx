@@ -35,13 +35,13 @@ export default function EmailPreferences() {
   };
 
   return (
-    <Card className="mt-6 p-6 sm:p-8" aria-labelledby="email-prefs-heading">
-      <h2 id="email-prefs-heading" className="text-lg font-bold text-slate-900">Email preferences</h2>
+    <Card className="mt-6 max-w-3xl p-5 sm:p-6" aria-labelledby="email-prefs-heading">
+      <h2 id="email-prefs-heading" className="text-lg font-semibold text-slate-900">Email preferences</h2>
       <p className="mt-1 text-sm text-slate-500">Choose which emails you would like to receive.</p>
       {error ? (
         <div className="mt-4"><LoadError error={error} onRetry={reload} /></div>
       ) : !data ? (
-        <div className="mt-4 h-32 animate-pulse rounded-xl bg-slate-100" aria-label="Loading email preferences" />
+        <div className="mt-4 h-32 animate-pulse rounded-lg bg-slate-100" aria-label="Loading email preferences" />
       ) : (
         <div className="mt-5 space-y-4">
           {OPTIONS.map(([key, label, hint]) => (
@@ -49,7 +49,7 @@ export default function EmailPreferences() {
               <Checkbox label={label} hint={hint} checked={data.preferences[key]} disabled={saving !== null} onChange={toggle(key)} />
             </div>
           ))}
-          <p className="rounded-xl bg-slate-50 p-3.5 text-sm text-slate-600">The email that verifies your address, and emails about your own registrations, are always sent.</p>
+          <p className="rounded-lg bg-slate-50 p-3.5 text-sm text-slate-600">The email that verifies your address, and emails about your own registrations, are always sent.</p>
         </div>
       )}
     </Card>

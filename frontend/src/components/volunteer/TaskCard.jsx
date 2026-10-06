@@ -32,7 +32,7 @@ export default function TaskCard({ task: t, onChanged }) {
     <Card className="p-5" data-testid="task">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="text-lg font-bold text-slate-900">{t.title}</h3>
+          <h3 className="text-base font-semibold text-slate-900">{t.title}</h3>
           <p className="text-sm text-slate-500">{t.eventName} - {t.department.name}</p>
         </div>
         <div className="flex items-center gap-1.5"><PriorityBadge priority={t.priority} /><TaskStatusBadge status={t.status} /></div>
@@ -43,8 +43,8 @@ export default function TaskCard({ task: t, onChanged }) {
       </p>
       {t.description && <p className="mt-2 text-sm text-slate-700">{t.description}</p>}
       {t.instructions && (
-        <div className="mt-3 rounded-xl bg-slate-50 p-3.5">
-          <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Instructions</p>
+        <div className="mt-3 rounded-lg bg-slate-50 p-3.5">
+          <p className="text-sm font-medium text-slate-500">Instructions</p>
           <p className="mt-0.5 whitespace-pre-line text-sm text-slate-700">{t.instructions}</p>
         </div>
       )}

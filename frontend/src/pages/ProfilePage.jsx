@@ -78,20 +78,23 @@ export default function ProfilePage() {
     <>
       <PageHeader eyebrow={isParticipant ? 'Profile' : 'Settings'} title={isParticipant ? 'Your profile' : 'Account settings'} description="Your account details." />
 
-      <Card className="max-w-3xl overflow-hidden">
-        <div className="bg-midnight flex flex-wrap items-center gap-5 p-6 text-white sm:p-8">
-          <ProfileAvatar name={user.name} size="xl" className="!ring-4 !ring-white/20" />
+      <Card className="max-w-3xl">
+        <div className="flex flex-wrap items-center gap-4 border-b border-slate-200 p-5 sm:p-6">
+          <ProfileAvatar name={user.name} size="lg" />
           <div className="min-w-0">
-            <h2 className="truncate text-2xl font-extrabold">{user.name}</h2>
-            <p className="break-all text-sm text-slate-300">{user.email}</p>
+            <h2 className="truncate text-lg font-semibold text-slate-900">{user.name}</h2>
+            <p className="break-all text-sm text-slate-500">{user.email}</p>
+            {isParticipant && (user.department || user.college) && (
+              <p className="text-sm text-slate-500">{[user.department, user.college].filter(Boolean).join(' - ')}</p>
+            )}
             <div className="mt-2 flex flex-wrap items-center gap-2">
-              <Badge tone="indigo">{isParticipant ? 'Student' : user.role}</Badge>
-              <span className="text-xs text-slate-400">Member since {joined}</span>
+              <Badge tone="indigo" className="capitalize">{isParticipant ? 'Student' : user.role}</Badge>
+              <span className="text-sm text-slate-500">Member since {joined}</span>
             </div>
           </div>
         </div>
 
-        <form onSubmit={submit} noValidate className="space-y-5 p-6 sm:p-8">
+        <form onSubmit={submit} noValidate className="space-y-5 p-5 sm:p-6">
           {formError && <Alert type="error">{formError}</Alert>}
           <Input label="Full name" value={values.name} onChange={set('name')} error={errors.name} />
           {isParticipant && (

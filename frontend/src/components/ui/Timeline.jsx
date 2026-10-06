@@ -2,20 +2,22 @@ import { formatTime } from '../../utils/format.js';
 import Badge from './Badge.jsx';
 import Icon from './Icon.jsx';
 
+// Every session type uses the same neutral dot; the icon and the label carry the meaning.
+const DOT = 'bg-indigo-50 text-indigo-600';
 const TYPE_STYLE = {
-  talk: ['bg-indigo-100 text-indigo-600', 'message', 'Talk', 'indigo'],
-  workshop: ['bg-emerald-100 text-emerald-600', 'layers', 'Workshop', 'green'],
+  talk: [DOT, 'message', 'Talk', 'slate'],
+  workshop: [DOT, 'layers', 'Workshop', 'slate'],
   break: ['bg-slate-100 text-slate-500', 'clock', 'Break', 'slate'],
-  competition: ['bg-amber-100 text-amber-600', 'trophy', 'Competition', 'amber'],
-  evaluation_round: ['bg-pink-100 text-pink-600', 'star', 'Evaluation', 'pink'],
-  session: ['bg-sky-100 text-sky-600', 'calendar', 'Session', 'blue'],
-  registration: ['bg-sky-100 text-sky-600', 'ticket', 'Registration', 'blue'],
-  ceremony: ['bg-pink-100 text-pink-600', 'award', 'Ceremony', 'pink'],
-  keynote: ['bg-indigo-100 text-indigo-600', 'sparkles', 'Keynote', 'indigo'],
-  panel: ['bg-indigo-100 text-indigo-600', 'users', 'Panel', 'indigo'],
-  presentation: ['bg-emerald-100 text-emerald-600', 'eye', 'Presentation', 'green'],
-  mentoring: ['bg-emerald-100 text-emerald-600', 'user-plus', 'Mentoring', 'green'],
-  networking: ['bg-sky-100 text-sky-600', 'globe', 'Networking', 'blue'],
+  competition: [DOT, 'trophy', 'Competition', 'slate'],
+  evaluation_round: [DOT, 'star', 'Evaluation', 'slate'],
+  session: [DOT, 'calendar', 'Session', 'slate'],
+  registration: [DOT, 'ticket', 'Registration', 'slate'],
+  ceremony: [DOT, 'award', 'Ceremony', 'slate'],
+  keynote: [DOT, 'sparkles', 'Keynote', 'slate'],
+  panel: [DOT, 'users', 'Panel', 'slate'],
+  presentation: [DOT, 'eye', 'Presentation', 'slate'],
+  mentoring: [DOT, 'user-plus', 'Mentoring', 'slate'],
+  networking: [DOT, 'globe', 'Networking', 'slate'],
 };
 
 /**
@@ -33,7 +35,7 @@ export default function Timeline({ items, onSelect, renderActions }) {
         return (
           <li key={item.id} className="relative flex gap-4" aria-current={live ? 'step' : undefined}>
             <div className="w-[4.75rem] shrink-0 pt-4 text-right sm:w-24">
-              <p className={`text-sm font-bold ${live ? 'text-emerald-600' : 'text-slate-900'}`}>{formatTime(item.startTime)}</p>
+              <p className={`text-sm font-semibold ${live ? 'text-emerald-600' : 'text-slate-900'}`}>{formatTime(item.startTime)}</p>
               <p className="text-xs text-slate-400">{formatTime(item.endTime)}</p>
             </div>
 
@@ -43,25 +45,25 @@ export default function Timeline({ items, onSelect, renderActions }) {
               >
                 <Icon name={live ? 'zap' : icon} className="h-4 w-4" />
               </span>
-              {!last && <span className="-mb-1 mt-1 w-0.5 flex-1 bg-gradient-to-b from-indigo-200 to-slate-200" />}
+              {!last && <span className="-mb-1 mt-1 w-px flex-1 bg-slate-200" />}
             </div>
 
             <div className="min-w-0 flex-1 pb-4">
               <div
-                className={`rounded-2xl border p-4 transition-shadow ${
-                  live ? 'border-emerald-300 bg-emerald-50/70 shadow-md shadow-emerald-500/10' : 'border-slate-200 bg-white hover:shadow-card'
+                className={`rounded-lg border p-4 ${
+                  live ? 'border-emerald-300 bg-emerald-50' : 'border-slate-200 bg-white'
                 } ${past ? 'opacity-60' : ''}`}
               >
                 <div className="flex flex-wrap items-center gap-2">
                   {onSelect ? (
-                    <button type="button" onClick={() => onSelect(item)} className="text-left font-bold text-slate-900 hover:text-indigo-700">
+                    <button type="button" onClick={() => onSelect(item)} className="text-left font-semibold text-slate-900 hover:text-indigo-700">
                       {item.title}
                     </button>
                   ) : (
-                    <h4 className="font-bold text-slate-900">{item.title}</h4>
+                    <h4 className="font-semibold text-slate-900">{item.title}</h4>
                   )}
                   {live && (
-                    <span className="rounded-full bg-emerald-600 px-2.5 py-0.5 text-[0.7rem] font-extrabold tracking-wider text-white">ONGOING</span>
+                    <span className="rounded-md bg-emerald-600 px-2 py-0.5 text-xs font-medium text-white">Ongoing</span>
                   )}
                   <Badge tone={tone}>{typeLabel}</Badge>
                 </div>

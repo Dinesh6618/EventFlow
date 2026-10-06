@@ -88,7 +88,7 @@ export default function StaffPage() {
         <Card>
           <ul className="divide-y divide-slate-100">
             {data.staff.map((member) => (
-              <li key={member.id} className="flex items-center justify-between gap-3 px-5 py-4">
+              <li key={member.id} className="flex items-center justify-between gap-3 px-4 py-3">
                 <div className="min-w-0">
                   <p className="font-medium text-slate-900">{member.name}</p>
                   <p className="truncate text-sm text-slate-500">{member.email}</p>

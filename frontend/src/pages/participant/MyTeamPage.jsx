@@ -25,7 +25,7 @@ export default function MyTeamPage() {
 
   return (
     <>
-      <PageHeader eyebrow="Teams" title="My Team" description="Build your team, invite people with the skills you need, and keep your project together." />
+      <PageHeader title="My Team" description="Build your team, invite people with the skills you need, and keep your project together." />
       {events.length === 0 ? (
         <EmptyState
           icon="users"
@@ -41,7 +41,7 @@ export default function MyTeamPage() {
             </div>
           )}
           <p className="text-sm text-slate-500">
-            Team space for <Link to={`/events/${current.eventId}`} className="font-semibold text-indigo-600 hover:text-indigo-700">{current.eventName}</Link>
+            Team space for <Link to={`/events/${current.eventId}`} className="font-medium text-indigo-600 hover:text-indigo-700">{current.eventName}</Link>
           </p>
           <TeamsPanel key={current.eventId} event={{ id: current.eventId, name: current.eventName }} />
         </div>

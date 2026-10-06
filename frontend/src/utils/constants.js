@@ -15,15 +15,6 @@ export const homePathFor = (role) =>
   ({ organizer: '/organizer/dashboard', admin: '/admin/dashboard', participant: '/home' })[role] || '/login';
 
 // Banner gradient used when an event has no uploaded image.
-export const TYPE_GRADIENTS = {
-  Hackathon: 'from-violet-600 via-indigo-600 to-blue-600',
-  Workshop: 'from-emerald-500 via-teal-500 to-cyan-600',
-  Symposium: 'from-sky-500 via-blue-600 to-indigo-700',
-  Seminar: 'from-amber-500 via-orange-500 to-rose-500',
-  Competition: 'from-rose-500 via-pink-600 to-fuchsia-600',
-  'Cultural Event': 'from-fuchsia-500 via-pink-500 to-orange-400',
-  'Technical Event': 'from-cyan-500 via-sky-600 to-indigo-600',
-};
 
 export const TYPE_ICONS = {
   Hackathon: 'zap',

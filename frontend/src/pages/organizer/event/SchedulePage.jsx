@@ -110,8 +110,8 @@ export default function SchedulePage() {
           nextId={data.next?.id}
           renderActions={(item) => (
             <>
-              <Button size="sm" variant="secondary" onClick={() => setEditing(item)}>Edit</Button>
-              <Button size="sm" variant="ghost" className="text-red-600 hover:bg-red-50" onClick={() => setDeleting(item)}>Delete</Button>
+              <Button size="sm" variant="secondary" onClick={() => setEditing(item)} aria-label={`Edit ${item.title}`}>Edit</Button>
+              <Button size="sm" variant="ghost" className="text-red-600 hover:bg-red-50" onClick={() => setDeleting(item)} aria-label={`Delete ${item.title}`}>Delete</Button>
             </>
           )}
         />

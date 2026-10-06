@@ -92,7 +92,7 @@ export default function FeedbackPanel({ event }) {
 
   return (
     <section aria-label="Feedback">
-      <h2 className="mb-3 mt-8 text-lg font-semibold text-slate-900">Feedback</h2>
+      <h2 className="mb-3 text-lg font-semibold text-slate-900">Feedback</h2>
       <div className="space-y-3">
         {data.event.open && (
           <Card className="flex flex-wrap items-center justify-between gap-3 p-5">

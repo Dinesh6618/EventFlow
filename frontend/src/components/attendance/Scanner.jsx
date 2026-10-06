@@ -46,7 +46,12 @@ export default function Scanner({ eventId, sessions = [], onRecorded }) {
       try {
         const result = await attendanceApi.scan(eventId, code, sessionOnly ? 'check_in' : actionRef.current, sessionRef.current || undefined);
         const { participant } = result;
-        setOutcome({ ok: true, text: `${verb}: ${participant.name}`, detail: [result.session, participant.participantCode, participant.department].filter(Boolean).join(' - ') });
+        setOutcome({
+          ok: true,
+          text: 'Attendance marked successfully.',
+          who: `${verb}: ${participant.name}`,
+          detail: [result.session, participant.participantCode, participant.department].filter(Boolean).join(' - '),
+        });
         setHistory((h) => [{ ok: true, text: `${verb} ${participant.name}`, at: result.at }, ...h].slice(0, 8));
         onRecorded?.();
       } catch (err) {
@@ -134,7 +139,7 @@ export default function Scanner({ eventId, sessions = [], onRecorded }) {
             type="button"
             aria-pressed={action === value}
             onClick={() => setAction(value)}
-            className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${action === value ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}
+            className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${action === value ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-100'}`}
           >
             {label}
           </button>
@@ -148,7 +153,7 @@ export default function Scanner({ eventId, sessions = [], onRecorded }) {
             id="scan-session"
             value={sessionId}
             onChange={(e) => setSessionId(e.target.value)}
-            className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+            className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
           >
             <option value="">Event entrance (check in / out)</option>
             {sessions.map((s) => (
@@ -159,36 +164,39 @@ export default function Scanner({ eventId, sessions = [], onRecorded }) {
         </div>
       )}
 
-      <div className="overflow-hidden rounded-xl bg-slate-900">
-        <div className="relative aspect-[4/3] w-full max-w-xl sm:aspect-video">
+      <div className="overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+        <div className="relative aspect-4/3 w-full max-w-xl sm:aspect-video">
           {/* Always rendered (never display:none) so the browser keeps decoding frames. */}
           <video ref={videoRef} muted playsInline className="h-full w-full object-cover" />
           {camera.state === 'on' && (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-              <div className="h-2/3 w-2/3 max-w-xs rounded-2xl border-2 border-white/80 shadow-[0_0_0_9999px_rgba(15,23,42,0.45)]" />
+              <div className="h-2/3 w-2/3 max-w-xs rounded-lg border-2 border-indigo-400" />
             </div>
           )}
           {camera.state !== 'on' && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-slate-900 p-6 text-center text-slate-300">
-              <Icon name="image" className="h-10 w-10 text-slate-500" />
-              <p className="text-sm">{camera.message || 'Start the camera and point it at a participant\'s QR code.'}</p>
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-slate-50 p-6 text-center">
+              <Icon name="qr" className="h-10 w-10 text-slate-400" />
+              <p className="max-w-xs text-sm text-slate-500">{camera.message || "Press Scan QR, then point the camera at a participant's QR code."}</p>
+              <Button size="lg" onClick={startCamera} loading={camera.state === 'starting'}>
+                <Icon name="qr" className="h-5 w-5" />
+                Scan QR
+              </Button>
             </div>
           )}
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-3">
-        {camera.state === 'on' ? (
-          <Button variant="secondary" onClick={stopCamera}>Stop camera</Button>
-        ) : (
-          <Button onClick={startCamera} loading={camera.state === 'starting'}>Start camera</Button>
-        )}
-      </div>
+      {camera.state === 'on' && (
+        <div className="flex flex-wrap gap-3">
+          <Button variant="secondary" onClick={stopCamera}>Stop scanning</Button>
+        </div>
+      )}
 
       <div aria-live="polite">
         {outcome && (
           <Alert type={outcome.ok ? 'success' : 'error'}>
             <p className="font-medium">{outcome.text}</p>
+            {outcome.who && <p className="mt-0.5">{outcome.who}</p>}
             {outcome.detail && <p className="mt-0.5 text-xs opacity-80">{outcome.detail}</p>}
           </Alert>
         )}
@@ -202,7 +210,7 @@ export default function Scanner({ eventId, sessions = [], onRecorded }) {
           onChange={(e) => setManual(e.target.value)}
           placeholder="Paste or type a code if the camera is unavailable"
           autoComplete="off"
-          className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 font-mono text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+          className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
         />
         <Button type="submit" variant="secondary" loading={busy} disabled={!manual.trim()}>
           {action === 'check_in' ? 'Check in' : 'Check out'}
@@ -211,7 +219,7 @@ export default function Scanner({ eventId, sessions = [], onRecorded }) {
 
       {history.length > 0 && (
         <section aria-label="This session">
-          <h3 className="mb-2 text-sm font-semibold text-slate-700">This session</h3>
+          <h3 className="mb-2 text-sm font-medium text-slate-500">This session</h3>
           <ul className="divide-y divide-slate-100 rounded-lg border border-slate-200 bg-white text-sm">
             {history.map((item, i) => (
               <li key={`${item.at}-${i}`} className="flex items-center justify-between gap-3 px-3 py-2">

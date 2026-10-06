@@ -50,7 +50,7 @@ export default function EventManageLayout() {
       </Link>
       <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{event.name}</h1>
+          <h1 className="text-2xl font-semibold text-slate-900">{event.name}</h1>
           <p className="mt-1 text-sm text-slate-500">
             {formatEventWhen(event)} - {event.venue}
           </p>

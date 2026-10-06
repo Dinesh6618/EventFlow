@@ -78,7 +78,7 @@ function Opportunities({ onApplied }) {
 
   return (
     <section aria-labelledby="open-events">
-      <h2 id="open-events" className="mb-3 text-xl font-bold text-slate-900">Events looking for volunteers</h2>
+      <h2 id="open-events" className="mb-3 text-lg font-semibold text-slate-900">Events looking for volunteers</h2>
       {!opportunities.data && opportunities.loading ? (
         <PageLoader />
       ) : opportunities.error ? (
@@ -126,15 +126,15 @@ export function VolunteerHome() {
             <DutyCard duty={today} featured onChanged={refresh} />
           ) : (
             <Card className="p-6 text-center sm:p-8">
-              <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600"><Icon name="calendar" className="h-6 w-6" /></span>
-              <h2 className="mt-3 text-lg font-bold text-slate-900">No duty today</h2>
+              <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600"><Icon name="calendar" className="h-6 w-6" /></span>
+              <h2 className="mt-3 text-lg font-semibold text-slate-900">No duty today</h2>
               <p className="mt-1 text-sm text-slate-500">{upcoming ? 'Your next duty is below.' : 'When an organizer assigns you a shift, it shows up here with a check-in button.'}</p>
             </Card>
           )}
 
           {upcoming && (
             <section aria-labelledby="next-duty">
-              <h2 id="next-duty" className="mb-3 text-lg font-bold text-slate-900">Next duty</h2>
+              <h2 id="next-duty" className="mb-3 text-lg font-semibold text-slate-900">Next duty</h2>
               <DutyCard duty={upcoming} onChanged={refresh} />
             </section>
           )}
@@ -142,7 +142,7 @@ export function VolunteerHome() {
           {d.tasks.today.length > 0 && (
             <section aria-labelledby="today-tasks">
               <div className="mb-3 flex items-center justify-between">
-                <h2 id="today-tasks" className="text-lg font-bold text-slate-900">Today&apos;s tasks</h2>
+                <h2 id="today-tasks" className="text-lg font-semibold text-slate-900">Today&apos;s tasks</h2>
                 <Link to="/volunteer/tasks" className="text-sm font-semibold text-indigo-600 hover:text-indigo-700">All tasks</Link>
               </div>
               <ul className="space-y-4">{d.tasks.today.map((t) => <li key={t.id}><TaskCard task={t} onChanged={refresh} /></li>)}</ul>
@@ -151,12 +151,12 @@ export function VolunteerHome() {
 
           {d.announcements.length > 0 && (
             <section aria-labelledby="announcements">
-              <h2 id="announcements" className="mb-3 text-lg font-bold text-slate-900">From the organizer</h2>
+              <h2 id="announcements" className="mb-3 text-lg font-semibold text-slate-900">From the organizer</h2>
               <ul className="space-y-3">
                 {d.announcements.map((a) => (
                   <li key={a.id}>
                     <Card className="p-4">
-                      <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-bold text-slate-900">{a.title}</h3><span className="text-xs text-slate-400">{a.eventName} - {timeAgo(a.createdAt)}</span></div>
+                      <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-semibold text-slate-900">{a.title}</h3><span className="text-xs text-slate-400">{a.eventName} - {timeAgo(a.createdAt)}</span></div>
                       <p className="mt-1 whitespace-pre-line text-sm text-slate-600">{a.message}</p>
                     </Card>
                   </li>
@@ -166,19 +166,19 @@ export function VolunteerHome() {
           )}
 
           <div className="grid gap-4 sm:grid-cols-3">
-            <Card className="p-4 text-center"><p className="text-2xl font-extrabold text-slate-900">{d.summary.hours} h</p><p className="text-xs text-slate-500">volunteered</p></Card>
-            <Card className="p-4 text-center"><p className="text-2xl font-extrabold text-slate-900">{d.summary.completedDuties}</p><p className="text-xs text-slate-500">duties completed</p></Card>
-            <Card className="p-4 text-center"><p className="text-2xl font-extrabold text-slate-900">{d.summary.tasksCompleted}</p><p className="text-xs text-slate-500">tasks completed</p></Card>
+            <Card className="p-4 text-center"><p className="text-2xl font-semibold text-slate-900">{d.summary.hours} h</p><p className="text-xs text-slate-500">volunteered</p></Card>
+            <Card className="p-4 text-center"><p className="text-2xl font-semibold text-slate-900">{d.summary.completedDuties}</p><p className="text-xs text-slate-500">duties completed</p></Card>
+            <Card className="p-4 text-center"><p className="text-2xl font-semibold text-slate-900">{d.summary.tasksCompleted}</p><p className="text-xs text-slate-500">tasks completed</p></Card>
           </div>
         </div>
       )}
 
-      <Link to="/volunteer/help" className="mt-8 flex items-center justify-between gap-4 rounded-2xl bg-slate-900 p-5 text-white shadow-lg transition-transform hover:-translate-y-0.5">
+      <Link to="/volunteer/help" className="surface surface-lift mt-8 flex items-center justify-between gap-4 p-4">
         <div className="flex items-center gap-4">
-          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10"><Icon name="shield" className="h-6 w-6" /></span>
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600"><Icon name="shield" className="h-5 w-5" /></span>
           <div>
-            <p className="font-extrabold">Help requests assigned to you</p>
-            <p className="text-sm text-slate-300">{helpOpen ? `${helpOpen} waiting for you` : 'Nothing assigned right now'}</p>
+            <p className="text-base font-semibold text-slate-900">Help requests assigned to you</p>
+            <p className="text-sm text-slate-500">{helpOpen ? `${helpOpen} waiting for you` : 'Nothing assigned right now'}</p>
           </div>
         </div>
         {helpOpen > 0 ? <Badge tone="amber">{helpOpen}</Badge> : <Icon name="arrow-right" className="h-5 w-5 text-slate-400" />}
@@ -186,7 +186,7 @@ export function VolunteerHome() {
 
       {mine.length > 0 && (
         <section aria-labelledby="my-events" className="mt-10">
-          <h2 id="my-events" className="mb-3 text-xl font-bold text-slate-900">Events I volunteer at</h2>
+          <h2 id="my-events" className="mb-3 text-lg font-semibold text-slate-900">Events I volunteer at</h2>
           <ul className="grid gap-4 sm:grid-cols-2">
             {mine.map((a) => (
               <li key={a.eventId}>

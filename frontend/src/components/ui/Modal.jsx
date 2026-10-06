@@ -26,17 +26,17 @@ export default function Modal({ open, onClose, title, children, footer, size = '
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
-      <div className="absolute inset-0 animate-toast-in bg-slate-950/55 backdrop-blur-[2px]" onClick={onClose} aria-hidden="true" />
+      <div className="absolute inset-0 animate-toast-in bg-slate-900/50" onClick={onClose} aria-hidden="true" />
       <div
         ref={panelRef}
         tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className={`anim-pop relative max-h-[90vh] w-full overflow-y-auto rounded-t-3xl bg-white p-6 shadow-2xl focus:outline-none sm:rounded-3xl ${size === 'xl' ? 'sm:max-w-5xl' : size === 'lg' ? 'sm:max-w-2xl' : 'sm:max-w-md'}`}
+        className={`anim-pop relative max-h-[90vh] w-full overflow-y-auto rounded-t-xl bg-white p-6 shadow-xl focus:outline-none sm:rounded-lg ${size === 'xl' ? 'sm:max-w-5xl' : size === 'lg' ? 'sm:max-w-2xl' : 'sm:max-w-md'}`}
       >
         <div className="mb-3 flex items-start justify-between gap-4">
-          <h2 id={titleId} className="text-lg font-bold text-slate-900">
+          <h2 id={titleId} className="text-lg font-semibold text-slate-900">
             {title}
           </h2>
           <button

@@ -19,13 +19,13 @@ export default function VolunteerManagementLayout() {
   return (
     <div className="space-y-6">
       <nav aria-label="Volunteer management" className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-        <ul className="inline-flex gap-1 whitespace-nowrap rounded-2xl border border-slate-200 bg-white p-1 shadow-sm">
+        <ul className="inline-flex gap-1 whitespace-nowrap rounded-lg border border-slate-200 bg-white p-1">
           {TABS.map((tab) => (
             <li key={tab.label}>
               <NavLink
                 to={tab.to}
                 end={tab.end}
-                className={({ isActive }) => `block rounded-xl px-3.5 py-1.5 text-sm font-semibold transition-colors ${isActive ? 'grad-brand text-white shadow-sm' : 'text-slate-600 hover:bg-indigo-50 hover:text-indigo-700'}`}
+                className={({ isActive }) => `block rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${isActive ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}
               >
                 {tab.label}
               </NavLink>

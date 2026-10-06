@@ -117,14 +117,14 @@ export default function TasksTab() {
       </Card>
 
       {!data && loading ? (
-        <div className="h-40 animate-pulse rounded-2xl bg-slate-200" aria-label="Loading tasks" />
+        <div className="h-40 animate-pulse rounded-lg bg-slate-200" aria-label="Loading tasks" />
       ) : tasks.length === 0 ? (
         <EmptyState icon="check" title="No tasks" description={depts.length === 0 ? 'Create a department and assign volunteers first.' : 'Create a task and it appears here, and on the volunteer\'s dashboard.'} />
       ) : (
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <thead className="border-b border-slate-200 bg-slate-50 text-xs font-medium text-slate-500">
                 <tr><th scope="col" className="px-4 py-3">Task</th><th scope="col" className="px-4 py-3">Volunteer</th><th scope="col" className="hidden px-4 py-3 md:table-cell">Department</th><th scope="col" className="px-4 py-3">When</th><th scope="col" className="px-4 py-3">Priority</th><th scope="col" className="px-4 py-3">Status</th><th scope="col" className="px-4 py-3"><span className="sr-only">Actions</span></th></tr>
               </thead>
               <tbody className="divide-y divide-slate-100">

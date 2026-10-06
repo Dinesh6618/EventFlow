@@ -7,6 +7,7 @@ import Button, { buttonClasses } from '../../components/ui/Button.jsx';
 import Card from '../../components/ui/Card.jsx';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
+import { Textarea } from '../../components/ui/FormField.jsx';
 import Icon from '../../components/ui/Icon.jsx';
 import LoadError from '../../components/ui/LoadError.jsx';
 import PageHeader from '../../components/ui/PageHeader.jsx';
@@ -30,7 +31,7 @@ export function JudgingHome() {
           {data.events.map((e) => (
             <li key={e.eventId}>
               <Card className="p-5">
-                <Badge tone="amber">Judge</Badge>
+                <Badge tone="indigo">Judge</Badge>
                 <h2 className="mt-2 text-lg font-semibold text-slate-900">{e.eventName}</h2>
                 <p className="text-sm text-slate-500">{formatDate(e.date)}</p>
                 <p className="mt-3 text-sm text-slate-600">{e.submitted} of {e.assigned} evaluations submitted</p>
@@ -86,15 +87,16 @@ export function JudgingEvent() {
   );
 }
 
+/** One criterion as a row: its name on the left, the score and its maximum on the right. */
 function ScoreField({ criterion, value, error, disabled, onChange }) {
   const id = `score-${criterion.id}`;
   return (
-    <div className="grid gap-2 sm:grid-cols-[1fr_9rem] sm:items-start">
-      <div>
+    <div className="flex items-start justify-between gap-4 py-3">
+      <div className="min-w-0">
         <label htmlFor={id} className="text-sm font-medium text-slate-900">{criterion.name}</label>
         {criterion.description && <p className="text-xs text-slate-500">{criterion.description}</p>}
       </div>
-      <div>
+      <div className="shrink-0">
         <div className="flex items-center gap-2">
           <input
             id={id}
@@ -107,11 +109,11 @@ function ScoreField({ criterion, value, error, disabled, onChange }) {
             disabled={disabled}
             aria-invalid={error ? true : undefined}
             onChange={(e) => onChange(e.target.value)}
-            className={`block w-full rounded-lg border bg-white px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 disabled:bg-slate-100 ${error ? 'border-red-400' : 'border-slate-300'}`}
+            className={`block w-20 rounded-lg border bg-white px-3 py-2 text-right text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 disabled:bg-slate-100 ${error ? 'border-red-400' : 'border-slate-300'}`}
           />
-          <span className="shrink-0 text-sm text-slate-500">/ {criterion.maxScore}</span>
+          <span className="w-9 text-sm text-slate-500">/ {criterion.maxScore}</span>
         </div>
-        {error && <p role="alert" className="mt-1 text-xs font-medium text-red-600">{error}</p>}
+        {error && <p role="alert" className="mt-1 max-w-[11rem] text-xs font-medium text-red-600">{error}</p>}
       </div>
     </div>
   );
@@ -207,7 +209,7 @@ export function JudgingTeam() {
             </dl>
           </Card>
           <Card className="p-5">
-            <h2 className="text-base font-semibold text-slate-900">Team</h2>
+            <h2 className="text-base font-semibold text-slate-900">Team members</h2>
             <ul className="mt-2 text-sm text-slate-700">
               {team.members.map((m) => <li key={m.name}>{m.name}{m.role === 'leader' && <span className="text-xs text-slate-400"> (leader)</span>}</li>)}
             </ul>
@@ -215,10 +217,14 @@ export function JudgingTeam() {
         </section>
 
         <section aria-label="Your evaluation">
-          <Card className="space-y-5 p-5 lg:sticky lg:top-24">
+          <Card className="space-y-4 p-5 lg:sticky lg:top-24">
             <div className="flex items-center justify-between gap-2">
               <h2 className="text-base font-semibold text-slate-900">Your evaluation</h2>
               <Badge tone={EVAL_STATUS[evaluation.status][0]}>{EVAL_STATUS[evaluation.status][1]}</Badge>
+            </div>
+            <div className="rounded-lg bg-slate-50 px-4 py-3">
+              <p className="text-sm text-slate-500">Team</p>
+              <p className="text-base font-semibold text-slate-900">{team.name}</p>
             </div>
             {locked && <Alert type="success">Submitted. Only the organizer can unlock it if a correction is needed.</Alert>}
             {evaluation.editUnlocked && evaluation.status === 'submitted' && <Alert type="info">The organizer allowed you to edit this evaluation. Re-submit when you are done.</Alert>}
@@ -226,17 +232,16 @@ export function JudgingTeam() {
               <Alert type="info">Scoring opens once the organizer sets the criteria.</Alert>
             ) : (
               <>
-                {criteria.map((c) => (
-                  <ScoreField key={c.id} criterion={c} value={scores[c.id] ?? ''} error={errors[c.id]} disabled={locked} onChange={(v) => { setScores((s) => ({ ...s, [c.id]: v })); setErrors((e) => ({ ...e, [c.id]: undefined })); }} />
-                ))}
-                <div className="flex items-center justify-between border-t border-slate-100 pt-4 text-sm">
-                  <span className="font-medium text-slate-700">Total</span>
+                <div className="divide-y divide-slate-100 border-y border-slate-100">
+                  {criteria.map((c) => (
+                    <ScoreField key={c.id} criterion={c} value={scores[c.id] ?? ''} error={errors[c.id]} disabled={locked} onChange={(v) => { setScores((s) => ({ ...s, [c.id]: v })); setErrors((e) => ({ ...e, [c.id]: undefined })); }} />
+                  ))}
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium text-slate-700">Total score</span>
                   <span className="text-lg font-semibold text-slate-900">{total} <span className="text-sm font-normal text-slate-500">/ {maxTotal}</span></span>
                 </div>
-                <div>
-                  <label htmlFor="comments" className="mb-1.5 block text-sm font-medium text-slate-700">Comments (private to organizers unless they choose to share)</label>
-                  <textarea id="comments" rows={4} value={comments} disabled={locked} onChange={(e) => setComments(e.target.value)} className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 disabled:bg-slate-100" />
-                </div>
+                <Textarea label="Comments (private to organizers unless they choose to share)" rows={4} value={comments} disabled={locked} onChange={(e) => setComments(e.target.value)} />
                 {!locked && (
                   <div className="flex flex-col gap-2 sm:flex-row">
                     <Button variant="secondary" onClick={saveDraft} loading={saving} className="flex-1">Save draft</Button>

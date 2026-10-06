@@ -62,6 +62,7 @@ import MyTeamPage from './pages/participant/MyTeamPage.jsx';
 import RegisterForEventPage from './pages/participant/RegisterForEventPage.jsx';
 import { JudgingEvent, JudgingHome, JudgingTeam } from './pages/judge/JudgePages.jsx';
 import MyCertificatesPage from './pages/participant/MyCertificatesPage.jsx';
+import MySchedulePage from './pages/participant/MySchedulePage.jsx';
 import NotificationsPage from './pages/NotificationsPage.jsx';
 import VerifyPage from './pages/VerifyPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
@@ -111,6 +112,7 @@ export default function App() {
           <Route path="/my/registrations/:id/pass" element={<EventPassPage />} />
           <Route path="/my/team" element={<MyTeamPage />} />
           <Route path="/my/certificates" element={<MyCertificatesPage />} />
+          <Route path="/my/schedule" element={<MySchedulePage />} />
           <Route path="/judging" element={<JudgingHome />} />
           <Route path="/judging/events/:eventId" element={<JudgingEvent />} />
           <Route path="/judging/events/:eventId/teams/:teamId" element={<JudgingTeam />} />

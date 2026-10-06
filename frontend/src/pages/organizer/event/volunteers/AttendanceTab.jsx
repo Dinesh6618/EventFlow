@@ -50,24 +50,24 @@ export default function AttendanceTab() {
         <StatCard label="Total volunteers" value={s?.total} icon="users" tone="indigo" loading={!s} hint="on duty this day" />
         <StatCard label="Checked in" value={s?.checkedIn} icon="check" tone="green" loading={!s} />
         <StatCard label="Late" value={s?.late} icon="clock" tone="amber" loading={!s} />
-        <StatCard label="Absent" value={s?.absent} icon="alert" tone="pink" loading={!s} hint="shift ended, no check-in" />
-        <StatCard label="Not checked in" value={s?.notCheckedIn} icon="user" tone="sky" loading={!s} />
+        <StatCard label="Absent" value={s?.absent} icon="alert" tone="amber" loading={!s} hint="shift ended, no check-in" />
+        <StatCard label="Not checked in" value={s?.notCheckedIn} icon="user" tone="indigo" loading={!s} />
       </div>
 
       {!data && loading ? (
-        <div className="h-40 animate-pulse rounded-2xl bg-slate-200" aria-label="Loading attendance" />
+        <div className="h-40 animate-pulse rounded-lg bg-slate-200" aria-label="Loading attendance" />
       ) : data.rows.length === 0 ? (
         <EmptyState icon="qr" title="Nobody is on duty this day" description="Assign volunteers to a shift on this day and their attendance appears here." />
       ) : (
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <thead className="border-b border-slate-200 bg-slate-50 text-xs font-medium text-slate-500">
                 <tr><th scope="col" className="px-4 py-3">Volunteer</th><th scope="col" className="px-4 py-3">Department</th><th scope="col" className="px-4 py-3">Shift</th><th scope="col" className="hidden px-4 py-3 lg:table-cell">Check in</th><th scope="col" className="hidden px-4 py-3 lg:table-cell">Check out</th><th scope="col" className="hidden px-4 py-3 md:table-cell">Duration</th><th scope="col" className="px-4 py-3">Status</th><th scope="col" className="px-4 py-3"><span className="sr-only">Actions</span></th></tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {data.rows.map((r) => (
-                  <tr key={r.id}>
+                  <tr key={r.id} className="hover:bg-slate-50">
                     <td className="px-4 py-3 font-semibold text-slate-900">{r.volunteer.name}</td>
                     <td className="px-4 py-3">{r.department.name}{r.location && <span className="block text-xs text-slate-400">{r.location}</span>}</td>
                     <td className="whitespace-nowrap px-4 py-3 text-slate-600">{shiftText(r.startTime, r.endTime)}</td>

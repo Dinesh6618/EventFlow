@@ -75,7 +75,7 @@ export function ChartFrame({ children, className = '' }) {
         {tip && (
           <div
             role="status"
-            className="pointer-events-none absolute z-10 min-w-36 max-w-64 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs shadow-lg"
+            className="pointer-events-none absolute z-10 min-w-36 max-w-64 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs shadow-lift"
             style={{ top: Math.max(tip.y - 12, 0), left: flip ? undefined : tip.x + 14, right: flip ? tip.width - tip.x + 14 : undefined }}
           >
             <p className="mb-1 font-medium text-slate-500">{tip.content.title}</p>

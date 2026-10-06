@@ -32,8 +32,8 @@ export default function StatusProgress({ request }) {
           <li key={step.key} className="relative flex gap-3 pb-5 last:pb-0" aria-current={step.active ? 'step' : undefined}>
             {!last && <span aria-hidden="true" className={`absolute left-[0.8125rem] top-7 h-[calc(100%-1.25rem)] w-0.5 ${step.done && steps[i + 1].done ? 'bg-indigo-300' : 'bg-slate-200'}`} />}
             <span
-              className={`relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                step.active ? 'grad-brand text-white shadow-sm ring-4 ring-indigo-100' : step.done ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400'
+              className={`relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
+                step.active ? 'bg-indigo-600 text-white ring-2 ring-indigo-200 ring-offset-1' : step.done ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400'
               }`}
             >
               {step.done && !step.active ? <Icon name="check" className="h-3.5 w-3.5" /> : i + 1}
